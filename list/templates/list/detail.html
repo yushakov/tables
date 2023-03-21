@@ -1,0 +1,12 @@
+<h1>{{ construct.title_text }}</h1>
+<a href="">Save this project as...</a>
+<ul>
+{% for choice in construct.choice_set.all %}
+    <li>
+    {{ choice.name_txt }}
+    <progress max='100' value='{{ choice.progress_percent_num }}'></progress>
+    {{ choice.progress_percent_num }} %
+    <a href="">modify</a> | <a href="">delete</a>
+    </li>
+{% endfor %}
+</ul>
