@@ -1,30 +1,39 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
+phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
 
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
     listed_date = models.DateTimeField('date listed')
     address_text = models.CharField(max_length=500)
-    email_text = models.CharField(max_length=200)
-    phone_text = models.CharField(max_length=200)
+    email_text = models.EmailField()
+    phone_text = models.CharField(max_length=200, validators=phone_valid)
     owner_name_text = models.CharField(max_length=200)
     overall_progress_percent_num = models.FloatField('progress', default=0.0, validators=percent_valid)
+    vat_percent_num = models.FloatField(validators=percent_valid, default='5')
+    company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
     
     def __str__(self):
         return self.title_text
 
+class Worker(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    phone = models.CharField(max_length=200, validators=phone_valid)
+    
+    def __str__(self):
+        return self.name
 
 class Choice(models.Model):
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+    workers = models.ManyToManyField(Worker)
     name_txt = models.CharField(max_length=200)
     notes_txt = models.CharField(max_length=5000, default='-')
     quantity_num = models.FloatField(default='1')
     units_of_measure_text = models.CharField(max_length=100, default='-')
     price_num = models.FloatField()
-    vat_percent_num = models.FloatField(validators=percent_valid, default='5')
-    company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
     assigned_to_txt = models.CharField(max_length=200)
     progress_percent_num = models.FloatField(validators=percent_valid, default='0')
     plan_start_date = models.DateField()

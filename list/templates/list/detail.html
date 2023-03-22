@@ -1,12 +1,18 @@
-<h1>{{ construct.title_text }}</h1>
-<a href="">Save this project as...</a>
-<ul>
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<h1>{{ construct.title_text }}</h1> &larr; <a href="{% url 'list:index' %}">back to the project list</a>
+<br><br>
+<a href="">Save this project as...</a> (when clicked, the name field appears)<br><br>
+<table>
+<tbody>
 {% for choice in construct.choice_set.all %}
-    <li>
-    {{ choice.name_txt }}
-    <progress max='100' value='{{ choice.progress_percent_num }}'></progress>
-    {{ choice.progress_percent_num }} %
-    <a href="">modify</a> | <a href="">delete</a>
-    </li>
+    <tr>
+    <td>{{ choice.name_txt }}</td>
+    <td align='right'>&#163;{{ choice.price_num }}</td>
+    <td><progress max='100' value='{{ choice.progress_percent_num }}'></progress></td>
+    <td align='right'>{{ choice.progress_percent_num }} %</td>
+    <td><a href="">modify</a> | <a href="">delete</a></td>
+    </tr>
 {% endfor %}
-</ul>
+</tbody>
+</table>

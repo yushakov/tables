@@ -1,17 +1,27 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h1>Projects</h1>
 {% if active_construct_list %}
-    <ul>
+<table>
+    <tbody>
     {% for construct in active_construct_list %}
-        <li>
+        <tr>
+        <td>
         <a href="{% url 'list:detail' construct.id %}">{{ construct.title_text }}</a>
+        </td>
+        <td>
         <progress id="project_progress" max="100"
         value="{{ construct.overall_progress_percent_num }}">
         </progress>
+        </td>
+        <td align='right'>
             {{ construct.overall_progress_percent_num }} %
-            <a href="">modify</a>
-        </li>
+        </td>
+        <td><a href="">modify</a></td>
+        </tr>
     {% endfor %}
-    </ul>
+    </tbody>
+</table>
 {% else %}
     <p>No projects are available.</p>
 {% endif %}
