@@ -34,7 +34,6 @@ class Choice(models.Model):
     quantity_num = models.FloatField(default='1')
     units_of_measure_text = models.CharField(max_length=100, default='-')
     price_num = models.FloatField()
-    assigned_to_txt = models.CharField(max_length=200)
     progress_percent_num = models.FloatField(validators=percent_valid, default='0')
     plan_start_date = models.DateField()
     plan_days_num = models.FloatField()

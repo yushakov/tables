@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_template_maths',
     'list.apps.ListConfig',
     'django.contrib.admin',
     'django.contrib.auth',

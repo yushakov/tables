@@ -1,4 +1,5 @@
 {% load static %}
+{% load django_template_maths %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h1>{{ construct.title_text }}</h1> &larr; <a href="{% url 'list:index' %}">back to the project list</a>
 <br><br>
@@ -9,6 +10,15 @@
     <tr>
     <td>{{ choice.name_txt }}</td>
     <td align='right'>&#163;{{ choice.price_num }}</td>
+    <td align='right'>{{ choice.quantity_num }} {{ choice.units_of_measure_text }}</td>
+    <td align='right'>&#163;{{ choice.price_num|mul:choice.quantity_num }}</td>
+    <td>
+    <select>
+    {% for worker in choice.workers.all %}
+        <option>{{ worker.name }}</option>
+    {% endfor %}
+    </select>
+    </td>
     <td><progress max='100' value='{{ choice.progress_percent_num }}'></progress></td>
     <td align='right'>{{ choice.progress_percent_num }} %</td>
     <td><a href="">modify</a> | <a href="">delete</a></td>
