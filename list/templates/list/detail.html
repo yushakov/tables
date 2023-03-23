@@ -4,56 +4,66 @@
 <br><br>
 <a href="">Save this project as...</a> (when clicked, the name field appears)<br><br>
 
-<div>
-<table style='float: left'>
+<table>
 <tbody>
 <tr>
-    <td>Address:</td>
+    <td><b>Address:</b></td>
     <td>{{ construct.address_text }}</td>
 </tr>
 <tr>
-    <td>Email:</td>
+    <td><b>Email:</b></td>
     <td>{{ construct.email_text }}</td>
-</tr>
-<tr>
-    <td>Phone:</td>
-    <td>{{ construct.phone_text }}</td>
-</tr>
-<tr>
-    <td>Owner:</td>
-    <td>{{ construct.owner_name_text }}</td>
-</tr>
-</tbody>
-</table>
-<table style='float: left'>
-<tbody>
-<tr>
-    <td>Total:</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td><b>Total:</b></td>
     <td>&#163;{{ construct_total }}</td>
 </tr>
 <tr>
-    <td>VAT:</td>
+    <td><b>Phone:</b></td>
+    <td>{{ construct.phone_text }}</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td><b>VAT:</b></td>
     <td>{{ construct.vat_percent_num }}%</td>
 </tr>
 <tr>
-    <td>Total + VAT:</td>
+    <td><b>Owner:</b></td>
+    <td>{{ construct.owner_name_text }}</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td><b>Total + VAT:</b></td>
     <td>&#163;{{ construct_total_vat }}</td>
 </tr>
 </tbody>
 </table>
-</div>
+<table>
+<tbody>
+<tr>
+</tr>
+<tr>
+</tr>
+<tr>
+</tr>
+</tbody>
+</table>
 <br><br>
-<br><br>
-<br><br>
-<br><br>
-<div>
-<table style='float: left'>
+<form>
+<table>
+<thead><tr>
+    <th>Name</th>
+    <th>Unit price</th>
+    <th>Quantity</th>
+    <th><!--Units--></th>
+    <th>Total price</th>
+    <th>Assigned to</th>
+    <th>Date start</th>
+    <th>Planned days</th>
+    <th>Progress</th>
+</tr></thead>
 <tbody>
 {% for items in ch_list %}
     <tr>
     <td>{{ items.choice.name_txt }}</td>
     <td align='right'>&#163;{{ items.choice.price_num }}</td>
-    <td align='right'>{{ items.choice.quantity_num }} {{ items.choice.units_of_measure_text }}</td>
+    <td align='right'>{{ items.choice.quantity_num }}</td>
+    <td align='left'>{{ items.choice.units_of_measure_text }}</td>
     <td align='right'>&#163;{{ items.choice_total_price }}</td>
     <td>
     <select>
@@ -62,12 +72,64 @@
     {% endfor %}
     </select>
     </td>
+    <td>{{ items.choice.plan_start_date }}</td>
     <td>{{ items.choice.plan_days_num }} days</td>
     <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
     <td align='right'>{{ items.choice.progress_percent_num }} %</td>
     <td><a href="">modify</a> | <a href="">delete</a></td>
     </tr>
 {% endfor %}
+{% for tags in form_tags %}
+<tr>
+    <td><input type='text' id='name_{{ tags.f0 }}' placeholder='Task name' size='30'></td>
+    <td><input type='text' id='unit_price_{{ tags.f0 }}' placeholder='Unit price' size='5'></td>
+    <td><input type='text' id='quantity_{{ tags.f0 }}' placeholder='Quantity' size='4'></td>
+    <td><input type='text' id='units_{{ tags.f0 }}' placeholder='Units (e.g., m2)' size='6'></td>
+    <td></td>
+    <td><input type='text' id='worker_{{ tags.f0 }}' value='Somebody' size='5'></td>
+    <td><input type='text' id='date_start_{{ tags.f0 }}' placeholder='Date start' size='6'></td>
+    <td><input type='text' id='planned_days_{{ tags.f0 }}' placeholder='Planned days' size='6'></td>
+    <td><input type='text' id='progress_{{ tags.f0 }}' value='0' size='4'>%</td>
+    <td></td>
+    <td></td>
+</tr>
+{% endfor %}
+<tr>
+    <td><input type='submit' value='Save new task(s)'></td>
 </tbody>
 </table>
-</div>
+</form>
+
+<!--form>
+<table>
+<tbody>
+{% for tags in form_tags %}
+<tr id='{{ tags.show0 }}' style='display:{{ tags.display }}'>
+    <td>
+        <a  href='#'
+        onclick="document.getElementById('{{ tags.f0 }}').style.display='block';
+        document.getElementById('{{ tags.show0 }}').style.display='none';
+        document.getElementById('{{ tags.show1 }}').style.display='block';
+        document.getElementById('submit_button').style.display='block';
+        return false;">add</a>
+    </td>
+</tr>
+<tr id='{{ tags.f0 }}' style='display:none'>
+    <td><input type='text' id='name_{{ tags.f0 }}' placeholder='Task name' size='30'></td>
+    <td><input type='text' id='unit_price_{{ tags.f0 }}' placeholder='Unit price' size='5'></td>
+    <td><input type='text' id='quantity_{{ tags.f0 }}' placeholder='Quantity' size='4'></td>
+    <td><input type='text' id='units_{{ tags.f0 }}' placeholder='Units (e.g., m2)' size='6'></td>
+    <td></td>
+    <td><input type='text' id='worker_{{ tags.f0 }}' value='Somebody' size='5'></td>
+    <td><input type='text' id='planned_days_{{ tags.f0 }}' placeholder='Planned days' size='6'></td>
+    <td><input type='text' id='progress_{{ tags.f0 }}' value='0' size='4'>%</td>
+    <td></td>
+    <td></td>
+</tr>
+{% endfor %}
+<tr id='submit_button' style='display:none'>
+    <td><input type='submit' value='Save'></td>
+</tr>
+</tbody>
+</table>
+</form-->
