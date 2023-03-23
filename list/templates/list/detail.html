@@ -1,28 +1,73 @@
 {% load static %}
-{% load django_template_maths %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h1>{{ construct.title_text }}</h1> &larr; <a href="{% url 'list:index' %}">back to the project list</a>
 <br><br>
 <a href="">Save this project as...</a> (when clicked, the name field appears)<br><br>
-<table>
+
+<div>
+<table style='float: left'>
 <tbody>
-{% for choice in construct.choice_set.all %}
+<tr>
+    <td>Address:</td>
+    <td>{{ construct.address_text }}</td>
+</tr>
+<tr>
+    <td>Email:</td>
+    <td>{{ construct.email_text }}</td>
+</tr>
+<tr>
+    <td>Phone:</td>
+    <td>{{ construct.phone_text }}</td>
+</tr>
+<tr>
+    <td>Owner:</td>
+    <td>{{ construct.owner_name_text }}</td>
+</tr>
+</tbody>
+</table>
+<table style='float: left'>
+<tbody>
+<tr>
+    <td>Total:</td>
+    <td>&#163;{{ construct_total }}</td>
+</tr>
+<tr>
+    <td>VAT:</td>
+    <td>{{ construct.vat_percent_num }}%</td>
+</tr>
+<tr>
+    <td>Total + VAT:</td>
+    <td>&#163;{{ construct_total_vat }}</td>
+</tr>
+</tbody>
+</table>
+</div>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<div>
+<table style='float: left'>
+<tbody>
+{% for items in ch_list %}
     <tr>
-    <td>{{ choice.name_txt }}</td>
-    <td align='right'>&#163;{{ choice.price_num }}</td>
-    <td align='right'>{{ choice.quantity_num }} {{ choice.units_of_measure_text }}</td>
-    <td align='right'>&#163;{{ choice.price_num|mul:choice.quantity_num }}</td>
+    <td>{{ items.choice.name_txt }}</td>
+    <td align='right'>&#163;{{ items.choice.price_num }}</td>
+    <td align='right'>{{ items.choice.quantity_num }} {{ items.choice.units_of_measure_text }}</td>
+    <td align='right'>&#163;{{ items.choice_total_price }}</td>
     <td>
     <select>
-    {% for worker in choice.workers.all %}
+    {% for worker in items.choice.workers.all %}
         <option>{{ worker.name }}</option>
     {% endfor %}
     </select>
     </td>
-    <td><progress max='100' value='{{ choice.progress_percent_num }}'></progress></td>
-    <td align='right'>{{ choice.progress_percent_num }} %</td>
+    <td>{{ items.choice.plan_days_num }} days</td>
+    <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
+    <td align='right'>{{ items.choice.progress_percent_num }} %</td>
     <td><a href="">modify</a> | <a href="">delete</a></td>
     </tr>
 {% endfor %}
 </tbody>
 </table>
+</div>
