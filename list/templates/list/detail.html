@@ -33,16 +33,7 @@
 </tr>
 </tbody>
 </table>
-<table>
-<tbody>
-<tr>
-</tr>
-<tr>
-</tr>
-<tr>
-</tr>
-</tbody>
-</table>
+
 <br><br>
 <form>
 <table>
@@ -59,7 +50,7 @@
 </tr></thead>
 <tbody>
 {% for items in ch_list %}
-    <tr>
+    <tr id='tr_{{ items.choice.id }}'>
     <td>{{ items.choice.name_txt }}</td>
     <td align='right'>&#163;{{ items.choice.price_num }}</td>
     <td align='right'>{{ items.choice.quantity_num }}</td>
@@ -76,7 +67,9 @@
     <td>{{ items.choice.plan_days_num }} days</td>
     <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
     <td align='right'>{{ items.choice.progress_percent_num }} %</td>
-    <td><a href="">modify</a> | <a href="">delete</a></td>
+    <td><a href="">add invoice</a> | <a href="">modify</a> | <a href="">delete</a>
+    | <a href="#" onclick="getElementById('tr_{{ items.choice.id }}').style.display='none';
+    return false;">hide</a></td>
     </tr>
 {% endfor %}
 {% for tags in form_tags %}

@@ -11,6 +11,20 @@ class IndexView(generic.ListView):
         """Return the projects"""
         return Construct.objects.order_by('overall_progress_percent_num')
 
+
+def index(request):
+    constructs = Construct.objects.order_by('overall_progress_percent_num')
+    price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
+    for construct in constructs:
+        price += sum([choice.price_num * choice.quantity_num for choice in construct.choice_set.all()])
+    context = {'active_construct_list': constructs,
+               'price': price,
+               'price_vat': price * (1. + construct.vat_percent_num * 0.01),
+              }
+    print('We are Here, in Index function')
+    return render(request, 'list/index.html', context)
+    
+
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     ch_list = []

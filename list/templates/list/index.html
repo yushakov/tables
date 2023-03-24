@@ -22,6 +22,28 @@
     {% endfor %}
     </tbody>
 </table>
+
+<table>
+    <thead>
+        <tr>
+            <th>Price of<br>non-finished</th>
+            <th>Price + VAT</th>
+            <th>Profit</th>
+            <th>Paid</th>
+            <th>To be paid<br>for progress</th>
+            <th>Worker<br>invoices</th> <!-- Which need to be paid -->
+        </tr>
+    </thead>
+<tbody>
+    <tr>
+        <td>&#163; {{ price }}</td>
+        <td>&#163; {{ price_vat }}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+</tbody>
+</table>
 {% else %}
     <p>No projects are available.</p>
 {% endif %}
