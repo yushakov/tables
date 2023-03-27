@@ -89,14 +89,19 @@ function freezeActiveRow(id) {
 }
 
 function updateIDs() {
+    const add_row_cell_idx = 0;
+    const del_cell_idx = 3;
 	var table = document.getElementById("choices");
 	var rows = Array.from(table.rows);
 	rows.forEach(function(row) {
-		var links = row.cells[0].innerHTML;
+		var links = row.cells[add_row_cell_idx].innerHTML;
+        var del_link = row.cells[del_cell_idx].innerHTML;
 		var idx = row.rowIndex;
-		var newLinks = links.replace(/addRow\([0-9]*,/g, "addRow("
+		var newLinks = links.replace(/addRow\([0-9]+,/g, "addRow("
 		+ idx + ",");
-		row.cells[0].innerHTML = newLinks;
+        var new_del_link = del_link.replace(/setDelete\([0-9]+/, "setDelete(" + idx);
+		row.cells[add_row_cell_idx].innerHTML = newLinks;
+        row.cells[del_cell_idx].innerHTML = new_del_link;
 	});
 }
 
