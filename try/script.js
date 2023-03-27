@@ -1,26 +1,46 @@
+function setError(field, message) {
+    const em = document.getElementById('error_msg_id');
+    if(em) return;
+    const br = document.createElement("br");
+    const errorMsg = document.createElement("span");
+    errorMsg.classList.add("error");
+    errorMsg.textContent = message;
+    br.id = 'br_id';
+    errorMsg.id = 'error_msg_id';
+    field.parentNode.appendChild(br);
+    field.parentNode.appendChild(errorMsg);
+    field.classList.add("invalid");
+}
+
+function unsetError(field) {
+    if(!field.classList.contains('invalid')) return;
+    field.classList.remove('invalid');
+    const br = document.getElementById('br_id');
+    const em = document.getElementById('error_msg_id');
+    if(br) field.parentNode.removeChild(br);
+    if(em) field.parentNode.removeChild(em);
+}
+
 function validateInput(id) {
 	var table = document.getElementById("choices");
 	var active_row = table.rows[id];
-	const priceInpRe = /[\.0-9]+/;
+	const priceInpRe = /^\d+(\.\d+)?$/;
 	if(active_row.className == "Choice"){
 		var name = document.getElementById("inpName");
 		var price = document.getElementById("inpPrice");
 		var name_val = name.value;
 		if(name_val.length < 3) {
+            setError(name, "3 or more symbols");
 			name.focus();
 			return false;
 		}
+        unsetError(name);
 		if(!priceInpRe.test(price.value.trim())) {
-            const br = document.createElement("br");
-            const errorMsg = document.createElement("span");
-            errorMsg.classList.add("error");
-            errorMsg.textContent = "Define numeric price";
-            price.parentNode.appendChild(br);
-            price.parentNode.appendChild(errorMsg);
-            price.classList.add("invalid");
-			price.focus();
+            setError(price, "Define numeric price");
+            price.focus();
 			return false;
 		}
+        unsetError(price);
 	}
 	else if(active_row.className == "Header2") {
 		var name = document.getElementById("inpName");
@@ -41,7 +61,6 @@ function encodeHTML(s) {
 			.replace(/'/g, '&#x2F');
 }
 
-// С 22:00 25 марта до 03:00 26 марта
 function freezeActiveRow(id) {
 	if(id >= 0) {
 		if(validateInput(id)) {
@@ -55,11 +74,12 @@ function freezeActiveRow(id) {
 			}
 			else if(active_row.className == "Header2") {
 				name = document.getElementById("inpName").value;
-				//hdrLevel = document.getElementById("inpPrice").value;
 				active_row.cells[1].innerHTML = "<b>"
 				  + encodeHTML(name) + "</b>";
 				active_row.cells[2].innerHTML = "";
 			}
+            active_row.cells[3].innerHTML = "<a href='#' onclick='return setDelete("
+            + id + ");'>delete</a>";
 		}
 		else {
 			return false;
@@ -80,6 +100,13 @@ function updateIDs() {
 	});
 }
 
+function setDelete(id) {
+    var table = document.getElementById("choices");
+    var row = table.rows[id];
+    row.classList.add('delete');
+    return false;
+}
+
 function addRow(id, className) {
 	var table = document.getElementById("choices");
 	var active_row_holder = document.getElementById("active_row");
@@ -93,6 +120,7 @@ function addRow(id, className) {
 	var actionCell = newRow.insertCell(0);
 	var nameCell = newRow.insertCell(1);
 	var priceCell = newRow.insertCell(2);
+    var delCell = newRow.insertCell(3);
 	actionCell.innerHTML = "<a href='#' onclick='return addRow("
 	+ newId + ", \"Choice\");'>task</a>" +
 	" | <a href='#' onclick='return addRow("
@@ -104,6 +132,7 @@ function addRow(id, className) {
 	else {
 		priceCell.innerHTML = "";
 	}
+    delCell.innerHTML = "";
 	document.getElementById('inpName').focus();
 	updateIDs();
 	return false;
