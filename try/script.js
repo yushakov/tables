@@ -11,12 +11,24 @@ function validateInput(id) {
 			return false;
 		}
 		if(!priceInpRe.test(price.value.trim())) {
+            const br = document.createElement("br");
+            const errorMsg = document.createElement("span");
+            errorMsg.classList.add("error");
+            errorMsg.textContent = "Define numeric price";
+            price.parentNode.appendChild(br);
+            price.parentNode.appendChild(errorMsg);
+            price.classList.add("invalid");
 			price.focus();
 			return false;
 		}
 	}
 	else if(active_row.className == "Header2") {
-		name = document.getElementById("inpName").value;
+		var name = document.getElementById("inpName");
+        var name_val = name.value;
+        if(name_val.length < 3) {
+            name.focus();
+            return false;
+        }
 	}
 	return true;
 }
@@ -84,7 +96,7 @@ function addRow(id, className) {
 	actionCell.innerHTML = "<a href='#' onclick='return addRow("
 	+ newId + ", \"Choice\");'>task</a>" +
 	" | <a href='#' onclick='return addRow("
-	+ newId + ", \"Header2\");'>header</a>";
+	+ newId + ", \"Header2\");'>head</a>";
 	nameCell.innerHTML = "<input id='inpName' type='text'/>";
 	if(className == "Choice") {
 		priceCell.innerHTML = "<input id='inpPrice' type='text'/>";
