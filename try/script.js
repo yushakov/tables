@@ -26,7 +26,7 @@ function validateInput(id) {
 	var active_row = table.rows[id];
 	const priceInpRe = /^\d+(\.\d+)?$/;
 	if(active_row.className == "Choice"){
-		var name = document.getElementById("inpName");
+		var name  = document.getElementById("inpName");
 		var price = document.getElementById("inpPrice");
 		var name_val = name.value;
 		if(name_val.length < 3) {
@@ -46,9 +46,11 @@ function validateInput(id) {
 		var name = document.getElementById("inpName");
         var name_val = name.value;
         if(name_val.length < 3) {
+            setError(name, "3 or more symbols");
             name.focus();
             return false;
         }
+        unsetError(name);
 	}
 	return true;
 }
@@ -61,8 +63,11 @@ function encodeHTML(s) {
 			.replace(/'/g, '&#x2F');
 }
 
-function freezeActiveRow(id) {
-	if(id >= 0) {
+function freezeActiveRow() {
+	var active_row_holder = document.getElementById("active_row");
+	var id = active_row_holder.innerText;
+    console.log(id)
+	if(id && id >= 0) {
 		if(validateInput(id)) {
 			var table = document.getElementById("choices");
 			var active_row = table.rows[id];
@@ -84,6 +89,7 @@ function freezeActiveRow(id) {
 		else {
 			return false;
 		}
+        active_row_holder.innerHTML = "-1";
 	}
 	return true;
 }
@@ -94,38 +100,64 @@ function updateIDs() {
 	var table = document.getElementById("choices");
 	var rows = Array.from(table.rows);
 	rows.forEach(function(row) {
-		var links = row.cells[add_row_cell_idx].innerHTML;
+		var links    = row.cells[add_row_cell_idx].innerHTML;
         var del_link = row.cells[del_cell_idx].innerHTML;
 		var idx = row.rowIndex;
 		var newLinks = links.replace(/addRow\([0-9]+,/g, "addRow("
 		+ idx + ",");
-        var new_del_link = del_link.replace(/setDelete\([0-9]+/, "setDelete(" + idx);
+        var new_del_link = del_link.replace(/setDelete\([0-9]+/,      "setDelete(" + idx)
+                                   .replace(/restoreDeleted\([0-9]+/, "restoreDeleted(" + idx);
 		row.cells[add_row_cell_idx].innerHTML = newLinks;
         row.cells[del_cell_idx].innerHTML = new_del_link;
 	});
 }
 
-function setDelete(id) {
+function restoreDeleted(id) {
+    const name_cell_idx  = 1;
+    const price_cell_idx = 2;
+    const del_cell_idx   = 3;
     var table = document.getElementById("choices");
     var row = table.rows[id];
-    row.classList.add('delete');
+    row.cells[name_cell_idx].classList.remove('delete');
+    row.cells[price_cell_idx].classList.remove('delete');
+    var del_link = row.cells[del_cell_idx].innerHTML;
+    var new_del_link = del_link.replace(/restoreDeleted/, "setDelete")
+                               .replace(/restore/, "delete");
+    row.cells[del_cell_idx].innerHTML = new_del_link;
+    return false;
+}
+
+function setDelete(id) {
+    const name_cell_idx  = 1;
+    const price_cell_idx = 2;
+    const del_cell_idx   = 3;
+    var table = document.getElementById("choices");
+    var row = table.rows[id];
+    row.cells[name_cell_idx].classList.add('delete');
+    row.cells[price_cell_idx].classList.add('delete');
+    var del_link = row.cells[del_cell_idx].innerHTML;
+    var new_del_link = del_link.replace(/setDelete/, "restoreDeleted")
+                               .replace(/delete/, "restore");
+    row.cells[del_cell_idx].innerHTML = new_del_link;
     return false;
 }
 
 function addRow(id, className) {
+    const action_cell_idx = 0;
+    const name_cell_idx   = 1;
+    const price_cell_idx  = 2;
+    const del_cell_idx    = 3;
 	var table = document.getElementById("choices");
 	var active_row_holder = document.getElementById("active_row");
-	var active_row_id = active_row_holder.innerText;
-	console.log(active_row_id);
-	if(!freezeActiveRow(active_row_id)) return false;
+	if(!freezeActiveRow()) return false;
 	var newRow = table.insertRow(id+1);
 	var newId = newRow.rowIndex;
 	active_row_holder.innerHTML = newId;
 	newRow.className = className; // "Choice" or "Header2"
-	var actionCell = newRow.insertCell(0);
-	var nameCell = newRow.insertCell(1);
-	var priceCell = newRow.insertCell(2);
-    var delCell = newRow.insertCell(3);
+	var actionCell = newRow.insertCell(action_cell_idx);
+	var nameCell   = newRow.insertCell(name_cell_idx);
+	var priceCell  = newRow.insertCell(price_cell_idx);
+    var delCell    = newRow.insertCell(del_cell_idx);
 	actionCell.innerHTML = "<a href='#' onclick='return addRow("
 	+ newId + ", \"Choice\");'>task</a>" +
 	" | <a href='#' onclick='return addRow("
@@ -133,8 +165,7 @@ function addRow(id, className) {
 	nameCell.innerHTML = "<input id='inpName' type='text'/>";
 	if(className == "Choice") {
 		priceCell.innerHTML = "<input id='inpPrice' type='text'/>";
-	}
-	else {
+	} else {
 		priceCell.innerHTML = "";
 	}
     delCell.innerHTML = "";
@@ -145,4 +176,54 @@ function addRow(id, className) {
 
 function saveChoices() {
 	// [TBD]
+}
+
+
+function test1() {
+    //debugger;
+    addRow(0, "Choice");
+    document.getElementById('inpName').value = 'floor';
+    document.getElementById('inpPrice').value = '100';
+    addRow(1, "Choice");
+    document.getElementById('inpName').value = 'walls';
+    document.getElementById('inpPrice').value = 'kkk';
+    addRow(2, "Choice");
+    document.getElementById('inpPrice').value = '200';
+    addRow(2, "Choice");
+    document.getElementById('inpName').value = 'ceiling';
+    document.getElementById('inpPrice').value = '300';
+    addRow(0, "Header2");
+    document.getElementById('inpName').value = 'house';
+    addRow(0, "Header2");
+    document.getElementById('inpName').value = 'garage';
+    addRow(1, "Choice");
+    document.getElementById('inpName').value = 'base';
+    document.getElementById('inpPrice').value = '546';
+    addRow(2, "Choice");
+    document.getElementById('inpName').value = 'floor';
+    document.getElementById('inpPrice').value = '345';
+    addRow(1, "Choice");
+    document.getElementById('inpName').value = 'fl';
+    document.getElementById('inpPrice').value = '89';
+    setDelete(4);
+    addRow(4, "Choice");
+    document.getElementById('inpName').value = 'garage floor';
+    addRow(4, "Choice");
+    document.getElementById('inpName').value = 'roof';
+    document.getElementById('inpPrice').value = '312';
+    freezeActiveRow();
+    addRow(0, "Header2");
+    document.getElementById('inpName').value = 'ga';
+    addRow(1, "Choice");
+    document.getElementById('inpName').value = 'garden';
+    addRow(1, "Choice");
+    document.getElementById('inpName').value = 'grass';
+    document.getElementById('inpPrice').value = '9ra';
+    addRow(2, "Choice");
+    document.getElementById('inpPrice').value = '974';
+    addRow(2, "Choice");
+    document.getElementById('inpName').value = 'aaa';
+    document.getElementById('inpPrice').value = '000';
+    freezeActiveRow();
+    setDelete(3);
 }
