@@ -15,3 +15,10 @@ table {
 .delete {
   color: grey;
   text-decoration: line-through;
+}
+
+td.td_header_2 {
+  background-color: #d6f1e8;
+  font-size: 1.2em;
+  font-weight: bold;
+}

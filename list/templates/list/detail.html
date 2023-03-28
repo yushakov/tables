@@ -53,11 +53,15 @@
     <th>Planned days</th>
     <th>Progress</th>
     <th></th>
+    <th></th>
 </tr></thead>
 <tbody>
 {% for items in ch_list %}
     <tr id='tr_{{ items.choice.id }}'>
-    <td>task | head</td>
+    <td>
+        <a href="#" onclick="return addRow({{ items.idx }}, 'Choice');">task</a> |
+        <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
+    </td>
     <td>{{ items.choice.name_txt }}</td>
     <td align='right'>&#163;{{ items.choice.price_num }}</td>
     <td align='right'>{{ items.choice.quantity_num }}</td>
@@ -81,6 +85,8 @@
 {% endfor %}
 <tr>
     <td><input type='submit' value='Save new task(s)'></td>
+    <td><button onclick="freezeActiveRow(); return false;">freeze</button></td>
+    <td><a href='#' onclick="test1(); return false;">test1</td>
 </tbody>
 </table>
 </form>

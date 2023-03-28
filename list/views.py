@@ -30,11 +30,11 @@ def detail(request, construct_id):
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0
-    for choice in construct.choice_set.all():
+    for idx, choice in enumerate(construct.choice_set.all()):
         choice_price = choice.price_num * choice.quantity_num
         construct_progress += choice_price * 0.01 * choice.progress_percent_num
         construct_total_price += choice_price
-        ch_list.append({'choice': choice, 'choice_total_price': choice_price})
+        ch_list.append({'idx': idx+1, 'choice': choice, 'choice_total_price': choice_price})
     construct_progress *= 100. / construct_total_price 
     construct.overall_progress_percent_num = construct_progress
     construct.save()
