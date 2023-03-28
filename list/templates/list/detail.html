@@ -1,4 +1,5 @@
 {% load static %}
+<script src="{% static 'list/detail.js' %}"></script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h1>{{ construct.title_text }}</h1> &larr; <a href="{% url 'list:index' %}">back to the project list</a>
 <br><br>
@@ -15,7 +16,7 @@
     <td>{{ construct.email_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>Total:</b></td>
-    <td>&#163;{{ construct_total }}</td>
+    <td>&#163; {{ construct_total }}</td>
 </tr>
 <tr>
     <td><b>Phone:</b></td>
@@ -29,15 +30,19 @@
     <td>{{ construct.owner_name_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>Total + VAT:</b></td>
-    <td>&#163;{{ construct_total_vat }}</td>
+    <td>&#163; {{ construct_total_vat }}</td>
 </tr>
 </tbody>
 </table>
 
 <br><br>
 <form>
-<table>
+<table id='choices'>
 <thead><tr>
+    <td>
+        <a href="#" onclick="return addRow(0, 'Choice');">task</a> |
+        <a href="#" onclick="return addRow(0, 'Header2');">head</a>
+    </td>
     <th>Name</th>
     <th>Unit price</th>
     <th>Quantity</th>
@@ -47,10 +52,12 @@
     <th>Date start</th>
     <th>Planned days</th>
     <th>Progress</th>
+    <th></th>
 </tr></thead>
 <tbody>
 {% for items in ch_list %}
     <tr id='tr_{{ items.choice.id }}'>
+    <td>task | head</td>
     <td>{{ items.choice.name_txt }}</td>
     <td align='right'>&#163;{{ items.choice.price_num }}</td>
     <td align='right'>{{ items.choice.quantity_num }}</td>
@@ -67,62 +74,14 @@
     <td>{{ items.choice.plan_days_num }} days</td>
     <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
     <td align='right'>{{ items.choice.progress_percent_num }} %</td>
-    <td><a href="">add invoice</a> | <a href="">modify</a> | <a href="">delete</a>
+    <!-- td><a href="">add invoice</a> | <a href="">modify</a> | <a href="">delete</a>
     | <a href="#" onclick="getElementById('tr_{{ items.choice.id }}').style.display='none';
-    return false;">hide</a></td>
+    return false;">hide</a></td -->
     </tr>
-{% endfor %}
-{% for tags in form_tags %}
-<tr>
-    <td><input type='text' id='name_{{ tags.f0 }}' placeholder='Task name' size='30'></td>
-    <td><input type='text' id='unit_price_{{ tags.f0 }}' placeholder='Unit price' size='5'></td>
-    <td><input type='text' id='quantity_{{ tags.f0 }}' placeholder='Quantity' size='4'></td>
-    <td><input type='text' id='units_{{ tags.f0 }}' placeholder='Units (e.g., m2)' size='6'></td>
-    <td></td>
-    <td><input type='text' id='worker_{{ tags.f0 }}' value='Somebody' size='5'></td>
-    <td><input type='text' id='date_start_{{ tags.f0 }}' placeholder='Date start' size='6'></td>
-    <td><input type='text' id='planned_days_{{ tags.f0 }}' placeholder='Planned days' size='6'></td>
-    <td><input type='text' id='progress_{{ tags.f0 }}' value='0' size='4'>%</td>
-    <td></td>
-    <td></td>
-</tr>
 {% endfor %}
 <tr>
     <td><input type='submit' value='Save new task(s)'></td>
 </tbody>
 </table>
 </form>
-
-<!--form>
-<table>
-<tbody>
-{% for tags in form_tags %}
-<tr id='{{ tags.show0 }}' style='display:{{ tags.display }}'>
-    <td>
-        <a  href='#'
-        onclick="document.getElementById('{{ tags.f0 }}').style.display='block';
-        document.getElementById('{{ tags.show0 }}').style.display='none';
-        document.getElementById('{{ tags.show1 }}').style.display='block';
-        document.getElementById('submit_button').style.display='block';
-        return false;">add</a>
-    </td>
-</tr>
-<tr id='{{ tags.f0 }}' style='display:none'>
-    <td><input type='text' id='name_{{ tags.f0 }}' placeholder='Task name' size='30'></td>
-    <td><input type='text' id='unit_price_{{ tags.f0 }}' placeholder='Unit price' size='5'></td>
-    <td><input type='text' id='quantity_{{ tags.f0 }}' placeholder='Quantity' size='4'></td>
-    <td><input type='text' id='units_{{ tags.f0 }}' placeholder='Units (e.g., m2)' size='6'></td>
-    <td></td>
-    <td><input type='text' id='worker_{{ tags.f0 }}' value='Somebody' size='5'></td>
-    <td><input type='text' id='planned_days_{{ tags.f0 }}' placeholder='Planned days' size='6'></td>
-    <td><input type='text' id='progress_{{ tags.f0 }}' value='0' size='4'>%</td>
-    <td></td>
-    <td></td>
-</tr>
-{% endfor %}
-<tr id='submit_button' style='display:none'>
-    <td><input type='submit' value='Save'></td>
-</tr>
-</tbody>
-</table>
-</form-->
+<div style='display:none' id='active_row'>-1</div>
