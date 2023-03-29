@@ -11,6 +11,10 @@ const g_progress_cell_idx  = 9;
 const g_prog_pcnt_cell_idx = 10;
 const g_del_cell_idx       = 11;
 
+function showPrettyRaw() {
+    var table = document.getElementById("choices");
+}
+
 function delMouseOver(x) {
     x.parentNode.parentNode.classList.add("onDelMouseOver");
 }
@@ -114,13 +118,17 @@ function freezeActiveRow() {
 				planDays = document.getElementById("inpPlanDays").value;
 				active_row.cells[g_name_cell_idx].innerHTML = encodeHTML(name);
 				active_row.cells[g_price_cell_idx].innerHTML = '&#163; ' + encodeHTML(price);
+				active_row.cells[g_price_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_qty_cell_idx ].innerHTML = encodeHTML(qty);
+				active_row.cells[g_qty_cell_idx ].style.textAlign = 'right';
 				active_row.cells[g_units_cell_idx].innerHTML = encodeHTML(units);
 				active_row.cells[g_tot_prc_cell_idx].innerHTML
                                            = '&#163; ' + String(Number(price) * Number(qty));
+				active_row.cells[g_tot_prc_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_asgn_to_cell_idx].innerHTML = encodeHTML(asgnTo);
 				active_row.cells[g_day_start_cell_idx].innerHTML = encodeHTML(dayStart);
 				active_row.cells[g_plan_days_cell_idx].innerHTML = encodeHTML(planDays);
+				active_row.cells[g_plan_days_cell_idx].style.textAlign = 'center';
 			}
 			else if(active_row.className == "Header2") {
                 const col_span = 5;
