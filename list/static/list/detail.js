@@ -34,26 +34,38 @@ function unsetError(field) {
     if(em) field.parentNode.removeChild(em);
 }
 
+function badNumber(element, message) {
+	const numberInpRe = /^\d+(\.\d+)?$/;
+    if(!numberInpRe.test(element.value.trim())) {
+        setError(element, message);
+        element.focus();
+        return true;
+    }
+    unsetError(element);
+    return false;
+}
+
 function validateInput(id) {
 	var table = document.getElementById("choices");
 	var active_row = table.rows[id];
-	const priceInpRe = /^\d+(\.\d+)?$/;
+	const numberInpRe = /^\d+(\.\d+)?$/;
 	if(active_row.className == "Choice"){
-		var name  = document.getElementById("inpName");
-		var price = document.getElementById("inpPrice");
+		var name     = document.getElementById("inpName");
+		var price    = document.getElementById("inpPrice");
+        var qty      = document.getElementById("inpQty");
+        var units    = document.getElementById("inpUnits");
+        var asgnTo   = document.getElementById("inpAsgnTo");
+        var dayStart = document.getElementById("inpDayStart");
+        var planDays = document.getElementById("inpPlanDays");
 		var name_val = name.value;
 		if(name_val.length < 3) {
             setError(name, "3 or more symbols");
 			name.focus();
 			return false;
 		}
-        unsetError(name);
-		if(!priceInpRe.test(price.value.trim())) {
-            setError(price, "Define numeric price");
-            price.focus();
-			return false;
-		}
-        unsetError(price);
+        if(badNumber(price,    "Input a number.")) return false;
+        if(badNumber(qty,      "Input a number.")) return false;
+        if(badNumber(planDays, "Input a number.")) return false;
 	}
 	else if(active_row.className == "Header2") {
 		var name = document.getElementById("inpName");
@@ -79,7 +91,6 @@ function encodeHTML(s) {
 function freezeActiveRow() {
 	var active_row_holder = document.getElementById("active_row");
 	var id = active_row_holder.innerText;
-    console.log(id)
 	if(id && id >= 0) {
 		if(validateInput(id)) {
 			var table = document.getElementById("choices");
@@ -112,7 +123,7 @@ function freezeActiveRow() {
                 active_row.cells[g_del_cell_idx].classList.add("td_header_2");
 			}
             active_row.cells[g_del_cell_idx].innerHTML = "<a href='#' onclick='return setDelete("
-            + id + ");'>delete</a>";
+                                                       + id + ");'>delete</a>";
 		}
 		else {
 			return false;
@@ -136,7 +147,6 @@ function updateIDs() {
                                        .replace(/restoreDeleted\([0-9]+/, "restoreDeleted(" + idx);
             row.cells[g_action_cell_idx].innerHTML = newLinks;
             row.cells[g_del_cell_idx].innerHTML = new_del_link;
-            console.log('g_del_cell_idx: ' + g_del_cell_idx);
         }
         catch(exception){
             console.log('Caught: ' + exception);
@@ -186,7 +196,13 @@ function addRow(id, className) {
 	var table = document.getElementById("choices");
 	var active_row_holder = document.getElementById("active_row");
 	if(!freezeActiveRow()) return false;
-	var newRow = table.insertRow(id+1);
+	var newRow;
+    if(id < table.rows.length) {
+        newRow = table.insertRow(id+1);
+    } else {
+        console.log("ERROR: row index is too big to be added!")
+        return false;
+    }
 	var newId = newRow.rowIndex;
 	active_row_holder.innerHTML = newId;
 	newRow.className = className; // "Choice" or "Header2"
@@ -203,9 +219,9 @@ function addRow(id, className) {
 	var progPcntCell = newRow.insertCell(g_prog_pcnt_cell_idx);
     var delCell      = newRow.insertCell(g_del_cell_idx);
 	actionCell.innerHTML = "<a href='#' onclick='return addRow("
-	+ newId + ", \"Choice\");'>task</a>" +
-	" | <a href='#' onclick='return addRow("
-	+ newId + ", \"Header2\");'>head</a>";
+	                     + newId + ", \"Choice\");'>task</a>"
+	                     + " | <a href='#' onclick='return addRow("
+	                     + newId + ", \"Header2\");'>head</a>";
 	nameCell.innerHTML = "<input id='inpName' type='text'/>";
 	if(className == "Choice") {
 		priceCell.innerHTML    = "<input id='inpPrice' type='text' size='5'/>";
@@ -277,3 +293,24 @@ function test1() {
     setDelete(3);
 }
 
+function test2() {
+    var table = document.getElementById("choices")
+    addRow(table.rows.length-1, "Choice")
+    document.getElementById("inpName").value = 'chimney';
+    document.getElementById("inpPrice").value = 'price';
+    document.getElementById("inpQty").value = 'three';
+    document.getElementById("inpPlanDays").value = '7 (seven)';
+    freezeActiveRow()
+    document.getElementById("inpPrice").value = '150';
+    document.getElementById("inpQty").value = '3';
+    document.getElementById("inpPlanDays").value = '7';
+    freezeActiveRow() 
+    addRow(0, "Choice");
+    document.getElementById("inpName").value = 'chimney better here';
+    document.getElementById("inpPrice").value = '153';
+    document.getElementById("inpQty").value = '3';
+    document.getElementById("inpPlanDays").value = '5';
+    setDelete(table.rows.length-1);
+    freezeActiveRow();
+    setDelete(table.rows.length-1);
+}

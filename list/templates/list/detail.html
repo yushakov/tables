@@ -81,13 +81,20 @@
     <!-- td><a href="">add invoice</a> | <a href="">modify</a> | <a href="">delete</a>
     | <a href="#" onclick="getElementById('tr_{{ items.choice.id }}').style.display='none';
     return false;">hide</a></td -->
+    <td>
+        <a href='#' onclick="return setDelete({{ items.idx }});">delete</a>
+    </td>
     </tr>
 {% endfor %}
+</tbody>
+</table>
+<table>
 <tr>
     <td><input type='submit' value='Save new task(s)'></td>
     <td><button onclick="freezeActiveRow(); return false;">freeze</button></td>
     <td><a href='#' onclick="test1(); return false;">test1</td>
-</tbody>
+    <td><a href='#' onclick="test2(); return false;">test2</td>
+</tr>
 </table>
 </form>
 <div style='display:none' id='active_row'>-1</div>
