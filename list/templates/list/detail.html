@@ -75,13 +75,13 @@
     </select>
     </td>
     <td>{{ items.choice.plan_start_date }}</td>
-    <td>{{ items.choice.plan_days_num }} days</td>
+    <td align='center'>{{ items.choice.plan_days_num }}</td>
     <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
     <td align='right'>{{ items.choice.progress_percent_num }} %</td>
     <!-- td><a href="">add invoice</a> | <a href="">modify</a> | <a href="">delete</a>
     | <a href="#" onclick="getElementById('tr_{{ items.choice.id }}').style.display='none';
     return false;">hide</a></td -->
-    <td>
+    <td id='del_{{ items.idx }}'>
         <a href='#' onclick="return setDelete({{ items.idx }});">delete</a>
     </td>
     </tr>
