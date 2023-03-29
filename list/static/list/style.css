@@ -3,6 +3,10 @@ table {
   padding: 0 2em 1em 0;
 }
 
+th {
+  text-align: left;
+}
+
 .invalid {
   border-color: red;
 }

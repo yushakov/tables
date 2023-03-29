@@ -11,8 +11,41 @@ const g_progress_cell_idx  = 9;
 const g_prog_pcnt_cell_idx = 10;
 const g_del_cell_idx       = 11;
 
-function showPrettyRaw() {
+const g_header_del_col_span = 5;
+
+function showPrettyRaw(x) {
     var table = document.getElementById("choices");
+    var rows = Array.from(table.rows);
+    var btn   = document.getElementById("PrettyRawBtn");
+    if(btn.innerText == "Show Pretty") {
+        rows.forEach(function(row) {
+           if(row.cells[g_name_cell_idx].classList.contains('delete')) {
+               row.style.display = 'none';
+           }
+           row.cells[g_action_cell_idx].style.display = 'none';
+           row.cells[g_del_cell_idx].style.display    = 'none';
+           var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
+           if(header_del.innerText == "delete" ||
+              header_del.innerText == "restore") {
+              header_del.style.display = 'none';
+           }
+        });
+        btn.innerText = "Show Raw";
+    } else {
+        rows.forEach(function(row) {
+           if(row.cells[g_name_cell_idx].classList.contains('delete')) {
+               row.style.display = 'table-row';
+           }
+           row.cells[g_action_cell_idx].style.display = 'block';
+           row.cells[g_del_cell_idx].style.display    = 'block';
+           var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
+           if(header_del.innerText == "delete" ||
+              header_del.innerText == "restore") {
+              header_del.style.display = 'block';
+           }
+        });
+        btn.innerText = "Show Pretty";
+    }
 }
 
 function delMouseOver(x) {
@@ -131,13 +164,12 @@ function freezeActiveRow() {
 				active_row.cells[g_plan_days_cell_idx].style.textAlign = 'center';
 			}
 			else if(active_row.className == "Header2") {
-                const col_span = 5;
-                del_cell_idx -= col_span-1;
+                del_cell_idx -= g_header_del_col_span-1;
 				name = document.getElementById("inpName").value;
 				active_row.cells[g_name_cell_idx].innerHTML = ""
 				  + encodeHTML(name) + "";
                 active_row.cells[g_name_cell_idx].classList.add("td_header_2");
-                active_row.cells[g_name_cell_idx].colSpan = col_span;
+                active_row.cells[g_name_cell_idx].colSpan = g_header_del_col_span;
 				active_row.cells[g_price_cell_idx].innerHTML = "";
                 active_row.cells[del_cell_idx].classList.add("td_header_2");
 			}
