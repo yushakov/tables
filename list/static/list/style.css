@@ -22,3 +22,7 @@ td.td_header_2 {
   font-size: 1.2em;
   font-weight: bold;
 }
+
+.onDelMouseOver {
+  background-color: lightgrey;
+}

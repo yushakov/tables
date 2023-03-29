@@ -11,6 +11,14 @@ const g_progress_cell_idx  = 9;
 const g_prog_pcnt_cell_idx = 10;
 const g_del_cell_idx       = 11;
 
+function delMouseOver(x) {
+    x.parentNode.parentNode.classList.add("onDelMouseOver");
+}
+
+function delMouseOut(x) {
+    x.parentNode.parentNode.classList.remove("onDelMouseOver");
+}
+
 function setError(field, message) {
     const em = document.getElementById('error_msg_id');
     if(em) return;
@@ -127,7 +135,10 @@ function freezeActiveRow() {
 			}
             active_row.cells[del_cell_idx].id = "del_" + id;
             active_row.cells[del_cell_idx].innerHTML = "<a href='#' onclick='return setDelete("
-                                                       + id + ");'>delete</a>";
+                                                       + id + ");' "
+                                                       + "onmouseover='delMouseOver(this);' "
+                                                       + "onmouseout='delMouseOut(this);'"
+                                                       +">delete</a>";
 		}
 		else {
 			return false;
