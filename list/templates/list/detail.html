@@ -16,21 +16,21 @@
     <td>{{ construct.email_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>Total:</b></td>
-    <td>&#163; {{ construct_total }}</td>
+    <td id='project_total'>&#163; {{ construct_total }}</td>
 </tr>
 <tr>
     <td><b>Phone:</b></td>
     <td>{{ construct.phone_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>VAT:</b></td>
-    <td>{{ construct.vat_percent_num }}%</td>
+    <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
 </tr>
 <tr>
     <td><b>Owner:</b></td>
     <td>{{ construct.owner_name_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>Total + VAT:</b></td>
-    <td>&#163; {{ construct_total_vat }}</td>
+    <td id='project_total_vat'>&#163; {{ construct_total_vat }}</td>
 </tr>
 </tbody>
 </table>
