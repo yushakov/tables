@@ -79,9 +79,11 @@ function unsetError(field) {
     if(em) field.parentNode.removeChild(em);
 }
 
-function badNumber(element, message) {
+function badNumber(element, message, min=null, max=null) {
 	const numberInpRe = /^\d+(\.\d+)?$/;
-    if(!numberInpRe.test(element.value.trim())) {
+    if(!numberInpRe.test(element.value.trim()) ||
+       (min != null && element.value.trim() < min) ||
+       (max != null && element.value.trim() > max)) {
         setError(element, message);
         element.focus();
         return true;
@@ -102,6 +104,7 @@ function validateInput(id) {
         var asgnTo   = document.getElementById("inpAsgnTo");
         var dayStart = document.getElementById("inpDayStart");
         var planDays = document.getElementById("inpPlanDays");
+        var progress = document.getElementById("inpProgress");
 		var name_val = name.value;
 		if(name_val.length < 3) {
             setError(name, "3 or more symbols");
@@ -111,6 +114,7 @@ function validateInput(id) {
         if(badNumber(price,    "Input a number.")) return false;
         if(badNumber(qty,      "Input a number.")) return false;
         if(badNumber(planDays, "Input a number.")) return false;
+        if(badNumber(progress, "Number between 0 and 100.", 0, 100)) return false;
 	}
 	else if(active_row.className == "Header2") {
 		var name = document.getElementById("inpName");
@@ -142,13 +146,14 @@ function freezeActiveRow() {
 			var table = document.getElementById("choices");
 			var active_row = table.rows[id];
 			if(active_row.className == "Choice"){
-				name     = document.getElementById("inpName").value;
-				price    = document.getElementById("inpPrice").value;
-				qty      = document.getElementById("inpQty").value;
-				units    = document.getElementById("inpUnits").value;
-				asgnTo   = document.getElementById("inpAsgnTo").value;
-				dayStart = document.getElementById("inpDayStart").value;
-				planDays = document.getElementById("inpPlanDays").value;
+				var name     = document.getElementById("inpName").value;
+				var price    = document.getElementById("inpPrice").value;
+				var qty      = document.getElementById("inpQty").value;
+				var units    = document.getElementById("inpUnits").value;
+				var asgnTo   = document.getElementById("inpAsgnTo").value;
+				var dayStart = document.getElementById("inpDayStart").value;
+				var planDays = document.getElementById("inpPlanDays").value;
+				var progress = document.getElementById("inpProgress").value;
 				active_row.cells[g_name_cell_idx].innerHTML = encodeHTML(name);
 				active_row.cells[g_price_cell_idx].innerHTML = '&#163; ' + encodeHTML(price);
 				active_row.cells[g_price_cell_idx].style.textAlign = 'right';
@@ -162,6 +167,10 @@ function freezeActiveRow() {
 				active_row.cells[g_day_start_cell_idx].innerHTML = encodeHTML(dayStart);
 				active_row.cells[g_plan_days_cell_idx].innerHTML = encodeHTML(planDays);
 				active_row.cells[g_plan_days_cell_idx].style.textAlign = 'center';
+                active_row.cells[g_progress_cell_idx].innerHTML = 
+                        "<td><progress max='100' value='" + progress + "'></progress></td>";
+                active_row.cells[g_prog_pcnt_cell_idx].innerHTML = 
+                        "<td align='right'>" + progress + " %</td>";
 			}
 			else if(active_row.className == "Header2") {
                 del_cell_idx -= g_header_del_col_span-1;
@@ -275,6 +284,7 @@ function restoreDeleted(ths) {
     row.cells[g_asgn_to_cell_idx].classList.remove('delete');
     row.cells[g_day_start_cell_idx].classList.remove('delete');
     row.cells[g_plan_days_cell_idx].classList.remove('delete');
+    row.cells[g_prog_pcnt_cell_idx].classList.remove('delete');
     var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/restoreDeleted/, "setDelete")
                                .replace(/restore/, "delete");
@@ -293,6 +303,7 @@ function setDelete(ths) {
     row.cells[g_asgn_to_cell_idx].classList.add('delete');
     row.cells[g_day_start_cell_idx].classList.add('delete');
     row.cells[g_plan_days_cell_idx].classList.add('delete');
+    row.cells[g_prog_pcnt_cell_idx].classList.add('delete');
     var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/setDelete/, "restoreDeleted")
                                .replace(/delete/, "restore");
@@ -339,6 +350,7 @@ function addRow(id, className) {
         asgnToCell.innerHTML   = "<input id='inpAsgnTo' type='text' size='5' value='Somebody'/>";
         dayStartCell.innerHTML = "<input id='inpDayStart' type='text' size='5' value='Today'/>";
         planDaysCell.innerHTML = "<input id='inpPlanDays' type='text' size='2' value='1'/>";
+        progressCell.innerHTML = "<input id='inpProgress' type='text' size='2' value='0.0'/>";
 	} else {
 		priceCell.innerHTML = "";
 	}
