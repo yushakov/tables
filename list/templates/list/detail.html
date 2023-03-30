@@ -9,7 +9,7 @@
 <tbody>
 <tr>
     <td><b>Address:</b></td>
-    <td>{{ construct.address_text }}</td>
+    <td onclick='modify(this);'>{{ construct.address_text }}</td>
 </tr>
 <tr>
     <td><b>Email:</b></td>
@@ -57,7 +57,7 @@
 </tr></thead>
 <tbody>
 {% for items in ch_list %}
-    <tr id='tr_{{ items.choice.id }}'>
+    <tr id='tr_{{ items.choice.id }}' class='Choice'>
     <td>
         <a href="#" onclick="return addRow({{ items.idx }}, 'Choice');">task</a> |
         <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
@@ -78,13 +78,14 @@
     <td align='center'>{{ items.choice.plan_days_num }}</td>
     <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
     <td align='right'>{{ items.choice.progress_percent_num }} %</td>
-    <!-- td><a href="">add invoice</a> | <a href="">modify</a> | <a href="">delete</a>
-    | <a href="#" onclick="getElementById('tr_{{ items.choice.id }}').style.display='none';
-    return false;">hide</a></td -->
-    <td>
+    <td class='del_modif_cell'>
         <a href='#' onclick="return setDelete(this);"
                     onmouseover="delMouseOver(this);"
                     onmouseout="delMouseOut(this);">delete</a>
+        &nbsp;|&nbsp;
+        <a href='#' onclick="return modifyRow(this);"
+                    onmouseover="delMouseOver(this);"
+                    onmouseout="delMouseOut(this);">modify</a>
     </td>
     </tr>
 {% endfor %}

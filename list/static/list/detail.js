@@ -25,10 +25,7 @@ function showPrettyRaw(x) {
            row.cells[g_action_cell_idx].style.display = 'none';
            row.cells[g_del_cell_idx].style.display    = 'none';
            var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
-           if(header_del.innerText == "delete" ||
-              header_del.innerText == "restore") {
-              header_del.style.display = 'none';
-           }
+           header_del.style.display = 'none';
         });
         btn.innerText = "Show Raw";
     } else {
@@ -39,10 +36,7 @@ function showPrettyRaw(x) {
            row.cells[g_action_cell_idx].style.display = 'block';
            row.cells[g_del_cell_idx].style.display    = 'block';
            var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
-           if(header_del.innerText == "delete" ||
-              header_del.innerText == "restore") {
-              header_del.style.display = 'block';
-           }
+           header_del.style.display = 'block';
         });
         btn.innerText = "Show Pretty";
     }
@@ -137,6 +131,43 @@ function encodeHTML(s) {
 			.replace(/'/g, '&#x2F');
 }
 
+function modify(ths) {
+    console.log(ths.innerText);
+    //var text = ths.innerText;
+    //ths.innerHTML = "<input type='text' value='" + text + "'/>";
+}
+
+function modifyRow(ths) {
+    var active_row = ths.parentNode.parentNode;
+    var name     = active_row.cells[g_name_cell_idx     ].innerText;
+    var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
+    var qty      = active_row.cells[g_qty_cell_idx      ].innerText;
+    var units    = active_row.cells[g_units_cell_idx    ].innerText;
+    var asgnTo   = active_row.cells[g_asgn_to_cell_idx  ].innerText;
+    var dayStart = active_row.cells[g_day_start_cell_idx].innerText;
+    var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
+    var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
+    active_row.cells[g_name_cell_idx     ].innerHTML
+        = "<input id='inpName' type='text' size='5'     value='" + name + "'/>";
+    if(active_row.classList.contains("Choice")) {
+        active_row.cells[g_price_cell_idx    ].innerHTML
+            = "<input id='inpPrice' type='text' size='5'    value='" + price + "'/>";
+        active_row.cells[g_qty_cell_idx      ].innerHTML
+            = "<input id='inpQty' type='text' size='3'      value='" + qty + "'/>";
+        active_row.cells[g_units_cell_idx    ].innerHTML
+            = "<input id='inpUnits' type='text' size='3'    value='" + units + "'/>";
+        active_row.cells[g_asgn_to_cell_idx  ].innerHTML
+            = "<input id='inpAsgnTo' type='text' size='5'   value='" + asgnTo + "'/>";
+        active_row.cells[g_day_start_cell_idx].innerHTML
+            = "<input id='inpDayStart' type='text' size='5' value='" + dayStart + "'/>";
+        active_row.cells[g_plan_days_cell_idx].innerHTML
+            = "<input id='inpPlanDays' type='text' size='2' value='" + planDays + "'/>";
+        active_row.cells[g_progress_cell_idx ].innerHTML
+            = "<input id='inpProgress' type='text' size='2' value='" + progress + "'/>";  
+    }
+    document.getElementById("active_row").innerHTML = active_row.rowIndex;
+}
+
 function freezeActiveRow() {
 	var active_row_holder = document.getElementById("active_row");
 	var id = active_row_holder.innerText;
@@ -182,10 +213,14 @@ function freezeActiveRow() {
 				active_row.cells[g_price_cell_idx].innerHTML = "";
                 active_row.cells[del_cell_idx].classList.add("td_header_2");
 			}
-            active_row.cells[del_cell_idx].innerHTML = "<a href='#' onclick='return setDelete(this);'"
-                                                       + "onmouseover='delMouseOver(this);' "
-                                                       + "onmouseout='delMouseOut(this);'"
-                                                       + ">delete</a>";
+            active_row.cells[del_cell_idx].classList.add("del_modif_cell");
+            active_row.cells[del_cell_idx].innerHTML =
+                "<a href='#' onclick='return setDelete(this);'"
+              + "onmouseover='delMouseOver(this);' "
+              + "onmouseout='delMouseOut(this);'>delete</a>"
+              + "&nbsp;|&nbsp; <a href='#' onclick='return modifyRow(this);'"
+              + "onmouseover='delMouseOver(this);'"
+              + "onmouseout='delMouseOut(this);'>modify</a>";
 		}
 		else {
 			return false;
@@ -367,7 +402,7 @@ function setDeleteByRowIdx(idx) {
     var row = document.getElementById("choices").rows[idx];
     var cells = Array.from(row.cells);
     cells.forEach(function(cell) {
-        if(cell.innerText == "delete") {
+        if(cell.classList.contains("del_modif_cell")) {
             cell.childNodes[0].onclick();
         }
     });
@@ -442,5 +477,6 @@ function test2() {
     document.getElementById("inpPlanDays").value = '5';
     setDeleteByRowIdx(table.rows.length-1);
     freezeActiveRow();
+    setDeleteByRowIdx(table.rows.length-1);
     setDeleteByRowIdx(table.rows.length-1);
 }
