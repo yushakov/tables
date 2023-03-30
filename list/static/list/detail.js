@@ -173,12 +173,10 @@ function freezeActiveRow() {
 				active_row.cells[g_price_cell_idx].innerHTML = "";
                 active_row.cells[del_cell_idx].classList.add("td_header_2");
 			}
-            active_row.cells[del_cell_idx].id = "del_" + id;
-            active_row.cells[del_cell_idx].innerHTML = "<a href='#' onclick='return setDelete("
-                                                       + id + ");' "
+            active_row.cells[del_cell_idx].innerHTML = "<a href='#' onclick='return setDelete(this);'"
                                                        + "onmouseover='delMouseOver(this);' "
                                                        + "onmouseout='delMouseOut(this);'"
-                                                       +">delete</a>";
+                                                       + ">delete</a>";
 		}
 		else {
 			return false;
@@ -197,13 +195,8 @@ function updateIDs() {
             var idx = row.rowIndex;
             if(idx > active_row_id) {
                 var links    = row.cells[g_action_cell_idx].innerHTML;
-                var del_cell = document.getElementById("del_"+(idx-1));
-                var del_link = del_cell.innerHTML;
                 var newLinks = links.replace(/addRow\([0-9]+,/g, "addRow(" + idx + ",");
-                var new_del_link = del_link.replace(/setDelete\([0-9]+/,      "setDelete(" + idx)
-                                           .replace(/restoreDeleted\([0-9]+/, "restoreDeleted(" + idx);
                 row.cells[g_action_cell_idx].innerHTML = newLinks;
-                del_cell.innerHTML = new_del_link;
             }
         }
         catch(exception){
@@ -212,16 +205,10 @@ function updateIDs() {
             console.log('>> row.cells[0]: ' + row.cells[0].innerHTML);
         }
 	});
-	rows.forEach(function(row) {
-        var idx = row.rowIndex;
-        var new_row_html = row.innerHTML.replace(/del_[0-9]+/, "del_"+idx);
-        row.innerHTML = new_row_html;
-    });
 }
 
-function restoreDeleted(id) {
-    var table = document.getElementById("choices");
-    var row = table.rows[id];
+function restoreDeleted(ths) {
+    var row = ths.parentNode.parentNode;
     row.cells[g_name_cell_idx].classList.remove('delete');
     row.cells[g_price_cell_idx].classList.remove('delete');
     row.cells[g_qty_cell_idx].classList.remove('delete');
@@ -230,16 +217,15 @@ function restoreDeleted(id) {
     row.cells[g_asgn_to_cell_idx].classList.remove('delete');
     row.cells[g_day_start_cell_idx].classList.remove('delete');
     row.cells[g_plan_days_cell_idx].classList.remove('delete');
-    var del_link = document.getElementById("del_"+id).innerHTML;
+    var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/restoreDeleted/, "setDelete")
                                .replace(/restore/, "delete");
-    document.getElementById("del_"+id).innerHTML = new_del_link;
+    ths.parentNode.innerHTML = new_del_link;
     return false;
 }
 
-function setDelete(id) {
-    var table = document.getElementById("choices");
-    var row = table.rows[id];
+function setDelete(ths) {
+    var row = ths.parentNode.parentNode;
     row.cells[g_name_cell_idx].classList.add('delete');
     row.cells[g_price_cell_idx].classList.add('delete');
     row.cells[g_qty_cell_idx].classList.add('delete');
@@ -248,10 +234,10 @@ function setDelete(id) {
     row.cells[g_asgn_to_cell_idx].classList.add('delete');
     row.cells[g_day_start_cell_idx].classList.add('delete');
     row.cells[g_plan_days_cell_idx].classList.add('delete');
-    var del_link = document.getElementById("del_"+id).innerHTML;
+    var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/setDelete/, "restoreDeleted")
                                .replace(/delete/, "restore");
-    document.getElementById("del_"+id).innerHTML = new_del_link;
+    ths.parentNode.innerHTML = new_del_link;
     return false;
 }
 
@@ -305,6 +291,15 @@ function saveChoices() {
 	// [TBD]
 }
 
+function setDeleteByRowIdx(idx) {
+    var row = document.getElementById("choices").rows[idx];
+    var cells = Array.from(row.cells);
+    cells.forEach(function(cell) {
+        if(cell.innerText == "delete") {
+            cell.childNodes[0].onclick();
+        }
+    });
+}
 
 function test1() {
     //debugger;
@@ -332,7 +327,7 @@ function test1() {
     addRow(1, "Choice");
     document.getElementById('inpName').value = 'fl';
     document.getElementById('inpPrice').value = '89';
-    setDelete(4);
+    setDeleteByRowIdx(4);
     addRow(4, "Choice");
     document.getElementById('inpName').value = 'garage floor';
     addRow(4, "Choice");
@@ -352,7 +347,7 @@ function test1() {
     document.getElementById('inpName').value = 'aaa';
     document.getElementById('inpPrice').value = '000';
     freezeActiveRow();
-    setDelete(3);
+    setDeleteByRowIdx(3);
 }
 
 function test2() {
@@ -373,7 +368,7 @@ function test2() {
     document.getElementById("inpPrice").value = '153';
     document.getElementById("inpQty").value = '3';
     document.getElementById("inpPlanDays").value = '5';
-    setDelete(table.rows.length-1);
+    setDeleteByRowIdx(table.rows.length-1);
     freezeActiveRow();
-    setDelete(table.rows.length-1);
+    setDeleteByRowIdx(table.rows.length-1);
 }

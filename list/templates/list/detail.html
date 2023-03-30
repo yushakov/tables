@@ -81,8 +81,8 @@
     <!-- td><a href="">add invoice</a> | <a href="">modify</a> | <a href="">delete</a>
     | <a href="#" onclick="getElementById('tr_{{ items.choice.id }}').style.display='none';
     return false;">hide</a></td -->
-    <td id='del_{{ items.idx }}'>
-        <a href='#' onclick="return setDelete({{ items.idx }});"
+    <td>
+        <a href='#' onclick="return setDelete(this);"
                     onmouseover="delMouseOver(this);"
                     onmouseout="delMouseOut(this);">delete</a>
     </td>
