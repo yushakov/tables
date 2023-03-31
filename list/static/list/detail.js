@@ -139,7 +139,7 @@ function modify(ths) {
 }
 
 function modifyRow(ths) {
-	if(!freezeActiveRow()) return;
+	if(!freezeActiveRow()) return false;
     var active_row = ths.parentNode.parentNode;
     var name     = active_row.cells[g_name_cell_idx     ].innerText;
     var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
@@ -168,6 +168,7 @@ function modifyRow(ths) {
             = "<input id='inpProgress' type='text' size='2' value='" + progress + "'/>";  
     }
     document.getElementById("active_row").innerHTML = active_row.rowIndex;
+    return false;
 }
 
 function freezeActiveRow() {
@@ -255,6 +256,14 @@ function updateIDs() {
 	});
 }
 
+function setHeaderTotal(header, price) {
+    var inner = header.cells[g_name_cell_idx].innerHTML;
+    header_name = inner.split('£')[0].replace(/&nbsp;/g, '').trim();
+    header.cells[g_name_cell_idx].innerHTML
+        = header_name + '&nbsp;&nbsp;&nbsp;&#163;'
+        + Number(price).toLocaleString(gLocale) + ' (total)';
+}
+
 function updateHeaders() {
     var active_row = document.getElementById("active_row").innerText;
     if(Number(active_row) > 0) return;
@@ -268,11 +277,7 @@ function updateHeaders() {
             if(row.classList.contains("Header2")
                && !row.cells[g_name_cell_idx].classList.contains("delete")) {
                 if(last_header) {
-                    var inner = last_header.cells[g_name_cell_idx].innerHTML;
-                    header_name = inner.split('£')[0].replace(/&nbsp;/g, '').trim();
-                    last_header.cells[g_name_cell_idx].innerHTML = header_name
-                                                   + '&nbsp;&nbsp;&nbsp;&#163;'
-                                                   + price + ' (total)';
+                    setHeaderTotal(last_header, price);
                 }
                 total_price += price;
                 last_header  = row;
@@ -294,11 +299,7 @@ function updateHeaders() {
                 if(row.rowIndex == rows.length-1) {
                     total_price += price;
                     if(last_header) {
-                        var inner = last_header.cells[g_name_cell_idx].innerHTML;
-                        header_name = inner.split('£')[0].replace(/&nbsp;/g, '').trim();
-                        last_header.cells[g_name_cell_idx].innerHTML = header_name
-                                                       + '&nbsp;&nbsp;&nbsp;&#163;'
-                                                       + price + ' (total)';
+                        setHeaderTotal(last_header, price);
                     }
                 }
             }
