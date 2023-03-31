@@ -12,6 +12,7 @@ const g_prog_pcnt_cell_idx = 10;
 const g_del_cell_idx       = 11;
 
 const g_header_del_col_span = 5;
+const gLocale = "en-US";
 
 function showPrettyRaw(x) {
     var table = document.getElementById("choices");
@@ -74,7 +75,7 @@ function unsetError(field) {
 }
 
 function badNumber(element, message, min=null, max=null) {
-	const numberInpRe = /^\d+(\.\d+)?$/;
+	const numberInpRe = /^\d+(,\d+)*(\.\d+)?$/;
     if(!numberInpRe.test(element.value.trim()) ||
        (min != null && element.value.trim() < min) ||
        (max != null && element.value.trim() > max)) {
@@ -138,6 +139,7 @@ function modify(ths) {
 }
 
 function modifyRow(ths) {
+	if(!freezeActiveRow()) return;
     var active_row = ths.parentNode.parentNode;
     var name     = active_row.cells[g_name_cell_idx     ].innerText;
     var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
@@ -179,6 +181,7 @@ function freezeActiveRow() {
 			if(active_row.className == "Choice"){
 				var name     = document.getElementById("inpName").value;
 				var price    = document.getElementById("inpPrice").value;
+                var price_num = Number(price.replace(/,/g,''));
 				var qty      = document.getElementById("inpQty").value;
 				var units    = document.getElementById("inpUnits").value;
 				var asgnTo   = document.getElementById("inpAsgnTo").value;
@@ -186,13 +189,13 @@ function freezeActiveRow() {
 				var planDays = document.getElementById("inpPlanDays").value;
 				var progress = document.getElementById("inpProgress").value;
 				active_row.cells[g_name_cell_idx].innerHTML = encodeHTML(name);
-				active_row.cells[g_price_cell_idx].innerHTML = '&#163; ' + encodeHTML(price);
+				active_row.cells[g_price_cell_idx].innerHTML = '&#163; ' + price_num.toLocaleString(gLocale);
 				active_row.cells[g_price_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_qty_cell_idx ].innerHTML = encodeHTML(qty);
 				active_row.cells[g_qty_cell_idx ].style.textAlign = 'right';
 				active_row.cells[g_units_cell_idx].innerHTML = encodeHTML(units);
 				active_row.cells[g_tot_prc_cell_idx].innerHTML
-                                           = '&#163; ' + String(Number(price) * Number(qty));
+                                           = '&#163; ' + Number(price_num * Number(qty)).toLocaleString(gLocale);
 				active_row.cells[g_tot_prc_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_asgn_to_cell_idx].innerHTML = encodeHTML(asgnTo);
 				active_row.cells[g_day_start_cell_idx].innerHTML = encodeHTML(dayStart);
@@ -282,7 +285,7 @@ function updateHeaders() {
                    && text.search(/£/) >= 0) {
                     try {
                         var row_price = text.split('£')[1].trim();
-                        price += Number(row_price);
+                        price += Number(row_price.replace(/,/g, ''));
                     }
                     catch(exception) {
                         console.log(exception);
@@ -305,8 +308,9 @@ function updateHeaders() {
     var project_total_vat = document.getElementById("project_total_vat");
     var project_vat       = document.getElementById("project_vat").innerHTML;
     var vat = Number(project_vat.replace(/%/,'').trim());
-    project_total.innerHTML     = '&#163; ' + total_price;
-    project_total_vat.innerHTML = '&#163; ' + String(Math.round(total_price * (1.0 + 0.01 * vat)));
+    project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
+    project_total_vat.innerHTML
+        = '&#163; ' + Number(Math.round(total_price * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
 }
 
 function restoreDeleted(ths) {
@@ -427,7 +431,7 @@ function test1() {
     document.getElementById('inpName').value = 'garage';
     addRow(1, "Choice");
     document.getElementById('inpName').value = 'base';
-    document.getElementById('inpPrice').value = '546';
+    document.getElementById('inpPrice').value = '1,000,500';
     addRow(2, "Choice");
     document.getElementById('inpName').value = 'floor';
     document.getElementById('inpPrice').value = '345';
