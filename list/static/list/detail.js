@@ -11,11 +11,21 @@ const g_progress_cell_idx  = 9;
 const g_prog_pcnt_cell_idx = 10;
 const g_del_cell_idx       = 11;
 
+const g_JsonNames = ['action', 'name', 'price', 'quantity', 'units',
+                     'total_price', 'assigned_to', 'day_start', 'days',
+                     'progress_bar', 'progress', 'delete_action'];
+
 const g_header_del_col_span = 5;
 const gLocale = "en-US";
 
 
-window.onbeforeunload = function() { return "Are you leaving? You may loose unsaved data..."; }
+window.onbeforeunload = function() {
+    var modified_text = document.getElementById('modified').innerText;
+    if(modified_text == 'yes') {
+        return false;
+    }
+    return true;
+}
 
 function showPrettyRaw(x) {
     var table = document.getElementById("choices");
@@ -136,6 +146,7 @@ function encodeHTML(s) {
 }
 
 function modify(ths) {
+    document.getElementById('modified').innerText = 'yes';
     console.log(ths.innerText);
     //var text = ths.innerText;
     //ths.innerHTML = "<input type='text' value='" + text + "'/>";
@@ -143,6 +154,7 @@ function modify(ths) {
 
 function modifyRow(ths) {
 	if(!freezeActiveRow()) return false;
+    document.getElementById('modified').innerText = 'yes';
     var active_row = ths.parentNode.parentNode;
     var name     = active_row.cells[g_name_cell_idx     ].innerText;
     var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
@@ -358,6 +370,7 @@ function setDelete(ths) {
 function addRow(id, className) {
 	var table = document.getElementById("choices");
 	var active_row_holder = document.getElementById("active_row");
+    document.getElementById('modified').innerText = 'yes';
 	if(!freezeActiveRow()) return false;
 	var newRow;
     if(id < table.rows.length) {
@@ -403,7 +416,28 @@ function addRow(id, className) {
 }
 
 function saveChoices() {
-	// [TBD]
+	if(!freezeActiveRow()) return false;
+    var table = document.getElementById('choices')
+    var rows = Array.from(table.rows);
+    var names = g_JsonNames;
+    var out = "{\n";
+    rows.forEach(function(row) {
+        if(row.rowIndex == 0) return;
+        out += "'row_" + String(row.rowIndex) + "': {\n";
+        out += "'id':  '" + String(row.id) + "',\n";
+        out += "'class': '" + String(row.classList) + "',\n";
+        var cells = Array.from(row.cells);
+        out += "'cells': {\n";
+        cells.forEach(function(cell) {
+            if(cell.cellIndex == 0) return;
+            out += "'" + names[cell.cellIndex] + "':" + "'" + cell.innerText  + "',\n";
+        });
+        out += "}}, \n";
+    });
+    out += "}\n";
+    console.log(out);
+    document.getElementById('modified').innerText = 'no';
+    return true;
 }
 
 function setDeleteByRowIdx(idx) {

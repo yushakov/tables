@@ -94,7 +94,7 @@
 </table>
 <table>
 <tr>
-    <td><input type='submit' value='Save new task(s)'></td>
+    <td><input type='submit' value='Save new task(s)' onclick="return saveChoices();"></td>
     <td><button onclick="freezeActiveRow(); return false;">freeze</button></td>
     <td><a href='#' onclick="test1(); return false;">test1</td>
     <td><a href='#' onclick="test2(); return false;">test2</td>
@@ -103,3 +103,4 @@
 </table>
 </form>
 <div style='display:none' id='active_row'>-1</div>
+<div style='display:none' id='modified'>no</div>
