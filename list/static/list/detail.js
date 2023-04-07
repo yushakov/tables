@@ -14,6 +14,9 @@ const g_del_cell_idx       = 11;
 const g_header_del_col_span = 5;
 const gLocale = "en-US";
 
+
+window.onbeforeunload = function() { return "Are you leaving? You may loose unsaved data..."; }
+
 function showPrettyRaw(x) {
     var table = document.getElementById("choices");
     var rows = Array.from(table.rows);

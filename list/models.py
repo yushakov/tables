@@ -1,5 +1,7 @@
+from django.contrib import admin
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
+from django.utils.html import format_html
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
@@ -17,6 +19,19 @@ class Construct(models.Model):
     
     def __str__(self):
         return self.title_text
+
+    @admin.display(description='Progress')
+    def overall_progress(self):
+        return f"{self.overall_progress_percent_num :.2f} %" 
+
+    @admin.display
+    def email(self):
+        return f"{self.email_text}"
+
+    @admin.display(description='To do')
+    def goto(self):
+        #return f"<a href=/list/{self.id}>view</a>"
+        return format_html("<a href='/list/{}'>view</a>", self.id)
 
 class Worker(models.Model):
     name = models.CharField(max_length=200)
