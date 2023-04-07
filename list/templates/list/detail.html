@@ -37,7 +37,8 @@
 </table>
 
 <br><br>
-<form>
+<form id='choices_form' action="{% url 'list:detail' construct.id %}" method='POST'>
+{% csrf_token %}
 <table id='choices'>
 <thead><tr>
     <td>
@@ -92,9 +93,13 @@
 {% endfor %}
 </tbody>
 </table>
+<script>setForm();</script>
 <table>
 <tr>
-    <td><input type='submit' value='Save new task(s)' onclick="return saveChoices();"></td>
+    <td>
+        <input type='hidden' id='json_input' name='json_value' value=''>
+    </td>
+    <td><input type='submit' value='Save new task(s)'></td>
     <td><button onclick="freezeActiveRow(); return false;">freeze</button></td>
     <td><a href='#' onclick="test1(); return false;">test1</td>
     <td><a href='#' onclick="test2(); return false;">test2</td>

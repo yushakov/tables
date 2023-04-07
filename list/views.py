@@ -2,6 +2,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views import generic
 from .models import Construct
+import json
+from urllib.parse import unquote_plus
 
 class IndexView(generic.ListView):
     template_name = 'list/index.html'
@@ -26,6 +28,13 @@ def index(request):
     
 
 def detail(request, construct_id):
+    if request.method == 'POST':
+        clean = request.POST["json_value"].replace(",}", "}")
+        data = json.loads(clean)
+        data = json.loads(data)
+        for key in data.keys():
+            print(f'{key}:')
+            print(data[key])
     construct = get_object_or_404(Construct, pk=construct_id)
     ch_list = []
     construct_total_price = 0.0

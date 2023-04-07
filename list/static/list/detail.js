@@ -27,6 +27,15 @@ window.onbeforeunload = function() {
     return true;
 }
 
+function setForm() {
+    const form = document.getElementById('choices_form');
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+        saveChoices();
+        form.submit();
+    });
+}
+
 function showPrettyRaw(x) {
     var table = document.getElementById("choices");
     var rows = Array.from(table.rows);
@@ -420,23 +429,25 @@ function saveChoices() {
     var table = document.getElementById('choices')
     var rows = Array.from(table.rows);
     var names = g_JsonNames;
-    var out = "{\n";
+    const sep = "";
+    var out = "{" + sep;
     rows.forEach(function(row) {
         if(row.rowIndex == 0) return;
-        out += "'row_" + String(row.rowIndex) + "': {\n";
-        out += "'id':  '" + String(row.id) + "',\n";
-        out += "'class': '" + String(row.classList) + "',\n";
+        out += "\"row_" + String(row.rowIndex) + "\": {" + sep;
+        out += "\"id\":  \"" + String(row.id) + "\"," + sep;
+        out += "\"class\": \"" + String(row.classList) + "\"," + sep;
         var cells = Array.from(row.cells);
-        out += "'cells': {\n";
+        out += "\"cells\": {" + sep;
         cells.forEach(function(cell) {
             if(cell.cellIndex == 0) return;
-            out += "'" + names[cell.cellIndex] + "':" + "'" + cell.innerText  + "',\n";
+            if(cell.cellIndex == 1) out += '"class":"' + cell.className + '", ';
+            out += "\"" + names[cell.cellIndex] + "\":" + "\"" + cell.innerText  + "\"," + sep;
         });
-        out += "}}, \n";
+        out += "}}," + sep;
     });
-    out += "}\n";
-    console.log(out);
+    out += "}" + sep;
     document.getElementById('modified').innerText = 'no';
+    document.getElementById('json_input').value = JSON.stringify(out);
     return true;
 }
 
