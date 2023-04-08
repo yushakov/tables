@@ -4,6 +4,7 @@ from django.views import generic
 from .models import Construct, Choice
 import json
 from urllib.parse import unquote_plus
+from datetime import datetime
 
 class IndexView(generic.ListView):
     template_name = 'list/index.html'
@@ -33,11 +34,22 @@ def update_choice(choice_id, cell_data):
     print(cell_data)
     if cell_data['class'] == 'Choice':
         cells = cell_data['cells']
+        choice = Choice.objects.get(pk=choice_id)
         if cells['class'] == 'delete':
-            choice = Choice.objects.get(pk=choice_id)
             print(f'DELETE "{choice.name_txt}" from "{choice.construct}"')
             print(choice.__dict__)
             choice.delete()
+        else:
+            print(f'UPDATE "{choice.name_txt}" from "{choice.construct}"')
+            choice.name_txt = cells['name']
+            choice.notes_txt = ''
+            choice.quantity_num = cells['quantity']
+            choice.units_of_measure_text = cells['units']
+            choice.price_num = cells['price'].replace('£','').replace(',','').strip()
+            choice.progress_percent_num = cells['progress'].replace('%','').strip()
+            choice.plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").strftime("%Y-%m-%d")
+            choice.plan_days_num = cells['days']
+            choice.save()
     return choice_id
 
 
