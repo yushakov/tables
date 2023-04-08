@@ -42,7 +42,8 @@ def detail(request, construct_id):
         construct_progress += choice_price * 0.01 * choice.progress_percent_num
         construct_total_price += choice_price
         ch_list.append({'idx': idx+1, 'choice': choice, 'choice_total_price': choice_price})
-    construct_progress *= 100. / construct_total_price 
+    if construct_total_price > 0.0:
+        construct_progress *= 100. / construct_total_price 
     construct.overall_progress_percent_num = construct_progress
     construct.save()
     form_tags = [{'show0':f'show{i}', 'show1':f'show{i+1}', 'f0':f'f{i}', 'display':'block' if i == 0 else 'none'}
