@@ -374,6 +374,7 @@ function setDelete(ths) {
                                .replace(/delete/, "restore");
     ths.parentNode.innerHTML = new_del_link;
     updateHeaders();
+    document.getElementById('modified').innerText = 'yes';
     return false;
 }
 

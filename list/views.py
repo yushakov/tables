@@ -39,6 +39,7 @@ def update_choice(choice_id, cell_data):
             print(f'DELETE "{choice.name_txt}" from "{choice.construct}"')
             print(choice.__dict__)
             choice.delete()
+            return -1
         else:
             print(f'UPDATE "{choice.name_txt}" from "{choice.construct}"')
             choice.name_txt = cells['name']
@@ -50,15 +51,17 @@ def update_choice(choice_id, cell_data):
             choice.plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").strftime("%Y-%m-%d")
             choice.plan_days_num = cells['days']
             choice.save()
-    return choice_id
+            return int(choice_id)
+        return -1
+    return -1
 
 
 def create_choice(cell_data, construct):
-    # can be just header
     print(f'Construct ID: {construct.id}')
     print(cell_data)
     if cell_data['class'] == 'Choice':
         cells = cell_data['cells']
+        # if it's new, but already deleted
         if cells['class'] == 'delete': return -1
         choice = Choice(construct=construct,
              name_txt = cells['name'],
@@ -72,18 +75,41 @@ def create_choice(cell_data, construct):
         choice.save()
         print(f'new choice ID: {choice.id}')
         return choice.id
-    elif cell_data['class'].startswith('Header'):
-        print('Creating header')
+    # can be just header
     return -1
 
 
+def add_to_structure(structure, row_data, choice_id):
+    ln_cntr = len(structure) + 1
+    row_type = row_data['class']
+    row_id = None
+    if row_type.startswith('Header'):
+        if row_data['cells']['class'].find('delete') >= 0: return
+        if row_data['cells']['name'].find('£') >= 0:
+            row_id = row_data['cells']['name'].split('£')[0].strip()
+        else:
+            row_id = row_data['cells']['name'].strip()
+    else:
+        if choice_id < 0: return
+        row_id = str(choice_id)
+    structure.update({f'line_{ln_cntr}':{'type':row_type, 'id':row_id}})
+
+
 def save_update(data, construct):
+    structure = dict()
+    ln_cntr = 1
     for key in data.keys():
         row_id = data[key]['id']
+        choice_id = None
         if row_id.startswith('tr_'):
             choice_id = update_choice(row_id.replace('tr_',''), data[key])
         else:
             choice_id = create_choice(data[key], construct)
+        add_to_structure(structure, data[key], choice_id)
+    string_structure = json.dumps(structure)
+    print(string_structure)
+    construct.struct_json = string_structure
+    construct.save()
 
 
 def detail(request, construct_id):
@@ -91,9 +117,6 @@ def detail(request, construct_id):
     if request.method == 'POST' and request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
         save_update(data, construct)
-        #for key in data.keys():
-            #print(f'{key}:')
-            #print(data[key])
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0
