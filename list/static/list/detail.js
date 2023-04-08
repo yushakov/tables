@@ -28,6 +28,7 @@ window.onbeforeunload = function() {
 }
 
 function setForm() {
+    //return;
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
         event.preventDefault();
@@ -376,6 +377,14 @@ function setDelete(ths) {
     return false;
 }
 
+function getToday() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function addRow(id, className) {
 	var table = document.getElementById("choices");
 	var active_row_holder = document.getElementById("active_row");
@@ -413,7 +422,7 @@ function addRow(id, className) {
         qtyCell.innerHTML      = "<input id='inpQty' type='text' size='3' value='1'/>";
         unitsCell.innerHTML    = "<input id='inpUnits' type='text' size='3' value='nr'/>";
         asgnToCell.innerHTML   = "<input id='inpAsgnTo' type='text' size='5' value='Somebody'/>";
-        dayStartCell.innerHTML = "<input id='inpDayStart' type='text' size='5' value='Today'/>";
+        dayStartCell.innerHTML = "<input id='inpDayStart' type='text' size='5' value='" + getToday() + "'/>";
         planDaysCell.innerHTML = "<input id='inpPlanDays' type='text' size='2' value='1'/>";
         progressCell.innerHTML = "<input id='inpProgress' type='text' size='2' value='0.0'/>";
 	} else {

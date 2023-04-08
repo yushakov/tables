@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.utils.html import format_html
+from django.utils import timezone
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
@@ -16,6 +17,7 @@ class Construct(models.Model):
     overall_progress_percent_num = models.FloatField('progress', default=0.0, validators=percent_valid)
     vat_percent_num = models.FloatField(validators=percent_valid, default='5')
     company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
+    struct_json = models.TextField(default='')
     
     def __str__(self):
         return self.title_text
@@ -43,17 +45,17 @@ class Worker(models.Model):
 
 class Choice(models.Model):
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
-    workers = models.ManyToManyField(Worker)
+    workers = models.ManyToManyField(Worker, default=None)
     name_txt = models.CharField(max_length=200)
     notes_txt = models.CharField(max_length=5000, default='-')
     quantity_num = models.FloatField(default='1')
     units_of_measure_text = models.CharField(max_length=100, default='-')
     price_num = models.FloatField()
     progress_percent_num = models.FloatField(validators=percent_valid, default='0')
-    plan_start_date = models.DateField()
+    plan_start_date = models.DateField(default=timezone.now)
     plan_days_num = models.FloatField()
-    actual_start_date = models.DateField()
-    actual_end_date = models.DateField()
+    actual_start_date = models.DateField(default=timezone.now)
+    actual_end_date = models.DateField(default=timezone.now)
 
     def __str__(self):
         return self.name_txt + f' ({self.construct})'

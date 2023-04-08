@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views import generic
-from .models import Construct
+from .models import Construct, Choice
 import json
 from urllib.parse import unquote_plus
 
@@ -27,13 +27,61 @@ def index(request):
     return render(request, 'list/index.html', context)
     
 
+def update_choice(choice_id, cell_data):
+    # can't be a header
+    print(f'Choice ID: {choice_id}')
+    print(cell_data)
+    if cell_data['class'] == 'Choice':
+        cells = cell_data['cells']
+        if cells['class'] == 'delete':
+            choice = Choice.objects.get(pk=choice_id)
+            print(f'DELETE "{choice.name_txt}" from "{choice.construct}"')
+            print(choice.__dict__)
+            choice.delete()
+    return choice_id
+
+
+def create_choice(cell_data, construct):
+    # can be just header
+    print(f'Construct ID: {construct.id}')
+    print(cell_data)
+    if cell_data['class'] == 'Choice':
+        cells = cell_data['cells']
+        if cells['class'] == 'delete': return -1
+        choice = Choice(construct=construct,
+             name_txt = cells['name'],
+             notes_txt = '',
+             quantity_num = cells['quantity'],
+             units_of_measure_text = cells['units'],
+             price_num = cells['price'].replace('£','').replace(',','').strip(),
+             progress_percent_num = cells['progress'].replace('%','').strip(),
+             plan_start_date = cells['day_start'],
+             plan_days_num = cells['days'])
+        choice.save()
+        print(f'new choice ID: {choice.id}')
+        return choice.id
+    elif cell_data['class'].startswith('Header'):
+        print('Creating header')
+    return -1
+
+
+def save_update(data, construct):
+    for key in data.keys():
+        row_id = data[key]['id']
+        if row_id.startswith('tr_'):
+            choice_id = update_choice(row_id.replace('tr_',''), data[key])
+        else:
+            choice_id = create_choice(data[key], construct)
+
+
 def detail(request, construct_id):
-    if request.method == 'POST':
-        data = json.loads(request.POST["json_value"])
-        for key in data.keys():
-            print(f'{key}:')
-            print(data[key])
     construct = get_object_or_404(Construct, pk=construct_id)
+    if request.method == 'POST' and request.POST["json_value"]:
+        data = json.loads(request.POST["json_value"])
+        save_update(data, construct)
+        #for key in data.keys():
+            #print(f'{key}:')
+            #print(data[key])
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0
