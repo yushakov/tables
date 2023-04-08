@@ -435,6 +435,8 @@ function addRow(id, className) {
 
 function saveChoices() {
 	if(!freezeActiveRow()) return false;
+    var modified_cell = document.getElementById('modified')
+    if(modified_cell.innerText == 'no') return false;
     var table = document.getElementById('choices')
     var rows = Array.from(table.rows);
     var out = {};
@@ -450,7 +452,7 @@ function saveChoices() {
         out["row_" + String(row.rowIndex)] =
            {"id": String(row.id), "class": String(row.classList), "cells": cell_dict};
     });
-    document.getElementById('modified').innerText = 'no';
+    modified.innerText = 'no';
     document.getElementById('json_input').value = JSON.stringify(out);
     return true;
 }
