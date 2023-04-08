@@ -29,9 +29,7 @@ def index(request):
 
 def detail(request, construct_id):
     if request.method == 'POST':
-        clean = request.POST["json_value"].replace(",}", "}")
-        data = json.loads(clean)
-        data = json.loads(data)
+        data = json.loads(request.POST["json_value"])
         for key in data.keys():
             print(f'{key}:')
             print(data[key])

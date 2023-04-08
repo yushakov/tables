@@ -428,24 +428,19 @@ function saveChoices() {
 	if(!freezeActiveRow()) return false;
     var table = document.getElementById('choices')
     var rows = Array.from(table.rows);
-    var names = g_JsonNames;
-    const sep = "";
-    var out = "{" + sep;
+    var out = {};
     rows.forEach(function(row) {
         if(row.rowIndex == 0) return;
-        out += "\"row_" + String(row.rowIndex) + "\": {" + sep;
-        out += "\"id\":  \"" + String(row.id) + "\"," + sep;
-        out += "\"class\": \"" + String(row.classList) + "\"," + sep;
         var cells = Array.from(row.cells);
-        out += "\"cells\": {" + sep;
+        var cell_dict = {};
         cells.forEach(function(cell) {
             if(cell.cellIndex == 0) return;
-            if(cell.cellIndex == 1) out += '"class":"' + cell.className + '", ';
-            out += "\"" + names[cell.cellIndex] + "\":" + "\"" + cell.innerText  + "\"," + sep;
+            if(cell.cellIndex == 1) cell_dict["class"] = String(cell.className);
+            cell_dict[g_JsonNames[cell.cellIndex]] = String(cell.innerText);
         });
-        out += "}}," + sep;
+        out["row_" + String(row.rowIndex)] =
+           {"id": String(row.id), "class": String(row.classList), "cells": cell_dict};
     });
-    out += "}" + sep;
     document.getElementById('modified').innerText = 'no';
     document.getElementById('json_input').value = JSON.stringify(out);
     return true;
