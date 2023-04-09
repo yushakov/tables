@@ -24,7 +24,6 @@ def index(request):
                'price': price,
                'price_vat': price * (1. + construct.vat_percent_num * 0.01),
               }
-    print('We are Here, in Index function')
     return render(request, 'list/index.html', context)
     
 
@@ -129,12 +128,9 @@ def detail(request, construct_id):
         construct_progress *= 100. / construct_total_price 
     construct.overall_progress_percent_num = construct_progress
     construct.save()
-    form_tags = [{'show0':f'show{i}', 'show1':f'show{i+1}', 'f0':f'f{i}', 'display':'block' if i == 0 else 'none'}
-                for i in range(5)]
     context = {'construct': construct,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
-               'construct_total_vat': construct_total_price * (1. + 0.01*construct.vat_percent_num),
-               'form_tags': form_tags}
+               'construct_total_vat': construct_total_price * (1. + 0.01*construct.vat_percent_num)}
     return render(request, 'list/detail.html', context)
 
