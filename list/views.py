@@ -5,6 +5,7 @@ from .models import Construct, Choice
 import json
 from urllib.parse import unquote_plus
 from datetime import datetime
+from django.core.exceptions import ValidationError
 
 class IndexView(generic.ListView):
     template_name = 'list/index.html'
@@ -134,6 +135,11 @@ def detail(request, construct_id):
     structure_str = construct.struct_json
     choices = construct.choice_set.all()
     struc_dict = check_integrity(structure_str, choices)
+    if(len(choices) > 0 and len(struc_dict) == 0):
+        raise ValidationError(f"JSON structure does not correspond to choices of {construct}",
+                                code="Bad integrity")
+    else:
+        print(f'Integrity Ok: {construct}')
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0

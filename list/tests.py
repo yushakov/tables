@@ -3,6 +3,13 @@ import numpy as np
 from list.views import check_integrity
 
 class ViewTests(TestCase):
+    def test_check_integrity_empty_choices(self):
+        choices = []
+        struc_dic = check_integrity('  ', choices)
+        print('check_integrity_empty_choices\n', struc_dic)
+        self.assertIs(len(struc_dic) == 0, True)
+
+
     def test_check_integrity_empty_structure(self):
         class LocalChoice:
             def __init__(self, ID):
