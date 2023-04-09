@@ -111,15 +111,33 @@ def save_update(data, construct):
     construct.save()
 
 
+def check_integrity(structure_str, choices):
+    choice_ids = [ch.id for ch in choices]
+    struc = {}
+    if len(structure_str.strip()) > 0:
+        struc = json.loads(structure_str)
+    else:
+        struc = {f'line{k+1}': {'type':'Choice', 'id': n} for k, n in enumerate(choice_ids)}
+    ids_in_struct = [int(ln['id']) for ln in struc.values() if ln['type'] == 'Choice']
+    choice_ids.sort()
+    ids_in_struct.sort()
+    if choice_ids == ids_in_struct:
+        return struc
+    return dict()
+
+
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST' and request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
         save_update(data, construct)
+    structure_str = construct.struct_json
+    choices = construct.choice_set.all()
+    struc_dict = check_integrity(structure_str, choices)
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0
-    for idx, choice in enumerate(construct.choice_set.all()):
+    for idx, choice in enumerate(choices):
         choice_price = choice.price_num * choice.quantity_num
         construct_progress += choice_price * 0.01 * choice.progress_percent_num
         construct_total_price += choice_price
