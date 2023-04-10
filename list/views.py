@@ -29,7 +29,7 @@ def index(request):
     
 
 def update_choice(choice_id, cell_data):
-    # can't be a header
+    # can be a header
     print(f'Choice ID: {choice_id}')
     print(cell_data)
     if cell_data['class'] == 'Choice':
@@ -127,6 +127,11 @@ def check_integrity(structure_str, choices):
     return dict()
 
 
+class HeaderFake:
+    id = '0'
+    name_txt = ''
+
+
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST' and request.POST["json_value"]:
@@ -147,7 +152,7 @@ def detail(request, construct_id):
         choice_price = choice.price_num * choice.quantity_num
         construct_progress += choice_price * 0.01 * choice.progress_percent_num
         construct_total_price += choice_price
-        ch_list.append({'idx': idx+1, 'choice': choice, 'choice_total_price': choice_price})
+        ch_list.append({'idx': idx+1, 'type':'Choice', 'choice': choice, 'choice_total_price': choice_price})
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
     construct.overall_progress_percent_num = construct_progress

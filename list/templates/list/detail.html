@@ -59,37 +59,46 @@
 </tr></thead>
 <tbody>
 {% for items in ch_list %}
-    <tr id='tr_{{ items.choice.id }}' class='Choice'>
-    <td>
-        <a href="#" onclick="return addRow({{ items.idx }}, 'Choice');">task</a> |
-        <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
-    </td>
-    <td>{{ items.choice.name_txt }}</td>
-    <td align='right'>&#163;{{ items.choice.price_num }}</td>
-    <td align='right'>{{ items.choice.quantity_num }}</td>
-    <td align='left'>{{ items.choice.units_of_measure_text }}</td>
-    <td align='right'>&#163;{{ items.choice_total_price }}</td>
-    <td>
-    <select>
-    {% for worker in items.choice.workers.all %}
-        <option>{{ worker.name }}</option>
-    {% endfor %}
-    </select>
-    </td>
-    <td>{{ items.choice.plan_start_date }}</td>
-    <td align='center'>{{ items.choice.plan_days_num }}</td>
-    <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
-    <td align='right'>{{ items.choice.progress_percent_num }} %</td>
-    <td class='del_modif_cell'>
-        <a href='#' onclick="return setDelete(this);"
-                    onmouseover="delMouseOver(this);"
-                    onmouseout="delMouseOut(this);">delete</a>
-        &nbsp;|&nbsp;
-        <a href='#' onclick="return modifyRow(this);"
-                    onmouseover="delMouseOver(this);"
-                    onmouseout="delMouseOut(this);">modify</a>
-    </td>
-    </tr>
+    {% if items.type == 'Choice' %}
+        <tr id='tr_{{ items.choice.id }}' class='{{ items.type }}'>
+    {% else %}
+        <tr id='hd_{{ items.choice.id }}' class='{{ items.type }}'>
+    {% endif %}
+        <td>
+            <a href="#" onclick="return addRow({{ items.idx }}, 'Choice');">task</a> |
+            <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
+        </td>
+    {% if items.type == 'Choice' %}
+        <td>{{ items.choice.name_txt }}</td>
+        <td align='right'>&#163;{{ items.choice.price_num }}</td>
+        <td align='right'>{{ items.choice.quantity_num }}</td>
+        <td align='left'>{{ items.choice.units_of_measure_text }}</td>
+        <td align='right'>&#163;{{ items.choice_total_price }}</td>
+        <td>
+        <select>
+        {% for worker in items.choice.workers.all %}
+            <option>{{ worker.name }}</option>
+        {% endfor %}
+        </select>
+        </td>
+        <td>{{ items.choice.plan_start_date }}</td>
+        <td align='center'>{{ items.choice.plan_days_num }}</td>
+        <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
+        <td align='right'>{{ items.choice.progress_percent_num }} %</td>
+        <td class='del_modif_cell'>
+    {% else %}
+        <td class='td_header_2' colspan='5'>{{ items.choice.name_txt }}</td>
+        <td class='del_modif_cell td_header_2'>
+    {% endif %}
+            <a href='#' onclick="return setDelete(this);"
+                        onmouseover="delMouseOver(this);"
+                        onmouseout="delMouseOut(this);">delete</a>
+            &nbsp;|&nbsp;
+            <a href='#' onclick="return modifyRow(this);"
+                        onmouseover="delMouseOver(this);"
+                        onmouseout="delMouseOut(this);">modify</a>
+        </td>
+        </tr>
 {% endfor %}
 </tbody>
 </table>
