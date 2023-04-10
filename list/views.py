@@ -127,9 +127,10 @@ def check_integrity(structure_str, choices):
     return dict()
 
 
-class HeaderFake:
-    id = '0'
-    name_txt = ''
+class FakeChoice:
+    def __init__(self, ID, name):
+        self.id = ID
+        self.name_txt = name
 
 
 def detail(request, construct_id):
@@ -148,11 +149,18 @@ def detail(request, construct_id):
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0
-    for idx, choice in enumerate(choices):
-        choice_price = choice.price_num * choice.quantity_num
-        construct_progress += choice_price * 0.01 * choice.progress_percent_num
-        construct_total_price += choice_price
-        ch_list.append({'idx': idx+1, 'type':'Choice', 'choice': choice, 'choice_total_price': choice_price})
+    choice, choice_price = None, None
+    choice_dict = {str(ch.id):ch for ch in choices}
+    for idx, line_x in enumerate(struc_dict.values()):
+        print('line: ', line_x)
+        if line_x['type'] == 'Choice':
+            choice = choice_dict[line_x['id']]
+            choice_price = choice.price_num * choice.quantity_num
+            construct_progress += choice_price * 0.01 * choice.progress_percent_num
+            construct_total_price += choice_price
+        else:
+            choice = FakeChoice(idx, line_x['id'])
+        ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice, 'choice_total_price': choice_price})
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
     construct.overall_progress_percent_num = construct_progress
