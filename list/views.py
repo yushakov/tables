@@ -115,10 +115,11 @@ def save_update(data, construct):
 def check_integrity(structure_str, choices):
     choice_ids = [ch.id for ch in choices]
     struc = {}
-    if len(structure_str.strip()) > 0:
+    if len(structure_str.strip()) > 0 and \
+       len(structure_str.replace('{','').replace('}','').strip()) > 0:
         struc = json.loads(structure_str)
     else:
-        struc = {f'line{k+1}': {'type':'Choice', 'id': n} for k, n in enumerate(choice_ids)}
+        struc = {f'line{k+1}': {'type':'Choice', 'id': str(n)} for k, n in enumerate(choice_ids)}
     ids_in_struct = [int(ln['id']) for ln in struc.values() if ln['type'] == 'Choice']
     choice_ids.sort()
     ids_in_struct.sort()

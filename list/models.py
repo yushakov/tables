@@ -32,7 +32,6 @@ class Construct(models.Model):
 
     @admin.display(description='To do')
     def goto(self):
-        #return f"<a href=/list/{self.id}>view</a>"
         return format_html("<a href='/list/{}'>view</a>", self.id)
 
 class Worker(models.Model):
