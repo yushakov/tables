@@ -27,6 +27,10 @@ td.td_header_2 {
   font-weight: bold;
 }
 
+th.name_cell {
+  width: 300px;
+}
+
 .onDelMouseOver {
   background-color: lightgrey;
 }

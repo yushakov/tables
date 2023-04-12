@@ -175,7 +175,7 @@ function modifyRow(ths) {
     var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
     var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
     active_row.cells[g_name_cell_idx     ].innerHTML
-        = "<input id='inpName' type='text' size='5'     value='" + name + "'/>";
+        = "<input id='inpName' type='text' size='25'     value='" + name + "'/>";
     if(active_row.classList.contains("Choice")) {
         active_row.cells[g_price_cell_idx    ].innerHTML
             = "<input id='inpPrice' type='text' size='5'    value='" + price + "'/>";
