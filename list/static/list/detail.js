@@ -175,7 +175,7 @@ function modifyRow(ths) {
     var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
     var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
     active_row.cells[g_name_cell_idx     ].innerHTML
-        = "<input id='inpName' type='text' size='25'     value='" + name + "'/>";
+	    = "<textarea id='inpName' rows='5' cols='40'>" + name + "</textarea>";
     if(active_row.classList.contains("Choice")) {
         active_row.cells[g_price_cell_idx    ].innerHTML
             = "<input id='inpPrice' type='text' size='5'    value='" + price + "'/>";
@@ -417,7 +417,7 @@ function addRow(id, className) {
 	                     + newId + ", \"Choice\");'>task</a>"
 	                     + " | <a href='#' onclick='return addRow("
 	                     + newId + ", \"Header2\");'>head</a>";
-	nameCell.innerHTML = "<input id='inpName' type='text'/>";
+	nameCell.innerHTML = "<textarea id='inpName' rows='5' cols='40'></textarea>";
 	if(className == "Choice") {
 		priceCell.innerHTML    = "<input id='inpPrice' type='text' size='5'/>";
         qtyCell.innerHTML      = "<input id='inpQty' type='text' size='3' value='1'/>";
