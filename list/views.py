@@ -42,12 +42,12 @@ def update_choice(choice_id, cell_data):
             print(f'UPDATE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
             choice.name_txt = cells['name']
             choice.notes_txt = ''
-            choice.quantity_num = cells['quantity']
+            choice.quantity_num = float(cells['quantity'].strip())
             choice.units_of_measure_text = cells['units']
-            choice.price_num = cells['price'].replace('£','').replace(',','').strip()
-            choice.progress_percent_num = cells['progress'].replace('%','').strip()
-            choice.plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").strftime("%Y-%m-%d")
-            choice.plan_days_num = cells['days']
+            choice.price_num = float(cells['price'].replace('£','').replace(',','').strip())
+            choice.progress_percent_num = float(cells['progress'].replace('%','').strip())
+            choice.plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").date()
+            choice.plan_days_num = float(cells['days'])
             choice.save()
             return int(choice_id)
         return -1

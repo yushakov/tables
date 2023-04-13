@@ -42,6 +42,17 @@ class Worker(models.Model):
     def __str__(self):
         return self.name
 
+
+def instances_are_equal(instance1, instance2, fields=None):
+    if fields is None:
+        fields = [f.name for f in instance1._meta.fields]
+    for field in fields:
+        if getattr(instance1, field) != getattr(instance2, field):
+            print(f'"{getattr(instance1, field)}" != "{getattr(instance2, field)}"')
+            return False
+    return True
+
+
 class Choice(models.Model):
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     workers = models.ManyToManyField(Worker, default=None)
@@ -58,3 +69,13 @@ class Choice(models.Model):
 
     def __str__(self):
         return self.name_txt + f' ({self.construct})'
+
+    def save(self, *args, **kwargs):
+        if self.pk:  # pk will be None for a new instance
+            existing_instance = Choice.objects.get(pk=self.pk)
+            if instances_are_equal(existing_instance, self):
+                print('Nothing to update, instances are equal...')
+                return
+        # save(), if the instance is new or changed
+        print(f'send {self.pk} to DB')
+        super(Choice, self).save(*args, **kwargs)
