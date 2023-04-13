@@ -30,18 +30,16 @@ def index(request):
 
 def update_choice(choice_id, cell_data):
     # can be a header
-    print(f'Choice ID: {choice_id}')
-    print(cell_data)
     if cell_data['class'] == 'Choice':
         cells = cell_data['cells']
         choice = Choice.objects.get(pk=choice_id)
         if cells['class'] == 'delete':
-            print(f'DELETE "{choice.name_txt}" from "{choice.construct}"')
+            print(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
             print(choice.__dict__)
             choice.delete()
             return -1
         else:
-            print(f'UPDATE "{choice.name_txt}" from "{choice.construct}"')
+            print(f'UPDATE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
             choice.name_txt = cells['name']
             choice.notes_txt = ''
             choice.quantity_num = cells['quantity']
@@ -57,8 +55,6 @@ def update_choice(choice_id, cell_data):
 
 
 def create_choice(cell_data, construct):
-    print(f'Construct ID: {construct.id}')
-    print(cell_data)
     if cell_data['class'] == 'Choice':
         cells = cell_data['cells']
         # if it's new, but already deleted
@@ -73,7 +69,6 @@ def create_choice(cell_data, construct):
              plan_start_date = cells['day_start'],
              plan_days_num = cells['days'])
         choice.save()
-        print(f'new choice ID: {choice.id}')
         return choice.id
     # can be just header
     return -1
@@ -107,7 +102,7 @@ def save_update(data, construct):
             choice_id = create_choice(data[key], construct)
         add_to_structure(structure, data[key], choice_id)
     string_structure = json.dumps(structure)
-    print(string_structure)
+    print('Project structure:\n', string_structure)
     construct.struct_json = string_structure
     construct.save()
 
@@ -138,6 +133,7 @@ def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST' and request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
+        print(datetime.now(), 'POST data in detail():\n', data)
         save_update(data, construct)
     structure_str = construct.struct_json
     choices = construct.choice_set.all()
@@ -153,7 +149,6 @@ def detail(request, construct_id):
     choice, choice_price = None, None
     choice_dict = {str(ch.id):ch for ch in choices}
     for idx, line_x in enumerate(struc_dict.values()):
-        print('line: ', line_x)
         if line_x['type'] == 'Choice':
             choice = choice_dict[line_x['id']]
             choice_price = choice.price_num * choice.quantity_num
