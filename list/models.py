@@ -77,5 +77,8 @@ class Choice(models.Model):
                 print('Nothing to update, instances are equal...')
                 return
         # save(), if the instance is new or changed
-        print(f'send {self.pk} to DB')
+        if self.pk:
+            print(f'send {self.pk} to DB')
+        else:
+            print(f'New "{self.name_txt}" in DB')
         super(Choice, self).save(*args, **kwargs)

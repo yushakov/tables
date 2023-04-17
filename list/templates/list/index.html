@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h1>Projects</h1>
 {% if active_construct_list %}
-<table>
+<table id='construct_list'>
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
@@ -23,7 +23,7 @@
     </tbody>
 </table>
 
-<table>
+<table id='construct_money_scope'>
     <thead>
         <tr>
             <th>Price of<br>non-finished</th>
