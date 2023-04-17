@@ -50,6 +50,7 @@ table#construct_list {
 
 table#construct_list td, table#construct_list th {
     border: none;
+    padding: 6px;
 }
 
 table#construct_money_scope {
@@ -58,6 +59,20 @@ table#construct_money_scope {
 }
 
 table#construct_money_scope td, table#construct_money_scope th {
+    border: 1px dotted grey;
+    padding: 8px;
+}
+
+table#choices_head td {
+    padding: 7px;
+}
+
+table#choices_footer {
+    border-collapse: collapse;
     border: none;
 }
 
+table#choices_footer td, table#choices_footer th {
+    border: none;
+    padding: 7px;
+}
