@@ -42,3 +42,22 @@ th.name_cell {
 .onDelMouseOver {
   background-color: lightgrey;
 }
+
+table#construct_list {
+    border-collapse: collapse;
+    border: none;
+}
+
+table#construct_list td, table#construct_list th {
+    border: none;
+}
+
+table#construct_money_scope {
+    border-collapse: collapse;
+    border: none;
+}
+
+table#construct_money_scope td, table#construct_money_scope th {
+    border: none;
+}
+
