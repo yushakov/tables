@@ -80,5 +80,5 @@ class Choice(models.Model):
         if self.pk:
             print(f'send {self.pk} to DB')
         else:
-            print(f'New "{self.name_txt}" in DB')
+            print(f'New "{self.name_txt[:50]}" in DB')
         super(Choice, self).save(*args, **kwargs)

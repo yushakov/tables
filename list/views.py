@@ -39,7 +39,7 @@ def update_choice(choice_id, cell_data):
             choice.delete()
             return -1
         else:
-            print(f'UPDATE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
+            print(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
             choice.name_txt = cells['name']
             choice.notes_txt = ''
             choice.quantity_num = float(cells['quantity'].strip())
