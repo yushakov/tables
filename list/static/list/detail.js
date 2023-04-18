@@ -56,8 +56,9 @@ function showPrettyRaw(x) {
                row.style.display = 'none';
            }
            row.cells[g_action_cell_idx].style.display = 'none';
-           row.cells[g_del_cell_idx].style.display    = 'none';
-           if(row.classList.contains('Header2')) {
+           if(row.classList.contains('Choice')) {
+               row.cells[g_del_cell_idx].style.display    = 'none';
+           } else {
                var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
                header_del.style.display = 'none';
            }
@@ -69,9 +70,12 @@ function showPrettyRaw(x) {
                row.style.display = 'table-row';
            }
            row.cells[g_action_cell_idx].style.display = 'block';
-           row.cells[g_del_cell_idx].style.display    = 'block';
-           var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
-           header_del.style.display = 'block';
+           if(row.classList.contains('Choice')) {
+               row.cells[g_del_cell_idx].style.display    = 'block';
+           } else {
+               var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
+               header_del.style.display = 'block';
+           }
         });
         btn.innerText = "Show Pretty";
     }
