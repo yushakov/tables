@@ -204,11 +204,11 @@ function modifyRow(ths) {
     var units    = active_row.cells[g_units_cell_idx    ].innerText;
     var asgnTo   = active_row.cells[g_asgn_to_cell_idx  ].innerText;
     var dayStart = active_row.cells[g_day_start_cell_idx].innerText;
-    var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
-    var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
     active_row.cells[g_name_cell_idx     ].innerHTML
 	    = "<textarea id='inpName' rows='5' cols='40'>" + name + "</textarea>";
     if(active_row.classList.contains("Choice")) {
+        var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
+        var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
         active_row.cells[g_price_cell_idx    ].innerHTML
             = "<input id='inpPrice' type='text' size='5'    value='" + price + "'/>";
         active_row.cells[g_qty_cell_idx      ].innerHTML
@@ -376,8 +376,10 @@ function restoreDeleted(ths) {
     row.cells[g_tot_prc_cell_idx].classList.remove('delete');
     row.cells[g_asgn_to_cell_idx].classList.remove('delete');
     row.cells[g_day_start_cell_idx].classList.remove('delete');
-    row.cells[g_plan_days_cell_idx].classList.remove('delete');
-    row.cells[g_prog_pcnt_cell_idx].classList.remove('delete');
+    if(row.classList.contains('Choice')) {
+        row.cells[g_plan_days_cell_idx].classList.remove('delete');
+        row.cells[g_prog_pcnt_cell_idx].classList.remove('delete');
+    }
     var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/restoreDeleted/, "setDelete")
                                .replace(/restore/, "delete");
@@ -395,8 +397,10 @@ function setDelete(ths) {
     row.cells[g_tot_prc_cell_idx].classList.add('delete');
     row.cells[g_asgn_to_cell_idx].classList.add('delete');
     row.cells[g_day_start_cell_idx].classList.add('delete');
-    row.cells[g_plan_days_cell_idx].classList.add('delete');
-    row.cells[g_prog_pcnt_cell_idx].classList.add('delete');
+    if(row.classList.contains('Choice')) {
+        row.cells[g_plan_days_cell_idx].classList.add('delete');
+        row.cells[g_prog_pcnt_cell_idx].classList.add('delete');
+    }
     var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/setDelete/, "restoreDeleted")
                                .replace(/delete/, "restore");
