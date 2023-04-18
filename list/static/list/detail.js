@@ -278,6 +278,9 @@ function freezeActiveRow() {
 			}
             active_row.cells[del_cell_idx].classList.add("del_modif_cell");
             active_row.cells[del_cell_idx].innerHTML = get_del_cell_text();
+            while(active_row.cells.length-1 > del_cell_idx) {
+                active_row.deleteCell(active_row.cells.length-1);
+            }
 		}
 		else {
 			return false;
