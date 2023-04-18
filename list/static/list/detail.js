@@ -57,8 +57,10 @@ function showPrettyRaw(x) {
            }
            row.cells[g_action_cell_idx].style.display = 'none';
            row.cells[g_del_cell_idx].style.display    = 'none';
-           var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
-           header_del.style.display = 'none';
+           if(row.classList.contains('Header2')) {
+               var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
+               header_del.style.display = 'none';
+           }
         });
         btn.innerText = "Show Raw";
     } else {

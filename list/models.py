@@ -17,7 +17,7 @@ class Construct(models.Model):
     overall_progress_percent_num = models.FloatField('progress', default=0.0, validators=percent_valid)
     vat_percent_num = models.FloatField(validators=percent_valid, default='5')
     company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
-    struct_json = models.TextField(default='')
+    struct_json = models.TextField(default='{}')
     
     def __str__(self):
         return self.title_text
