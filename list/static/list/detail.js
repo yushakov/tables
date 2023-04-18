@@ -191,11 +191,9 @@ function modifyRow(ths) {
         del_cell_idx -= g_header_del_col_span-1;
     }
     var del_cell_html = active_row.cells[del_cell_idx].innerText;
-    console.log(del_cell_html);
     del_cell_html = del_cell_html.replace('modify', '')
                                  .replace('delete', '')
                                  .replace('|', '');
-    console.log(del_cell_html);
     active_row.cells[del_cell_idx].innerText = del_cell_html;
 
     var name     = active_row.cells[g_name_cell_idx     ].innerText;
@@ -644,6 +642,49 @@ function addGarage() {
     document.getElementById('inpPlanDays').value = '3';
     document.getElementById('inpAsgnTo').value = 'Andrew';
     addRow(6, "Choice");
+    document.getElementById('inpName').value = 'roof';
+    document.getElementById('inpPrice').value = '500';
+    document.getElementById('inpQty').value = '1';
+    document.getElementById('inpPlanDays').value = '7';
+    document.getElementById('inpAsgnTo').value = 'David';
+    freezeActiveRow();
+}
+
+function addGarageBottomUp() {
+    //debugger;
+    var rows = document.getElementById("choices").rows;
+    var lastIdx = rows.length - 1;
+    addRow(lastIdx, "Header2");
+    document.getElementById('inpName').value = 'Garage';
+    addRow(lastIdx+1, "Choice");
+    document.getElementById('inpName').value = 'base';
+    document.getElementById('inpPrice').value = '5,000';
+    document.getElementById('inpPlanDays').value = '10';
+    document.getElementById('inpAsgnTo').value = 'Illarion';
+    addRow(lastIdx+2, "Choice");
+    document.getElementById('inpName').value = 'floor';
+    document.getElementById('inpPrice').value = '300';
+    document.getElementById('inpPlanDays').value = '5';
+    document.getElementById('inpAsgnTo').value = 'Ivan';
+    addRow(lastIdx+3, "Choice");
+    document.getElementById('inpName').value = 'tools';
+    document.getElementById('inpPrice').value = '2,500';
+    document.getElementById('inpQty').value = '3';
+    document.getElementById('inpPlanDays').value = '11';
+    document.getElementById('inpAsgnTo').value = 'Nikolay Stankov';
+    addRow(lastIdx+4, "Choice");
+    document.getElementById('inpName').value = 'walls';
+    document.getElementById('inpPrice').value = '250';
+    document.getElementById('inpQty').value = '4';
+    document.getElementById('inpPlanDays').value = '2';
+    document.getElementById('inpAsgnTo').value = 'Kolya';
+    addRow(lastIdx+5, "Choice");
+    document.getElementById('inpName').value = 'ceiling';
+    document.getElementById('inpPrice').value = '500';
+    document.getElementById('inpQty').value = '1';
+    document.getElementById('inpPlanDays').value = '3';
+    document.getElementById('inpAsgnTo').value = 'Andrew';
+    addRow(lastIdx+6, "Choice");
     document.getElementById('inpName').value = 'roof';
     document.getElementById('inpPrice').value = '500';
     document.getElementById('inpQty').value = '1';
