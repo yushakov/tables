@@ -104,12 +104,6 @@
                         onmouseover="delMouseOver(this);"
                         onmouseout="delMouseOut(this);">modify</a>
         </td>
-    {% if items.type != 'Choice' %}
-        <!--td></td-->
-        <!--td></td-->
-        <!--td></td-->
-        <!--td></td-->
-    {% endif %}
         </tr>
 {% endfor %}
 </tbody>
@@ -128,6 +122,7 @@
     <td><a href='#' onclick="test2(); return false;">test2</td>
     <td><a href='#' onclick="addHouse(); return false;">add House</td>
     <td><a href='#' onclick="addGarage(); return false;">add Garage</td>
+    <td><a href='#' onclick="bigTest(); return false;">Big Test</td>
 </tr>
 </table>
 </form>

@@ -692,3 +692,44 @@ function addGarageBottomUp() {
     document.getElementById('inpAsgnTo').value = 'David';
     freezeActiveRow();
 }
+
+function delModifLineByLine() {
+    var rows = document.getElementById("choices").rows;
+    rows = Array.from(rows);
+    rows.forEach(function(row) {
+        if(row.rowIndex == 0) return;
+        var dmc = row.getElementsByClassName('del_modif_cell');
+        for(var i = 0; i < 1; i++) {
+            var dmci = dmc.item(0);
+            delMouseOver(dmci.children[i]);
+            console.log('setDelete(). Row:' + row.rowIndex);
+            setDelete(dmci.children[i]);
+            delMouseOut(dmci.children[i]);
+        }
+        for(var i = 0; i < 1; i++) {
+            var dmci = dmc.item(0);
+            delMouseOver(dmci.children[i]);
+            console.log('restoreDeleted(). Row:' + row.rowIndex);
+            restoreDeleted(dmci.children[i]);
+            delMouseOut(dmci.children[i]);
+        }
+        for(var i = 0; i < 1; i++) {
+            var dmci = dmc.item(0);
+            delMouseOver(dmci.children[i]);
+            console.log('modifyRow(). Row:' + row.rowIndex);
+            modifyRow(dmci.children[i]);
+            console.log('freezeActiveRow(). Row:' + row.rowIndex);
+            freezeActiveRow();
+            delMouseOut(dmci.children[i]);
+        }
+    });
+}
+
+function bigTest() {
+    test1();
+    test2();
+    addHouse();
+    addGarage();
+    addGarageBottomUp();
+    delModifLineByLine();
+}
