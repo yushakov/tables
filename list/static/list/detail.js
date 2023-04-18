@@ -27,6 +27,15 @@ window.onbeforeunload = function() {
     return true;
 }
 
+function get_del_cell_text() {
+    return "<a href='#' onclick='return setDelete(this);'"
+        + "onmouseover='delMouseOver(this);' "
+        + "onmouseout='delMouseOut(this);'>delete</a>"
+        + "&nbsp;|&nbsp; <a href='#' onclick='return modifyRow(this);'"
+        + "onmouseover='delMouseOver(this);'"
+        + "onmouseout='delMouseOut(this);'>modify</a>";
+}
+
 function setForm() {
     //return;
     const form = document.getElementById('choices_form');
@@ -164,8 +173,25 @@ function modify(ths) {
 
 function modifyRow(ths) {
 	if(!freezeActiveRow()) return false;
-    document.getElementById('modified').innerText = 'yes';
+    var elem = document.getElementById('modified');
+    if(elem) elem.innerText = 'yes';
+    if(!ths || !ths.parentNode) return false;
     var active_row = ths.parentNode.parentNode;
+    if(!active_row) return false;
+
+    del_cell_idx  = g_del_cell_idx;
+    active_row.classList.remove("onDelMouseOver");
+    if(!active_row.classList.contains("Choice")) {
+        del_cell_idx -= g_header_del_col_span-1;
+    }
+    var del_cell_html = active_row.cells[del_cell_idx].innerText;
+    console.log(del_cell_html);
+    del_cell_html = del_cell_html.replace('modify', '')
+                                 .replace('delete', '')
+                                 .replace('|', '');
+    console.log(del_cell_html);
+    active_row.cells[del_cell_idx].innerText = del_cell_html;
+
     var name     = active_row.cells[g_name_cell_idx     ].innerText;
     var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
     var qty      = active_row.cells[g_qty_cell_idx      ].innerText;
@@ -192,7 +218,9 @@ function modifyRow(ths) {
         active_row.cells[g_progress_cell_idx ].innerHTML
             = "<input id='inpProgress' type='text' size='2' value='" + progress + "'/>";  
     }
-    document.getElementById("active_row").innerHTML = active_row.rowIndex;
+    var acro = document.getElementById("active_row");
+    if(acro) acro.innerHTML = active_row.rowIndex;
+    else console.log("ERROR: can't get 'active_row'");
     return false;
 }
 
@@ -204,7 +232,7 @@ function freezeActiveRow() {
 		if(validateInput(id)) {
 			var table = document.getElementById("choices");
 			var active_row = table.rows[id];
-			if(active_row.className == "Choice"){
+			if(active_row.classList.contains("Choice")){
 				var name     = document.getElementById("inpName").value;
 				var price    = document.getElementById("inpPrice").value;
                 var price_num = Number(price.replace(/,/g,''));
@@ -232,7 +260,7 @@ function freezeActiveRow() {
                 active_row.cells[g_prog_pcnt_cell_idx].innerHTML = 
                         "<td align='right'>" + progress + " %</td>";
 			}
-			else if(active_row.className == "Header2") {
+			else if(active_row.classList.contains("Header2")) {
                 del_cell_idx -= g_header_del_col_span-1;
 				name = document.getElementById("inpName").value;
 				active_row.cells[g_name_cell_idx].innerHTML = ""
@@ -243,13 +271,7 @@ function freezeActiveRow() {
                 active_row.cells[del_cell_idx].classList.add("td_header_2");
 			}
             active_row.cells[del_cell_idx].classList.add("del_modif_cell");
-            active_row.cells[del_cell_idx].innerHTML =
-                "<a href='#' onclick='return setDelete(this);'"
-              + "onmouseover='delMouseOver(this);' "
-              + "onmouseout='delMouseOut(this);'>delete</a>"
-              + "&nbsp;|&nbsp; <a href='#' onclick='return modifyRow(this);'"
-              + "onmouseover='delMouseOver(this);'"
-              + "onmouseout='delMouseOut(this);'>modify</a>";
+            active_row.cells[del_cell_idx].innerHTML = get_del_cell_text();
 		}
 		else {
 			return false;
