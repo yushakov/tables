@@ -55,7 +55,11 @@ function showPrettyRaw(x) {
            if(row.cells[g_name_cell_idx].classList.contains('delete')) {
                row.style.display = 'none';
            }
-           row.cells[g_action_cell_idx].style.display = 'none';
+           if(row.rowIndex == 0) {
+               row.cells[g_action_cell_idx].innerHTML = '';
+           } else {
+               row.cells[g_action_cell_idx].innerHTML = row.rowIndex;
+           }
            if(row.classList.contains('Choice')) {
                row.cells[g_del_cell_idx].style.display    = 'none';
            } else {
@@ -69,7 +73,7 @@ function showPrettyRaw(x) {
            if(row.cells[g_name_cell_idx].classList.contains('delete')) {
                row.style.display = 'table-row';
            }
-           row.cells[g_action_cell_idx].style.display = 'block';
+           row.cells[g_action_cell_idx].innerHTML = getActionCellHtml(row.rowIndex);
            if(row.classList.contains('Choice')) {
                row.cells[g_del_cell_idx].style.display    = 'block';
            } else {
@@ -419,6 +423,13 @@ function getToday() {
     return `${year}-${month}-${day}`;
 }
 
+function getActionCellHtml(idx) {
+	return "<a href='#' onclick='return addRow("
+             + idx + ", \"Choice\");'>task</a>"
+             + " | <a href='#' onclick='return addRow("
+             + idx + ", \"Header2\");'>head</a>";
+}
+
 function addRow(id, className) {
 	var table = document.getElementById("choices");
 	var active_row_holder = document.getElementById("active_row");
@@ -446,10 +457,7 @@ function addRow(id, className) {
 	var progressCell = newRow.insertCell(g_progress_cell_idx);
 	var progPcntCell = newRow.insertCell(g_prog_pcnt_cell_idx);
     newRow.insertCell(g_del_cell_idx);
-	actionCell.innerHTML = "<a href='#' onclick='return addRow("
-	                     + newId + ", \"Choice\");'>task</a>"
-	                     + " | <a href='#' onclick='return addRow("
-	                     + newId + ", \"Header2\");'>head</a>";
+	actionCell.innerHTML = getActionCellHtml(newId);
 	nameCell.innerHTML = "<textarea id='inpName' rows='5' cols='40'></textarea>";
 	if(className == "Choice") {
 		priceCell.innerHTML    = "<input id='inpPrice' type='text' size='5'/>";
