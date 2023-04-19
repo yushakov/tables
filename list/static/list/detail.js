@@ -191,6 +191,11 @@ function modify(ths) {
     //ths.innerHTML = "<input type='text' value='" + text + "'/>";
 }
 
+function setModified() {
+    var modiff = document.getElementById('project_last_save_date');
+    modiff.innerHTML += '<p style="color:red">*** do not forget to save changes ***</p>';
+}
+
 function modifyRow(ths) {
 	if(!freezeActiveRow()) return false;
     var elem = document.getElementById('modified');
@@ -198,6 +203,7 @@ function modifyRow(ths) {
     if(!ths || !ths.parentNode) return false;
     var active_row = ths.parentNode.parentNode;
     if(!active_row) return false;
+    setModified();
 
     del_cell_idx  = g_del_cell_idx;
     active_row.classList.remove("onDelMouseOver");
@@ -418,6 +424,7 @@ function setDelete(ths) {
     ths.parentNode.innerHTML = new_del_link;
     updateHeaders();
     document.getElementById('modified').innerText = 'yes';
+    setModified();
     return false;
 }
 
@@ -448,6 +455,7 @@ function addRow(id, className) {
         console.log("ERROR: row index is too big to be added!")
         return false;
     }
+    setModified();
 	var newId = newRow.rowIndex;
 	active_row_holder.innerHTML = newId;
 	newRow.className = className; // "Choice" or "Header2"
