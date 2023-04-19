@@ -48,7 +48,7 @@ function setForm() {
 
 function showPrettyRaw(x) {
     var table = document.getElementById("choices");
-    var rows = Array.from(table.rows);
+    var rows  = Array.from(table.rows);
     var btn   = document.getElementById("PrettyRawBtn");
     if(btn.innerText == "Show Pretty") {
         rows.forEach(function(row) {
@@ -57,6 +57,7 @@ function showPrettyRaw(x) {
            }
            if(row.rowIndex == 0) {
                row.cells[g_action_cell_idx].innerHTML = '';
+               return;
            } else {
                row.cells[g_action_cell_idx].innerHTML = row.rowIndex;
            }
@@ -733,7 +734,33 @@ function delModifLineByLine() {
     });
 }
 
+function cellTextsToStr(cells) {
+    var titles = "";
+    var cells = Array.from(cells);
+    cells.forEach(function(cell) {
+        if(cell.cellIndex > 0) {
+            if(cell.innerText.trim().length > 0 &&
+                cell.style.display != 'none') {
+                titles += cell.innerText;
+            }
+        }
+    });
+    return titles;
+}
+
+function test_choices_header_pretty() {
+    var row = document.getElementById("choices").rows[0];
+    var titles1 = cellTextsToStr(row.cells);
+    //console.log(titles1);
+    showPrettyRaw(0);
+    var titles2 = cellTextsToStr(row.cells);
+    //console.log(titles2);
+    showPrettyRaw(0);
+    console.assert(titles1 == titles2, "Show Pretty breaks the headers!")
+}
+
 function bigTest() {
+    test_choices_header_pretty();
     test1();
     test2();
     addHouse();
