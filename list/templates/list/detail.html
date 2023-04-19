@@ -3,9 +3,13 @@
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h1>{{ construct.title_text }}</h1>
+<div id="back_to_projects_link">
 &larr; <a href="{% url 'list:index' %}">back to the project list</a>
+</div>
 <br><br>
+<div id="save_project_as_link">
 <a href="">Save this project as...</a> (when clicked, the name field appears)<br><br>
+</div>
 
 <table id='choices_head'>
 <tbody>

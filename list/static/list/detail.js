@@ -67,6 +67,8 @@ function showPrettyRaw(x) {
                header_del.style.display = 'none';
            }
         });
+        document.getElementById("back_to_projects_link").style.display='none';
+        document.getElementById("save_project_as_link").style.display='none';
         btn.innerText = "Show Raw";
     } else {
         rows.forEach(function(row) {
@@ -81,6 +83,8 @@ function showPrettyRaw(x) {
                header_del.style.display = 'block';
            }
         });
+        document.getElementById("back_to_projects_link").style.display='block';
+        document.getElementById("save_project_as_link").style.display='block';
         btn.innerText = "Show Pretty";
     }
 }
