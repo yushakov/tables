@@ -27,7 +27,7 @@ window.onbeforeunload = function() {
     return true;
 }
 
-function get_del_cell_text() {
+function getDeleteCellHtml() {
     return "<a href='#' onclick='return setDelete(this);'"
         + "onmouseover='delMouseOver(this);' "
         + "onmouseout='delMouseOut(this);'>delete</a>"
@@ -194,11 +194,7 @@ function modifyRow(ths) {
     if(!active_row.classList.contains("Choice")) {
         del_cell_idx -= g_header_del_col_span-1;
     }
-    var del_cell_html = active_row.cells[del_cell_idx].innerText;
-    del_cell_html = del_cell_html.replace('modify', '')
-                                 .replace('delete', '')
-                                 .replace('|', '');
-    active_row.cells[del_cell_idx].innerText = del_cell_html;
+    active_row.cells[del_cell_idx].innerText = '';
 
     var name     = active_row.cells[g_name_cell_idx     ].innerText;
     var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
@@ -279,7 +275,7 @@ function freezeActiveRow() {
                 active_row.cells[del_cell_idx].classList.add("td_header_2");
 			}
             active_row.cells[del_cell_idx].classList.add("del_modif_cell");
-            active_row.cells[del_cell_idx].innerHTML = get_del_cell_text();
+            active_row.cells[del_cell_idx].innerHTML = getDeleteCellHtml();
             while(active_row.cells.length-1 > del_cell_idx) {
                 active_row.deleteCell(active_row.cells.length-1);
             }
