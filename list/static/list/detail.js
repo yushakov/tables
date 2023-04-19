@@ -193,7 +193,9 @@ function modify(ths) {
 
 function setModified() {
     var modiff = document.getElementById('project_last_save_date');
-    modiff.innerHTML += '<p style="color:red">*** do not forget to save changes ***</p>';
+    if(modiff.innerText.search("\\*\\*\\*") < 0) {
+        modiff.innerHTML += '<p style="color:red">*** do not forget to save changes ***</p>';
+    }
 }
 
 function modifyRow(ths) {
