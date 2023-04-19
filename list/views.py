@@ -17,7 +17,7 @@ class IndexView(generic.ListView):
 
 
 def index(request):
-    constructs = Construct.objects.order_by('overall_progress_percent_num')
+    constructs = Construct.objects.order_by('-listed_date')
     price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
     for construct in constructs:
         price += sum([choice.price_num * choice.quantity_num for choice in construct.choice_set.all()])
