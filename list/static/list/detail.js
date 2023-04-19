@@ -194,8 +194,8 @@ function modifyRow(ths) {
     if(!active_row.classList.contains("Choice")) {
         del_cell_idx -= g_header_del_col_span-1;
     }
-    active_row.cells[del_cell_idx].innerText = '';
-
+    active_row.cells[del_cell_idx].innerHTML =
+        "<a href='#' onclick='freezeActiveRow(); return false;'>FREEZE</a>";
     var name     = active_row.cells[g_name_cell_idx     ].innerText;
     var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
     var qty      = active_row.cells[g_qty_cell_idx      ].innerText;
