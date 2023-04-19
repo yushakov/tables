@@ -10,6 +10,7 @@ phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
     listed_date = models.DateTimeField('date listed')
+    last_save_date = models.DateTimeField('last save', default=timezone.now)
     address_text = models.CharField(max_length=500)
     email_text = models.EmailField()
     phone_text = models.CharField(max_length=200, validators=phone_valid)
@@ -21,6 +22,10 @@ class Construct(models.Model):
     
     def __str__(self):
         return self.title_text
+
+    def save(self, *args, **kwargs):
+        self.last_save_date = timezone.now()
+        super(Construct, self).save(*args, **kwargs)
 
     @admin.display(description='Progress')
     def overall_progress(self):
@@ -81,4 +86,5 @@ class Choice(models.Model):
             print(f'send {self.pk} to DB')
         else:
             print(f'New "{self.name_txt[:50]}" in DB')
+        self.construct.save()
         super(Choice, self).save(*args, **kwargs)
