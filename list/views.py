@@ -45,6 +45,7 @@ def update_choice(choice_id, cell_data):
             choice.quantity_num = float(cells['quantity'].strip())
             choice.units_of_measure_text = cells['units']
             choice.price_num = float(cells['price'].replace('£','').replace(',','').strip())
+            choice.workers = str(cells['assigned_to'])
             choice.progress_percent_num = float(cells['progress'].replace('%','').strip())
             choice.plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").date()
             choice.plan_days_num = float(cells['days'])
@@ -65,6 +66,7 @@ def create_choice(cell_data, construct):
              quantity_num = cells['quantity'],
              units_of_measure_text = cells['units'],
              price_num = cells['price'].replace('£','').replace(',','').strip(),
+             workers = cells['assigned_to'],
              progress_percent_num = cells['progress'].replace('%','').strip(),
              plan_start_date = cells['day_start'],
              plan_days_num = cells['days'])

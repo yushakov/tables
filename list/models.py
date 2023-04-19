@@ -12,9 +12,10 @@ class Construct(models.Model):
     listed_date = models.DateTimeField('date listed')
     last_save_date = models.DateTimeField('last save', default=timezone.now)
     address_text = models.CharField(max_length=500)
-    email_text = models.EmailField()
-    phone_text = models.CharField(max_length=200, validators=phone_valid)
+    email_text = models.EmailField(default='email@domain.com')
+    phone_text = models.CharField(max_length=200, validators=phone_valid, default='07770777')
     owner_name_text = models.CharField(max_length=200)
+    assigned_to = models.CharField(max_length=800, default='Some Team')
     overall_progress_percent_num = models.FloatField('progress', default=0.0, validators=percent_valid)
     vat_percent_num = models.FloatField(validators=percent_valid, default='5')
     company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
@@ -60,7 +61,8 @@ def instances_are_equal(instance1, instance2, fields=None):
 
 class Choice(models.Model):
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
-    workers = models.ManyToManyField(Worker, default=None)
+    #workers = models.ManyToManyField(Worker, default=None)
+    workers = models.CharField(max_length=800, default='Somebody')
     name_txt = models.CharField(max_length=200)
     notes_txt = models.TextField(default='-')
     quantity_num = models.FloatField(default='1')

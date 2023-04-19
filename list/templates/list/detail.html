@@ -84,11 +84,7 @@
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
         <td align='right'>&#163;{{ items.choice_total_price }}</td>
         <td>
-        <select>
-        {% for worker in items.choice.workers.all %}
-            <option>{{ worker.name }}</option>
-        {% endfor %}
-        </select>
+            {{ items.choice.workers }}
         </td>
         <td>{{ items.choice.plan_start_date }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
