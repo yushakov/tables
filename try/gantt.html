@@ -11,21 +11,12 @@
         }
         th, td {
             border: 1px solid #ccc;
-            padding: 2px 2px 7px 2px;
-            text-align: left;
+            padding: 2px 2px 7px 5px;
+            text-align: center;
             position: relative;
         }
         .gantt-container {
             position: relative;
-        }
-        .gantt-column {
-            width: calc(100% / 10);
-            display: inline-block;
-            border-right: 1px solid #eee;
-            box-sizing: border-box;
-        }
-        .gantt-column:last-child {
-            border-right: none;
         }
         .gantt-bar {
             position: absolute;
@@ -45,8 +36,6 @@
             <tr id='gantt-header'>
                 <th>Task</th>
                 <th>Additional Info</th>
-                <!--th colspan="10" id="gantt-header"></th-->
-                <!--th id="gantt-header"></th-->
             </tr>
         </thead>
         <tbody id="gantt-chart">
@@ -67,28 +56,20 @@
             const taskName = document.createElement("td");
             const taskInfo = document.createElement("td");
             const ganttContainer = document.createElement("td");
+            ganttContainer.style.width = `calc(70%)`;
+            ganttContainer.style.position = 'relative';
             ganttContainer.colSpan = N;
 
             taskName.textContent = task.name;
             taskInfo.textContent = task.info;
 
-            //const ganttChart = document.createElement("div");
-            //ganttChart.classList.add("gantt-container");
-
-            //for (let i = 0; i < N; i++) {
-            //    const ganttColumn = document.createElement("div");
-            //    ganttColumn.classList.add("gantt-column");
-            //    ganttChart.appendChild(ganttColumn);
-            //}
-
             const ganttBar = document.createElement("div");
             ganttBar.classList.add("gantt-bar");
-            ganttBar.style.left = `${(task.start / N) * 100}%`;
-            ganttBar.style.width = `${((task.end - task.start + 1) / N) * 100}%`;
+            ganttBar.style.left = `calc(${(task.start / N) * 100}% + 1px)`;
+            ganttBar.style.width = `calc(${((task.end - task.start + 1) / N) * 100}% - 1px)`;
+            console.log(ganttBar.style.width)
             ganttBar.textContent = task.name;
 
-            //ganttChart.appendChild(ganttBar);
-            //ganttContainer.appendChild(ganttChart);
             ganttContainer.appendChild(ganttBar);
 
             row.appendChild(taskName);
@@ -100,15 +81,10 @@
 
         const ganttHeader = document.getElementById("gantt-header");
         for (let i = 1; i <= N; i++) {
-            //const dayLabel = document.createElement("span");
-            //const dayLabel = document.createElement("td");
-            //dayLabel.textContent = `day ${i}`;
-            //dayLabel.style.width = `calc(100% / ${N})`;
-            //dayLabel.style.display = "inline-block";
-            //dayLabel.style.boxSizing = "border-box";
-            //ganttHeader.appendChild(dayLabel);
-            var dl = ganttHeader.insertCell(-1);
-            dl.innerHTML = `day ${i}`;
+            const dl = document.createElement("th");
+            dl.innerHTML = `<b>day ${i}</b>`;
+            dl.style.width = `calc(70% / ${N})`;
+            ganttHeader.appendChild(dl);
         }
 
         const ganttChart = document.getElementById("gantt-chart");
@@ -118,4 +94,3 @@
     </script>
 </body>
 </html>
-
