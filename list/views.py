@@ -125,6 +125,19 @@ def check_integrity(structure_str, choices):
     return dict()
 
 
+def getStructChoiceDict(construct):
+    structure_str = construct.struct_json
+    choices = construct.choice_set.all()
+    struc_dict = check_integrity(structure_str, choices)
+    if(len(choices) > 0 and len(struc_dict) == 0):
+        raise ValidationError(f"JSON structure does not correspond to choices of {construct}",
+                                code="Bad integrity")
+    else:
+        print(f'Integrity Ok: {construct}')
+    choice_dict = {str(ch.id):ch for ch in choices}
+    return struc_dict, choice_dict
+
+
 class FakeChoice:
     def __init__(self, ID, name):
         self.id = ID
@@ -137,19 +150,11 @@ def detail(request, construct_id):
         data = json.loads(request.POST["json_value"])
         print(datetime.now(), 'POST data in detail():\n', data)
         save_update(data, construct)
-    structure_str = construct.struct_json
-    choices = construct.choice_set.all()
-    struc_dict = check_integrity(structure_str, choices)
-    if(len(choices) > 0 and len(struc_dict) == 0):
-        raise ValidationError(f"JSON structure does not correspond to choices of {construct}",
-                                code="Bad integrity")
-    else:
-        print(f'Integrity Ok: {construct}')
+    struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0
     choice, choice_price = None, None
-    choice_dict = {str(ch.id):ch for ch in choices}
     for idx, line_x in enumerate(struc_dict.values()):
         if line_x['type'] == 'Choice':
             choice = choice_dict[line_x['id']]
@@ -169,3 +174,7 @@ def detail(request, construct_id):
                'construct_total_vat': construct_total_price * (1. + 0.01*construct.vat_percent_num)}
     return render(request, 'list/detail.html', context)
 
+
+def gantt(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    choices = construct.choice_set.all()
