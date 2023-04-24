@@ -144,13 +144,7 @@ class FakeChoice:
         self.name_txt = name
 
 
-def detail(request, construct_id):
-    construct = get_object_or_404(Construct, pk=construct_id)
-    if request.method == 'POST' and request.POST["json_value"]:
-        data = json.loads(request.POST["json_value"])
-        print(datetime.now(), 'POST data in detail():\n', data)
-        save_update(data, construct)
-    struc_dict, choice_dict = getStructChoiceDict(construct)
+def getChoiceListAndPrices(struc_dict, choice_dict):
     ch_list = []
     construct_total_price = 0.0
     construct_progress = 0.0
@@ -164,6 +158,17 @@ def detail(request, construct_id):
         else:
             choice = FakeChoice(idx, line_x['id'])
         ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice, 'choice_total_price': choice_price})
+    return ch_list, construct_progress, construct_total_price
+
+
+def detail(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    if request.method == 'POST' and request.POST["json_value"]:
+        data = json.loads(request.POST["json_value"])
+        print(datetime.now(), 'POST data in detail():\n', data)
+        save_update(data, construct)
+    struc_dict, choice_dict = getStructChoiceDict(construct)
+    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
     construct.overall_progress_percent_num = construct_progress
@@ -177,4 +182,7 @@ def detail(request, construct_id):
 
 def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    choices = construct.choice_set.all()
+    struc_dict, choice_dict = getStructChoiceDict(construct)
+    ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
+    context = {'ch_list': ch_list}
+    return render(request, 'list/gantt.html', context)
