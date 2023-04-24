@@ -15,8 +15,15 @@
             text-align: center;
             position: relative;
         }
-        .gantt-container {
+        .gantt-chart {
             position: relative;
+        }
+        .gantt-chart::before {
+            content: "";
+            position: absolute;
+            right: 67%;
+            height: 500px;
+            border-right: 1px solid black;
         }
         .gantt-bar {
             position: absolute;
@@ -67,7 +74,6 @@
             ganttBar.classList.add("gantt-bar");
             ganttBar.style.left = `calc(${(task.start / N) * 100}% + 1px)`;
             ganttBar.style.width = `calc(${((task.end - task.start + 1) / N) * 100}% - 1px)`;
-            console.log(ganttBar.style.width)
             ganttBar.textContent = task.name;
 
             ganttContainer.appendChild(ganttBar);
