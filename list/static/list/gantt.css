@@ -1,0 +1,31 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #ccc;
+    padding: 2px 2px 7px 5px;
+    /*text-align: center;*/
+    position: relative;
+}
+.gantt-chart {
+    position: relative;
+}
+.gantt-chart::before {
+    content: "";
+    position: absolute;
+    right: 67%;
+    height: 500px;
+    border-right: 1px solid black;
+}
+.gantt-bar {
+    position: absolute;
+    top: 15%;
+    height: 20px;
+    background-color: #4CAF50;
+    text-align: center;
+    line-height: 20px;
+    color: white;
+    z-index: 1;
+}
+

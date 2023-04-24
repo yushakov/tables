@@ -1,0 +1,29 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<link rel="stylesheet" href="{% static 'list/gantt.css' %}">
+<!--script src="{% static 'list/gantt.js' %}"></script-->
+<h1>Gantt Chart</h1>
+<table id='gantt_table'>
+    <thead>
+        <tr id='gantt-header'>
+            <th class="name_cell">Task name</th>
+            <th>Total price</th>
+            <th>Assigned to</th>
+            <th>Date start</th>
+            <th>Planned days</th>
+        </tr>
+    </thead>
+    <tbody id="gantt-chart">
+    {% for items in ch_list %}
+        {% if items.type == 'Choice' %}
+            <tr id='tr_{{ items.choice.id }}' class='{{ items.type }}'>
+                <td align='left'>{{ items.choice.name_txt }}</td>
+                <td align='right'>&#163;{{ items.choice_total_price }}</td>
+                <td align='center'>{{ items.choice.workers }}</td>
+                <td>{{ items.choice.plan_start_date }}</td>
+                <td align='center'>{{ items.choice.plan_days_num }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+    </tbody>
+</table>
