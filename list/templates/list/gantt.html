@@ -1,16 +1,30 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <link rel="stylesheet" href="{% static 'list/gantt.css' %}">
-<!--script src="{% static 'list/gantt.js' %}"></script-->
+<script src="{% static 'list/gantt.js' %}"></script>
 <h1>Gantt Chart</h1>
+<h2>&nbsp;&nbsp;Project: {{ construct.title_text }}</h2>
+<div>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="{% url 'list:detail' construct.id %}">tasks</a>
+    &nbsp;&nbsp;
+    <a href="{% url 'list:index' %}">projects</a>
+</div>
+<br><br>
+<div id='task_list' style='display:none'>
+{{ marking }}
+</div>
+<div id='total_days' style='display:none'>
+{{ total }}
+</div>
 <table id='gantt_table'>
     <thead>
         <tr id='gantt-header'>
             <th class="name_cell">Task name</th>
             <th>Total price</th>
             <th>Assigned to</th>
-            <th>Date start</th>
-            <th>Planned days</th>
+            <!--th>Date start</th>
+            <th>Planned days</th-->
         </tr>
     </thead>
     <tbody id="gantt-chart">
@@ -20,26 +34,10 @@
                 <td align='left' class='task_name'>{{ items.choice.name_txt }}</td>
                 <td align='right'>&#163;{{ items.choice_total_price }}</td>
                 <td align='center'>{{ items.choice.workers }}</td>
-                <td>{{ items.choice.plan_start_date }}</td>
-                <td align='center'>{{ items.choice.plan_days_num }}</td>
+                <!--td>{{ items.choice.plan_start_date }}</td>
+                <td align='center'>{{ items.choice.plan_days_num }}</td-->
             </tr>
         {% endif %}
     {% endfor %}
     </tbody>
 </table>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const expandableCells = document.querySelectorAll(".task_name");
-    
-    expandableCells.forEach((cell) => {
-        cell.addEventListener("mouseover", () => {
-            cell.style.maxHeight = "none";
-            console.log("mouseover");
-        });
-
-        cell.addEventListener("mouseout", () => {
-            cell.style.maxHeight = "1.2em";
-        });
-    });
-});
-</script>

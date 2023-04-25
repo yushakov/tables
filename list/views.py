@@ -4,7 +4,7 @@ from django.views import generic
 from .models import Construct, Choice
 import json
 from urllib.parse import unquote_plus
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
 
 class IndexView(generic.ListView):
@@ -180,9 +180,28 @@ def detail(request, construct_id):
     return render(request, 'list/detail.html', context)
 
 
+def getMarking(choice_list):
+    starts, ends = [], []
+    marking = {}
+    for choice in choice_list:
+        if choice['type'] == 'Choice':
+            starts.append(choice['choice'].plan_start_date)
+            ends.append(choice['choice'].plan_start_date + timedelta(days=choice['choice'].plan_days_num))
+            marking[choice['choice'].id] = {'start': starts[-1], 'end': ends[-1]}
+    starts.sort()
+    ends.sort()
+    total = ends[-1] - starts[0]
+    common_start = starts[0]
+    for k in marking.keys():
+        marking[k]['start'] = (marking[k]['start'] - common_start).days
+        marking[k]['end']   = (marking[k]['end']   - common_start).days - 1
+    return common_start, marking, total.days
+
+
 def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
-    context = {'ch_list': ch_list}
+    common_start, marking, total = getMarking(ch_list)
+    context = {'construct': construct, 'ch_list': ch_list, 'start': common_start, 'marking': json.dumps(marking), 'total': total}
     return render(request, 'list/gantt.html', context)
