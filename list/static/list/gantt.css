@@ -5,7 +5,6 @@ table {
 th, td {
     border: 1px solid #ccc;
     padding: 2px 2px 7px 5px;
-    /*text-align: center;*/
     position: relative;
 }
 .gantt-chart {
@@ -29,3 +28,22 @@ th, td {
     z-index: 1;
 }
 
+td.task_name {
+    position: absolute;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 1.2em;
+    line-height: 1.2em;
+    width: 300px;
+    z-index: 0;
+}
+
+td.task_name:hover {
+    border: 1px solid black;
+    white-space: normal;
+    max-height: none;
+    line-height: normal;
+    background-color: white;
+    z-index: 1;
+}
