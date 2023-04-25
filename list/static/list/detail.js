@@ -50,6 +50,7 @@ function showPrettyRaw(x) {
     var table = document.getElementById("choices");
     var rows  = Array.from(table.rows);
     var btn   = document.getElementById("PrettyRawBtn");
+    const hideable = document.querySelectorAll(".hide_for_pretty");
     if(btn.innerText == "Show Pretty") {
         rows.forEach(function(row) {
            if(row.rowIndex == 0) {
@@ -69,8 +70,9 @@ function showPrettyRaw(x) {
                header_del.style.display = 'none';
            }
         });
-        document.getElementById("back_to_projects_link").style.display='none';
-        document.getElementById("save_project_as_link").style.display='none';
+        hideable.forEach(function(element) {
+            element.style.display = "none";
+        });
         btn.innerText = "Show Raw";
     } else {
         rows.forEach(function(row) {
@@ -89,8 +91,9 @@ function showPrettyRaw(x) {
                header_del.style.display = 'block';
            }
         });
-        document.getElementById("back_to_projects_link").style.display='block';
-        document.getElementById("save_project_as_link").style.display='block';
+        hideable.forEach(function(element) {
+            element.style.display = "block";
+        });
         btn.innerText = "Show Pretty";
     }
 }
