@@ -22,6 +22,8 @@ function createGanttRow(row, task) {
 }
 
 function formChart() {
+    const start_day_cell = document.getElementById("common_start");
+    start_day_cell.colSpan = gAllDays;
     const ganttHeader = document.getElementById("gantt-header");
     var labels = document.getElementById("day_labels").innerText;
     labels = labels.split(',');

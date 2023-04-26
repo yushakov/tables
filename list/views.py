@@ -204,6 +204,6 @@ def gantt(request, construct_id):
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     common_start, marking, total, labels = getMarking(ch_list)
-    context = {'construct': construct, 'ch_list': ch_list, 'start': common_start,
+    context = {'construct': construct, 'ch_list': ch_list, 'start': common_start.strftime('%B'),
                'marking': json.dumps(marking), 'total': total, 'labels': labels}
     return render(request, 'list/gantt.html', context)
