@@ -6,7 +6,7 @@ table {
 }
 th, td {
     border: 1px solid #ccc;
-    padding: 3px 2px 3px 2px;
+    padding: 3px 4px 3px 4px;
     position: relative;
 }
 
@@ -29,10 +29,11 @@ th, td {
     top: 10%;
     height: 20px;
     background-color: #4CAF50;
+    border-radius: 5px;
     text-align: center;
     line-height: 20px;
     color: white;
-    z-index: 0;
+    z-index: 1;
 }
 
 td.task_name {
