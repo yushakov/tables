@@ -12,15 +12,14 @@ function getGlobals() {
 
 function createGanttRow(row, task) {
     const ganttContainer = document.createElement("td");
-    ganttContainer.style.width = `calc(70%)`;
-    ganttContainer.style.position = 'relative';
+    ganttContainer.classList.add("gantt-container");
+    ganttContainer.style.width = `calc(${gAllDays * 31}px)`;
     ganttContainer.colSpan = gAllDays;
     const ganttBar = document.createElement("div");
     ganttBar.classList.add("gantt-bar");
-    ganttBar.style.left = `calc(${(task.start / gAllDays) * 100}% + 1px)`;
-    ganttBar.style.width = `calc(${((task.end - task.start + 1) / gAllDays) * 100}% - 1px)`;
+    ganttBar.style.left = `calc(${task.start * 31}px + 1px)`;
+    ganttBar.style.width = `calc(${(task.end - task.start + 1) * 31}px - 1px)`;
     ganttBar.textContent = task.name;
-
     ganttContainer.appendChild(ganttBar);
     row.appendChild(ganttContainer);
 }
@@ -30,10 +29,10 @@ function formChart() {
     for (let i = 1; i <= gAllDays; i++) {
         const dl = document.createElement("th");
         dl.innerHTML = `<b>${i}</b>`;
-        dl.style.width = `calc(70% / ${gAllDays})`;
+        dl.style.width = `30px`;
+        dl.classList.add("day_cell");
         ganttHeader.appendChild(dl);
     }
-
     const ganttChart = document.getElementById("gantt-chart");
     const rows = Array.from(ganttChart.rows);
     rows.forEach(function(row) {
