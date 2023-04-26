@@ -1,10 +1,7 @@
-let gTasks = {};
 let gAllDays = -1;
 
 function getGlobals() {
-    var task_list = document.getElementById("task_list");
     var total_days = document.getElementById("total_days");
-    gTasks = JSON.parse(task_list.innerText.replace(/&quot;/g, '"'));
     gAllDays = Number(total_days.innerText);
     //makeExpandableCells();
     formChart();
@@ -26,19 +23,23 @@ function createGanttRow(row, task) {
 
 function formChart() {
     const ganttHeader = document.getElementById("gantt-header");
-    for (let i = 1; i <= gAllDays; i++) {
+    var labels = document.getElementById("day_labels").innerText;
+    labels = labels.split(',');
+    for (let i = 0; i < gAllDays; i++) {
         const dl = document.createElement("th");
-        dl.innerHTML = `<b>${i}</b>`;
+        dl.innerHTML = `<b>${labels[i]}</b>`;
         dl.style.width = `30px`;
         dl.classList.add("day_cell");
         ganttHeader.appendChild(dl);
     }
     const ganttChart = document.getElementById("gantt-chart");
     const rows = Array.from(ganttChart.rows);
+    var task_list = document.getElementById("task_list");
+    tasks = JSON.parse(task_list.innerText.replace(/&quot;/g, '"'));
     rows.forEach(function(row) {
         if(row.rowIndex == 0) return;
         var task_id = Number(row.id.replace(/tr_/, ''));
-        createGanttRow(row, gTasks[task_id]);
+        createGanttRow(row, tasks[task_id]);
     });
 }
 

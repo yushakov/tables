@@ -190,18 +190,20 @@ def getMarking(choice_list):
             marking[choice['choice'].id] = {'start': starts[-1], 'end': ends[-1]}
     starts.sort()
     ends.sort()
-    total = ends[-1] - starts[0]
+    total = (ends[-1] - starts[0]).days
     common_start = starts[0]
+    labels = ', '.join([str((common_start + timedelta(days=i)).day) for i in range(total)])
     for k in marking.keys():
         marking[k]['start'] = (marking[k]['start'] - common_start).days
         marking[k]['end']   = (marking[k]['end']   - common_start).days - 1
-    return common_start, marking, total.days
+    return common_start, marking, total, labels
 
 
 def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
-    common_start, marking, total = getMarking(ch_list)
-    context = {'construct': construct, 'ch_list': ch_list, 'start': common_start, 'marking': json.dumps(marking), 'total': total}
+    common_start, marking, total, labels = getMarking(ch_list)
+    context = {'construct': construct, 'ch_list': ch_list, 'start': common_start,
+               'marking': json.dumps(marking), 'total': total, 'labels': labels}
     return render(request, 'list/gantt.html', context)
