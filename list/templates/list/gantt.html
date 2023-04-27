@@ -2,8 +2,7 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <link rel="stylesheet" href="{% static 'list/gantt.css' %}">
 <script src="{% static 'list/gantt.js' %}"></script>
-<h1>Gantt Chart</h1>
-<h2>&nbsp;&nbsp;Project: {{ construct.title_text }}</h2>
+<h1>{{ construct.title_text }}</h1>
 <div>
     &nbsp;&nbsp;&nbsp;&nbsp;
     <a href="{% url 'list:detail' construct.id %}">tasks</a>
