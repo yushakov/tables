@@ -27,6 +27,13 @@ th#assign_cell  {
     text-align: center;
 }
 
+.day_div {
+    position: absolute;
+    height: 0px;
+    border-left: 1px dotted black;
+}
+
+
 .gantt-chart {
     position: relative;
 }
@@ -41,6 +48,11 @@ th#assign_cell  {
     line-height: 20px;
     color: white;
     z-index: 0;
+}
+
+.gantt-bar:hover {
+    height: 100px;
+    opacity: 0.5;
 }
 
 td.task_name {

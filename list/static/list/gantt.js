@@ -21,6 +21,22 @@ function createGanttRow(row, task) {
     row.appendChild(ganttContainer);
 }
 
+function getTaskNamesHeight() {
+    const name_cells = document.getElementsByClassName("task_name");
+    var total_height = 0;
+    for(var i = 0; i < name_cells.length; i++) {
+        total_height += Number(name_cells[i].parentNode.offsetHeight);
+    }
+    return total_height;
+}
+
+function setDayDivHeight(height) {
+    const days = document.getElementsByClassName("day_div");
+    for(var i = 0; i < days.length; i++) {
+        days[i].style.height = `${height + 26}px`;
+    }
+}
+
 function formChart() {
     const start_day_cell = document.getElementById("common_start");
     start_day_cell.colSpan = gAllDays;
@@ -29,7 +45,7 @@ function formChart() {
     labels = labels.split(',');
     for (let i = 0; i < gAllDays; i++) {
         const dl = document.createElement("th");
-        dl.innerHTML = `<b>${labels[i]}</b>`;
+        dl.innerHTML = `<div class="day_div"></div><b>${labels[i]}</b>`;
         dl.style.width = `30px`;
         dl.classList.add("day_cell");
         ganttHeader.appendChild(dl);
@@ -37,12 +53,14 @@ function formChart() {
     const ganttChart = document.getElementById("gantt-chart");
     const rows = Array.from(ganttChart.rows);
     var task_list = document.getElementById("task_list");
-    tasks = JSON.parse(task_list.innerText.replace(/&quot;/g, '"'));
+    tasks = JSON.parse(task_list.innerText);
     rows.forEach(function(row) {
         if(row.rowIndex == 0) return;
         var task_id = Number(row.id.replace(/tr_/, ''));
         createGanttRow(row, tasks[task_id]);
     });
+    var rows_height = getTaskNamesHeight();
+    setDayDivHeight(rows_height);
 }
 
 function makeExpandableCells() {
