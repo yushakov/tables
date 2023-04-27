@@ -40,6 +40,10 @@ th.name_cell {
     width: 300px;
 }
 
+th.assign_cell  {
+    width: 120px;
+}
+
 .onDelMouseOver {
   background-color: lightgrey;
 }

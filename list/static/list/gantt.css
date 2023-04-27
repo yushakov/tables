@@ -13,10 +13,6 @@ th, td {
     position: relative;
 }
 
-th#assign_cell  {
-    width: 120px;
-}
-
 .gantt-container {
     padding: 0px;
     position: relative;

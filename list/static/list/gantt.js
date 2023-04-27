@@ -15,7 +15,7 @@ function createGanttRow(row, task) {
     const ganttBar = document.createElement("div");
     ganttBar.classList.add("gantt-bar");
     ganttBar.style.left = `calc(${task.start * 31}px + 1px)`;
-    ganttBar.style.width = `calc(${(task.end - task.start + 1) * 31}px - 1px)`;
+    ganttBar.style.width = `calc(${(task.end - task.start + 1) * 31}px - 2px)`;
     ganttBar.textContent = task.name;
     ganttContainer.appendChild(ganttBar);
     row.appendChild(ganttContainer);
@@ -47,6 +47,7 @@ function formChart() {
         const dl = document.createElement("th");
         dl.innerHTML = `<div class="day_div"></div><b>${labels[i]}</b>`;
         dl.style.width = `30px`;
+        if(Number(labels[i]) == 1) dl.style.background = 'lightgrey';
         dl.classList.add("day_cell");
         ganttHeader.appendChild(dl);
     }

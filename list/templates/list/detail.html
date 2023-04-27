@@ -2,19 +2,17 @@
 <script src="{% static 'list/detail.js' %}">
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
+
 <h1>{{ construct.title_text }}</h1>
+
 <div class='hide_for_pretty'>
 &larr; <a href="{% url 'list:index' %}">back to the project list</a>
-</div>
 <br><br>
-<div class='hide_for_pretty'>
 <a href="">Save this project as...</a> (when clicked, the name field appears)<br><br>
-</div>
 <br>
-<div class='hide_for_pretty'>
 <a href="{% url 'list:gantt' construct.id %}">Gantt Chart &rarr;</a>
-</div>
 <br>
+</div>
 
 <table id='choices_head'>
 <tbody>
@@ -64,7 +62,7 @@
     <th>Quantity</th>
     <th><!--Units--></th>
     <th>Total price</th>
-    <th>Assigned to</th>
+    <th class='assign_cell'>Assigned to</th>
     <th>Date start</th>
     <th>Planned days</th>
     <th>Progress</th>
