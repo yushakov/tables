@@ -9,7 +9,7 @@ phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
 
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
-    listed_date = models.DateTimeField('date listed')
+    listed_date = models.DateTimeField('date listed', default=timezone.now)
     last_save_date = models.DateTimeField('last save', default=timezone.now)
     address_text = models.CharField(max_length=500)
     email_text = models.EmailField(default='email@domain.com')
