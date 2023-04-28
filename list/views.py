@@ -68,7 +68,7 @@ def create_choice(cell_data, construct):
              price_num = cells['price'].replace('£','').replace(',','').strip(),
              workers = cells['assigned_to'],
              progress_percent_num = cells['progress'].replace('%','').strip(),
-             plan_start_date = cells['day_start'],
+             plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").date(),
              plan_days_num = cells['days'])
         choice.save()
         return choice.id

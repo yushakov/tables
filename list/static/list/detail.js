@@ -92,7 +92,7 @@ function showPrettyRaw(x) {
            }
         });
         hideable.forEach(function(element) {
-            element.style.display = "block";
+            element.style.display = "table-cell";
         });
         btn.innerText = "Show Pretty";
     }
@@ -246,6 +246,7 @@ function modifyRow(ths) {
     var acro = document.getElementById("active_row");
     if(acro) acro.innerHTML = active_row.rowIndex;
     else console.log("ERROR: can't get 'active_row'");
+	document.getElementById('inpName').focus();
     return false;
 }
 
@@ -475,7 +476,9 @@ function addRow(id, className) {
 	var planDaysCell = newRow.insertCell(g_plan_days_cell_idx);
 	var progressCell = newRow.insertCell(g_progress_cell_idx);
 	var progPcntCell = newRow.insertCell(g_prog_pcnt_cell_idx);
-    newRow.insertCell(g_del_cell_idx);
+    var del_cell_freeze = newRow.insertCell(g_del_cell_idx);
+    del_cell_freeze.innerHTML =
+        "<a href='#' onclick='freezeActiveRow(); return false;'>FREEZE</a>";
 	actionCell.innerHTML = getActionCellHtml(newId);
 	nameCell.innerHTML = "<textarea id='inpName' rows='5' cols='40'></textarea>";
 	if(className == "Choice") {
