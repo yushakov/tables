@@ -1,8 +1,50 @@
 from django.test import TestCase
 import numpy as np
-from list.views import check_integrity
+from list.views import check_integrity, is_yyyy_mm_dd, is_month_day_year
 
 class ViewTests(TestCase):
+    def test_is_yyyy_mm_dd_1(self):
+        date = "2021-01-20"
+        ret = is_yyyy_mm_dd(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_yyyy_mm_dd_2(self):
+        date = "21-01-20"
+        ret = is_yyyy_mm_dd(date)
+        self.assertIs(ret, False)
+
+
+    def test_is_yyyy_mm_dd_3(self):
+        date = "January 10, 2021"
+        ret = is_yyyy_mm_dd(date)
+        self.assertIs(ret, False)
+
+
+    def test_is_month_day_year_1(self):
+        date = "January 10, 2021"
+        ret = is_month_day_year(date)
+        self.assertIs(ret, True)
+
+    
+    def test_is_month_day_year_2(self):
+        date = "Jan 10, 2021"
+        ret = is_month_day_year(date)
+        self.assertIs(ret, False)
+
+    
+    def test_is_month_day_year_4(self):
+        date = "January 10, 21"
+        ret = is_month_day_year(date)
+        self.assertIs(ret, False)
+
+    
+    def test_is_month_day_year_5(self):
+        date = "January     10, 21"
+        ret = is_month_day_year(date)
+        self.assertIs(ret, False)
+
+    
     def test_check_integrity_almost_empty_structure(self):
         class LocalChoice:
             def __init__(self, ID):

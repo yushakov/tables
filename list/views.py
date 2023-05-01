@@ -27,28 +27,59 @@ def index(request):
               }
     return render(request, 'list/index.html', context)
     
+def is_yyyy_mm_dd(date_field):
+    try:
+        datetime.strptime(date_field, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
+
+def is_month_day_year(date_field):
+    try:
+        datetime.strptime(date_field, "%B %d, %Y")
+        return True
+    except ValueError:
+        return False
+
+
+def prepare_data(cells):
+    data = dict()
+    data['name_txt'] = cells['name']
+    data['notes_txt'] = ''
+    data['quantity_num'] = float(cells['quantity'].strip())
+    data['units_of_measure_text'] = cells['units']
+    data['price_num'] = float(cells['price'].replace('£','').replace(',','').strip())
+    data['workers'] = str(cells['assigned_to'])
+    data['progress_percent_num'] = float(cells['progress'].replace('%','').strip())
+    if is_month_day_year(cells['day_start']):
+        data['plan_start_date'] = datetime.strptime(cells['day_start'], "%B %d, %Y").date()
+    elif is_yyyy_mm_dd(cells['day_start']):
+        data['plan_start_date'] = datetime.strptime(cells['day_start'], "%Y-%m-%d").date()
+    data['plan_days_num'] = float(cells['days'])
+    return data
 
 def update_choice(choice_id, cell_data):
     # can be a header
-    if cell_data['class'] == 'Choice':
+    if cell_data['class'].find('Choice') >= 0:
         cells = cell_data['cells']
         choice = Choice.objects.get(pk=choice_id)
-        if cells['class'] == 'delete':
+        if cells['class'].find('delete') >= 0:
             print(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
             print(choice.__dict__)
             choice.delete()
             return -1
         else:
             print(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
-            choice.name_txt = cells['name']
-            choice.notes_txt = ''
-            choice.quantity_num = float(cells['quantity'].strip())
-            choice.units_of_measure_text = cells['units']
-            choice.price_num = float(cells['price'].replace('£','').replace(',','').strip())
-            choice.workers = str(cells['assigned_to'])
-            choice.progress_percent_num = float(cells['progress'].replace('%','').strip())
-            choice.plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").date()
-            choice.plan_days_num = float(cells['days'])
+            data = prepare_data(cells)
+            choice.name_txt =                 data['name_txt']
+            choice.notes_txt =                data['notes_txt']
+            choice.quantity_num =             data['quantity_num']
+            choice.units_of_measure_text =    data['units_of_measure_text']
+            choice.price_num =                data['price_num']
+            choice.workers =                  data['workers']
+            choice.progress_percent_num =     data['progress_percent_num']
+            choice.plan_start_date =          data['plan_start_date']
+            choice.plan_days_num =            data['plan_days_num']          
             choice.save()
             return int(choice_id)
         return -1
@@ -56,20 +87,21 @@ def update_choice(choice_id, cell_data):
 
 
 def create_choice(cell_data, construct):
-    if cell_data['class'] == 'Choice':
+    if cell_data['class'].find('Choice') >= 0:
         cells = cell_data['cells']
         # if it's new, but already deleted
-        if cells['class'] == 'delete': return -1
+        if cells['class'].find('delete') >= 0: return -1
+        data = prepare_data(cells)
         choice = Choice(construct=construct,
-             name_txt = cells['name'],
-             notes_txt = '',
-             quantity_num = cells['quantity'],
-             units_of_measure_text = cells['units'],
-             price_num = cells['price'].replace('£','').replace(',','').strip(),
-             workers = cells['assigned_to'],
-             progress_percent_num = cells['progress'].replace('%','').strip(),
-             plan_start_date = datetime.strptime(cells['day_start'], "%B %d, %Y").date(),
-             plan_days_num = cells['days'])
+             name_txt              = data['name_txt'],
+             notes_txt             = data['notes_txt'],
+             quantity_num          = data['quantity_num'],
+             units_of_measure_text = data['units_of_measure_text'],
+             price_num             = data['price_num'],
+             workers               = data['workers'],
+             progress_percent_num  = data['progress_percent_num'],
+             plan_start_date       = data['plan_start_date'],
+             plan_days_num         = data['plan_days_num'])
         choice.save()
         return choice.id
     # can be just header
