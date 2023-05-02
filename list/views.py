@@ -62,7 +62,12 @@ def update_choice(choice_id, cell_data):
     # can be a header
     if cell_data['class'].find('Choice') >= 0:
         cells = cell_data['cells']
-        choice = Choice.objects.get(pk=choice_id)
+        try:
+            choice = Choice.objects.get(pk=choice_id)
+        except Exception:
+            print(f"EXCEPTION on trying to update choice: {choice_id}")
+            print(f"cell_data['cells']: {cells}")
+            return -2
         if cells['class'].find('delete') >= 0:
             print(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
             print(choice.__dict__)
