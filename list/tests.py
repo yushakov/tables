@@ -16,8 +16,8 @@ class ViewTests(TestCase):
         self.assertIs(construct.id is not None, True)
 
 
-    def test_update_choice_1(self):
-        print("test_update_choice_1()")
+    def test_update_choice_no_update(self):
+        print("test_update_choice_no_update()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',
@@ -36,8 +36,8 @@ class ViewTests(TestCase):
         self.assertIs(ret == choice_id, True)
 
 
-    def test_update_choice_2(self):
-        print("test_update_choice_2()")
+    def test_update_choice_1(self):
+        print("test_update_choice_1()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',
@@ -76,6 +76,27 @@ class ViewTests(TestCase):
         cells['class'] = 'delete'
         ret = update_choice(choice_id, cell_data)
         self.assertIs(ret == -1, True)
+
+
+    def test_update_choice_for_header(self):
+        print("test_update_choice_for_header()")
+        cells = {'class': '',
+                 'name': 'task_name_to_update',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15',
+                 'days': '365'}      
+        cell_data = {'class': 'Header2', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        choice_id = create_choice(cell_data, construct)
+        cells['units'] = 'sq. m.'
+        ret = update_choice(choice_id, cell_data)
+        self.assertIs(ret == choice_id, True)
 
 
     def test_create_choice_1(self):
