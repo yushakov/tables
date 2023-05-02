@@ -1,8 +1,159 @@
 from django.test import TestCase
 import numpy as np
-from list.views import check_integrity, is_yyyy_mm_dd, is_month_day_year
+from list.views import check_integrity,   \
+                       is_yyyy_mm_dd,     \
+                       is_month_day_year, \
+                       create_choice,     \
+                       update_choice
+from list.models import Construct, Choice
 
 class ViewTests(TestCase):
+    def test_create_construct(self):
+        print("test_create_construct()")
+        construct = Construct()
+        construct.save()
+        print(f"Construct ID: {construct.id}")
+        self.assertIs(construct.id is not None, True)
+
+
+    def test_update_choice_1(self):
+        print("test_update_choice_1()")
+        cells = {'class': '',
+                 'name': 'task_name_to_update',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15',
+                 'days': '365'}      
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        choice_id = create_choice(cell_data, construct)
+        ret = update_choice(choice_id, cell_data)
+        self.assertIs(ret == choice_id, True)
+
+
+    def test_update_choice_2(self):
+        print("test_update_choice_2()")
+        cells = {'class': '',
+                 'name': 'task_name_to_update',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15',
+                 'days': '365'}      
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        choice_id = create_choice(cell_data, construct)
+        cells['units'] = 'sq. m.'
+        ret = update_choice(choice_id, cell_data)
+        self.assertIs(ret == choice_id, True)
+
+
+    def test_update_choice_delete(self):
+        print("test_update_choice_delete()")
+        cells = {'class': '',
+                 'name': 'task_name_to_update',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15',
+                 'days': '365'}      
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        choice_id = create_choice(cell_data, construct)
+        cells['class'] = 'delete'
+        ret = update_choice(choice_id, cell_data)
+        self.assertIs(ret == -1, True)
+
+
+    def test_create_choice_1(self):
+        print("test_create_choice_1()")
+        cells = {'class': '',
+                 'name': 'task_name',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15', # focus here 
+                 'days': '365'}      
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        ret = create_choice(cell_data, construct)
+        self.assertIs(ret >= 0, True)
+
+
+    def test_create_choice_2(self):
+        print("test_create_choice_2()")
+        cells = {'class': '',
+                 'name': 'task_name',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': 'April 15, 2023', # focus here
+                 'days': '365'}      
+        cell_data = {'class': 'Choice delete', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        ret = create_choice(cell_data, construct)
+        self.assertIs(ret >= 0, True)
+
+
+    def test_create_choice_3(self):
+        print("test_create_choice_3()")
+        cells = {'class': 'delete hello', # focus here
+                 'name': 'task_name',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '£100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': 'April 15, 2023',
+                 'days': '365'}      
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        ret = create_choice(cell_data, construct)
+        self.assertIs(ret == -1, True)
+
+
+    def test_create_choice_header(self):
+        print("test_create_choice_header()")
+        cells = {'class': '',
+                 'name': 'task_name',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': 'April 15, 2023',
+                 'days': '365'}      
+        cell_data = {'class': 'Header2', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        ret = create_choice(cell_data, construct)
+        self.assertIs(ret == -1, True)
+
+
     def test_is_yyyy_mm_dd_1(self):
         print('test_is_yyyy_mm_dd_1')
         date = "2021-01-20"
