@@ -482,7 +482,7 @@ function addRow(id, className) {
 	actionCell.innerHTML = getActionCellHtml(newId);
 	nameCell.innerHTML = "<textarea id='inpName' rows='5' cols='40'></textarea>";
 	if(className == "Choice") {
-		priceCell.innerHTML    = "<input id='inpPrice' type='text' size='5'/>";
+		priceCell.innerHTML    = "<input id='inpPrice' type='text' size='5' value='1'/>";
         qtyCell.innerHTML      = "<input id='inpQty' type='text' size='3' value='1'/>";
         unitsCell.innerHTML    = "<input id='inpUnits' type='text' size='3' value='nr'/>";
         asgnToCell.innerHTML   = "<input id='inpAsgnTo' type='text' size='5' value='Somebody'/>";

@@ -154,6 +154,21 @@ def check_integrity(structure_str, choices):
     ids_in_struct.sort()
     if choice_ids == ids_in_struct:
         return struc
+    else:
+        print(f'Integrity mismatch')
+        print(f'Choices: {choice_ids}')
+        print(f'Structure: {ids_in_struct}')
+        voc = {str(ch.id): ch.name_txt[:30] for ch in choices}
+        for ch in choices:
+            print(f'{ch.id}: {ch.name_txt[:30]}')
+        for k in struc.keys():
+            if struc[k]["type"] == "Choice":
+                if struc[k]["id"] in voc.keys():
+                    print(f'{k}: {struc[k]["id"]} "{voc[struc[k]["id"]]}"')
+                else:
+                    print(f'There is no {struc[k]["id"]} in choices IDs')
+            else:
+                print(f'{k}: {struc[k]}')
     return dict()
 
 
