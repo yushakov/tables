@@ -53,6 +53,7 @@ th, td {
 
 td.task_name {
     position: absolute;
+    display: table-cell;
     border: none;
     border-top: 1px solid lightgrey;
     white-space: nowrap;
@@ -62,6 +63,7 @@ td.task_name {
     line-height: 1.2em;
     width: 300px;
     z-index: 1;
+    background-color: white;
 }
 
 td.task_name:hover {
