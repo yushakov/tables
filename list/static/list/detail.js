@@ -36,6 +36,35 @@ function getDeleteCellHtml() {
         + "onmouseout='delMouseOut(this);'>modify</a>";
 }
 
+function updateRows() {
+    var table = document.getElementById("choices");
+    var rows = Array.from(table.rows);
+    console.log("updateRows");
+    rows.forEach(function(row) {
+        row.cells[g_name_cell_idx].addEventListener("click", function() {
+            var active_row_holder = document.getElementById("active_row");
+            var id = active_row_holder.innerText;
+            if(Number(id) >= 0) return;
+            var prev = row.previousElementSibling;
+            var next = row.nextElementSibling;
+            var parent = row.parentNode;
+            if(parent) {
+                if(window.event.ctrlKey && !window.event.altKey && next) {
+                    parent.insertBefore(next, row);
+                    setModified();
+                    updateHeaders();
+                }
+                if(!window.event.ctrlKey && window.event.altKey && prev) {
+                    parent.insertBefore(row, prev);
+                    setModified();
+                    updateHeaders();
+                }
+                row.focus();
+            }
+        });
+    });
+}
+
 function setForm() {
     //return;
     const form = document.getElementById('choices_form');
@@ -44,6 +73,7 @@ function setForm() {
         saveChoices();
         form.submit();
     });
+    updateRows();
 }
 
 function showPrettyRaw(x) {
@@ -196,6 +226,7 @@ function modify(ths) {
 
 function setModified() {
     var modiff = document.getElementById('project_last_save_date');
+    document.getElementById('modified').innerText = 'yes';
     if(modiff.innerText.search("\\*\\*\\*") < 0) {
         modiff.innerHTML += '<p style="color:red">*** do not forget to save changes ***</p>';
     }
