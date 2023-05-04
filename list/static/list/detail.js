@@ -412,13 +412,47 @@ function updateHeaders() {
             }
         }
     });
+    updateMoneyInfo(total_price);
+}
+
+function updateMoneyInfo(total_price) {
     var project_total     = document.getElementById("project_total");
     var project_total_vat = document.getElementById("project_total_vat");
     var project_vat       = document.getElementById("project_vat").innerHTML;
+    var progress_cost     = document.getElementById("progress_cost");
+    var progress_vat      = document.getElementById("progress_vat");
+    var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").trim());
+    var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
+    var progress_cost_value = Math.round(get_progress_cost());
+    var progress_vat_value = Math.round(progress_cost_value * (1.0 + 0.01 * vat));
+    var to_be_paid_value = progress_vat_value - paid_value;
+    to_be_paid.innerHTML = '&#163; ' + Number(to_be_paid_value).toLocaleString(gLocale);
+    if(to_be_paid_value > 0) {
+        to_be_paid.style = "color: red";
+    } else {
+        to_be_paid.style = "color: blue";
+    }
+    progress_cost.innerHTML = '&#163; ' + progress_cost_value;
+    progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
     project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
     project_total_vat.innerHTML
         = '&#163; ' + Number(Math.round(total_price * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
+}
+
+function get_progress_cost() {
+    var rows = Array.from(document.getElementById("choices").rows);
+    var progress_cost = 0.0;
+    rows.forEach(function(row) {
+        var total_price_cells = row.getElementsByClassName("choice_total_price");
+        var progress_cells    = row.getElementsByClassName("choice_progress_percent");
+        if(total_price_cells.length == 1 && progress_cells.length == 1) {
+            var total_price      = Number(total_price_cells[0].innerText.replace(/£/,"").trim());
+            var progress_percent = Number(progress_cells[0].innerText.replace(/%/,"").trim());
+            progress_cost += total_price * 0.01*progress_percent;
+        }
+    });
+    return progress_cost;
 }
 
 function restoreDeleted(ths) {
