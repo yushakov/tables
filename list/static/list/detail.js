@@ -307,6 +307,7 @@ function freezeActiveRow() {
 				active_row.cells[g_units_cell_idx].innerHTML = encodeHTML(units);
 				active_row.cells[g_tot_prc_cell_idx].innerHTML
                                            = '&#163; ' + Number(price_num * Number(qty)).toLocaleString(gLocale);
+                active_row.cells[g_tot_prc_cell_idx].classList.add("choice_total_price");
 				active_row.cells[g_tot_prc_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_asgn_to_cell_idx].innerHTML = encodeHTML(asgnTo);
 				active_row.cells[g_day_start_cell_idx].innerHTML = encodeHTML(dayStart);
@@ -316,6 +317,7 @@ function freezeActiveRow() {
                         "<td><progress max='100' value='" + progress + "'></progress></td>";
                 active_row.cells[g_prog_pcnt_cell_idx].innerHTML = 
                         "<td align='right'>" + progress + " %</td>";
+                active_row.cells[g_prog_pcnt_cell_idx].classList.add("choice_progress_percent");
 			}
 			else if(active_row.classList.contains("Header2")) {
                 del_cell_idx -= g_header_del_col_span-1;
