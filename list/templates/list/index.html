@@ -11,13 +11,15 @@
         <td>
             <a href="{% url 'list:detail' construct.id %}">{{ construct.title_text }}</a>
         </td>
-        <td>
+        <!--td>
             <progress id="project_progress" max="100"
                 value="{{ construct.overall_progress_percent_num }}">
             </progress>
-        </td>
-        <td align='right'>
-            {{ construct.overall_progress_percent_num|floatformat:2 }} %
+        </td-->
+        <td align='left' class='progress-cell'>
+            <div class='project-progress' style='width: {{ construct.overall_progress_percent_num }}%'>
+                {{ construct.overall_progress_percent_num|floatformat:2 }}&nbsp;%
+            </div>
         </td>
         <td>
             <a href="{% url 'list:gantt' construct.id %}">Gantt Chart</a>

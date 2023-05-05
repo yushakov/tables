@@ -85,3 +85,26 @@ table#choices_footer td, table#choices_footer th {
     border: none;
     padding: 7px;
 }
+
+table#construct_list {
+    table-layout: fixed;
+    width: max-content;
+}
+
+td.progress-cell {
+    position: relative;
+    width: 200px;
+}
+
+.project-progress {
+    position: relative;
+    left: 0;
+    width: 0%;
+    top: 10%;
+    background-color: lightblue;
+    border-radius: 5px;
+    text-align: center;
+    line-height: 120%;
+    color: black;
+    z-index: 0;
+}
