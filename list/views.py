@@ -123,7 +123,8 @@ def add_to_structure(structure, row_data, choice_id):
             row_id = row_data['cells']['name'].split('£')[0].strip()
         else:
             row_id = row_data['cells']['name'].strip()
-    else:
+    elif row_type.startswith('Choice'):
+        row_type = "Choice";
         if choice_id < 0: return
         row_id = str(choice_id)
     structure.update({f'line_{ln_cntr}':{'type':row_type, 'id':row_id}})
@@ -154,7 +155,7 @@ def check_integrity(structure_str, choices):
         struc = json.loads(structure_str)
     else:
         struc = {f'line{k+1}': {'type':'Choice', 'id': str(n)} for k, n in enumerate(choice_ids)}
-    ids_in_struct = [int(ln['id']) for ln in struc.values() if ln['type'] == 'Choice']
+    ids_in_struct = [int(ln['id']) for ln in struc.values() if ln['type'].startswith('Choice')]
     choice_ids.sort()
     ids_in_struct.sort()
     if choice_ids == ids_in_struct:
@@ -167,7 +168,7 @@ def check_integrity(structure_str, choices):
         for ch in choices:
             print(f'{ch.id}: {ch.name_txt[:30]}')
         for k in struc.keys():
-            if struc[k]["type"] == "Choice":
+            if struc[k]["type"].startswith("Choice"):
                 if struc[k]["id"] in voc.keys():
                     print(f'{k}: {struc[k]["id"]} "{voc[struc[k]["id"]]}"')
                 else:
@@ -202,7 +203,7 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
     construct_progress = 0.0
     choice, choice_price = None, None
     for idx, line_x in enumerate(struc_dict.values()):
-        if line_x['type'] == 'Choice':
+        if line_x['type'].startswith('Choice'):
             choice = choice_dict[line_x['id']]
             choice_price = choice.price_num * choice.quantity_num
             construct_progress += choice_price * 0.01 * choice.progress_percent_num
@@ -237,7 +238,7 @@ def getMarking(choice_list):
     starts, ends = [], []
     marking = {}
     for choice in choice_list:
-        if choice['type'] == 'Choice':
+        if choice['type'].startswith('Choice'):
             starts.append(choice['choice'].plan_start_date)
             ends.append(choice['choice'].plan_start_date + timedelta(days=choice['choice'].plan_days_num))
             marking[choice['choice'].id] = {'start': starts[-1], 'end': ends[-1]}
