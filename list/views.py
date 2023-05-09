@@ -214,12 +214,17 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
     return ch_list, construct_progress, construct_total_price
 
 
-def detail(request, construct_id):
-    construct = get_object_or_404(Construct, pk=construct_id)
-    if request.method == 'POST' and request.POST["json_value"]:
+def process_post(request, construct):
+    if request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
         print(datetime.now(), 'POST data in detail():\n', data)
         save_update(data, construct)
+
+
+def detail(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    if request.method == 'POST':
+        process_post(request, construct)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
