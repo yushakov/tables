@@ -342,6 +342,7 @@ function freezeActiveRow() {
 		}
         active_row_holder.innerHTML = "-1";
         updateHeaders();
+        updateIDs();
 	}
 	return true;
 }
