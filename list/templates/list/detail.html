@@ -116,7 +116,11 @@
         </td>
         <td>{{ items.choice.plan_start_date }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
-        <td><progress max='100' value='{{ items.choice.progress_percent_num }}'></progress></td>
+        <td class="progress-cell">
+            <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
+                {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
+            </div>
+        </td>
         <td align='right' class='choice_progress_percent'>{{ items.choice.progress_percent_num }} %</td>
         <td class='del_modif_cell'>
     {% else %}

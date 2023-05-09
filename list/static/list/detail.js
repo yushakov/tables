@@ -313,8 +313,10 @@ function freezeActiveRow() {
 				active_row.cells[g_day_start_cell_idx].innerHTML = encodeHTML(dayStart);
 				active_row.cells[g_plan_days_cell_idx].innerHTML = encodeHTML(planDays);
 				active_row.cells[g_plan_days_cell_idx].style.textAlign = 'center';
+                active_row.cells[g_progress_cell_idx].classList.add("progress-cell");
                 active_row.cells[g_progress_cell_idx].innerHTML = 
-                        "<td><progress max='100' value='" + progress + "'></progress></td>";
+                        "<div class='project-progress' style='width: " + progress + "%'>"
+                            + progress + "&nbsp;%</div>";
                 active_row.cells[g_prog_pcnt_cell_idx].innerHTML = 
                         "<td align='right'>" + progress + " %</td>";
                 active_row.cells[g_prog_pcnt_cell_idx].classList.add("choice_progress_percent");
