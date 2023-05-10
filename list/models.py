@@ -76,7 +76,7 @@ class Choice(models.Model):
     actual_end_date = models.DateField(default=timezone.now)
 
     def __str__(self):
-        return self.name_txt + f' ({self.construct})'
+        return f'{self.id}: ' + self.name_txt + f' ({self.construct})'
 
     def save(self, *args, **kwargs):
         if self.pk:  # pk will be None for a new instance

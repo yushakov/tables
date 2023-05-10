@@ -302,8 +302,8 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dic) == 6, True)
 
 
-    def test_check_integrity_resend_post(self):
-        print("test_check_integrity_resend_post()")
+    def test_process_post(self):
+        print("\n>>> test_process_post() <<<")
         class Request:
             method = "POST"
             POST = {"json_value":
@@ -312,56 +312,159 @@ class ViewTests(TestCase):
   "row_1": {
     "id": "hd_0",
     "class": "Header2",
-    "cells": {
-      "class": "td_header_2",
-      "name": "Bathroom",
-      "price": "",
-      "quantity": "",
-      "units": "",
-      "total_price": "",
-      "assigned_to": "",
-      "day_start": "delete | modify"
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
     }
   },
   "row_2": {
     "id": "",
     "class": "Choice",
-    "cells": {
-      "class": "",
-      "name": "mirror",
-      "price": "£ 1",
-      "quantity": "1",
-      "units": "nr",
-      "total_price": "£ 1",
-      "assigned_to": "Somebody",
-      "day_start": "2023-05-09",
-      "days": "1",
-      "progress_bar": "0.0%",
-      "progress": "0.0 %",
-      "delete_action": "delete | modify"
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
     }
   },
   "row_3": {
     "id": "",
     "class": "Choice",
-    "cells": {
-      "class": "",
-      "name": "Bathtub silicon",
-      "price": "£1.0",
-      "quantity": "1.0",
-      "units": "nr",
-      "total_price": "£1.0",
-      "assigned_to": "Somebody",
-      "day_start": "May 9, 2023",
-      "days": "1.0",
-      "progress_bar": "5.00%",
-      "progress": "5.0 %",
-      "delete_action": "delete | modify"
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
     }
   }
 }
 '''}
-        construct = Construct()
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 3)
+
+
+    def test_check_integrity_resend_post(self):
+        print("\n>>> test_check_integrity_resend_post() <<<")
+        class Request:
+            method = "POST"
+            POST = {"json_value":
+'''
+{
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        request = Request()
+        process_post(request, construct)
+        request.POST = {"json_value" :
+'''
+{
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "tr_1",
+    "class": "Choice",
+    "cells": {"class": "delete and", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "tr_2",
+    "class": "Choice",
+    "cells": { "class": "delete and", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_4": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_5": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 3)
+
+
+    def test_check_integrity_wrong_resend_post(self):
+        print("\n>>> test_check_integrity_wrong_resend_post() <<<")
+        class Request:
+            method = "POST"
+            POST = {"json_value":
+'''
+{
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        construct = Construct(title_text="Construct name")
         construct.save()
         request = Request()
         process_post(request, construct)
@@ -369,7 +472,7 @@ class ViewTests(TestCase):
         structure_str = construct.struct_json
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
-        self.assertIs(len(struc_dict), 2)
+        self.assertIs(len(struc_dict), 0)
 
 
     def test_check_integrity_wrong_structure_2(self):
