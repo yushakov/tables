@@ -134,6 +134,7 @@ def save_update(data, construct):
     structure = dict()
     ln_cntr = 1
     for key in data.keys():
+        if not key.startswith("row_"): continue
         row_id = data[key]['id']
         choice_id = None
         if row_id.startswith('tr_'):
@@ -214,11 +215,20 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
     return ch_list, construct_progress, construct_total_price
 
 
+def checkTimeStamp(data, construct):
+    if 'timestamp' in data:
+        if int(data['timestamp']) > int(construct.last_save_date.timestamp()):
+            return True
+    print("ERROR: no timestamp or wrong timestamp")
+    return False
+
+
 def process_post(request, construct):
     if request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
         print(datetime.now(), 'POST data in detail():\n', data)
-        save_update(data, construct)
+        if checkTimeStamp(data, construct):
+            save_update(data, construct)
 
 
 def detail(request, construct_id):

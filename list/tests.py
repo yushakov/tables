@@ -1,14 +1,28 @@
 from django.test import TestCase
 import numpy as np
+import datetime as dt
 from list.views import check_integrity,   \
                        is_yyyy_mm_dd,     \
                        is_month_day_year, \
                        create_choice,     \
                        update_choice,     \
-                       process_post
+                       process_post,      \
+                       checkTimeStamp
 from list.models import Construct, Choice
 
 class ViewTests(TestCase):
+    def test_checkTimeStamp(self):
+        print("\n>>> test_checkTimeStamp() <<<")
+        construct1 = Construct()
+        construct1.save()
+        construct2 = Construct()
+        construct2.save()
+        stamp2 = int(construct2.last_save_date.timestamp()) + 2
+        data = {"timestamp" : str(stamp2)}
+        result = checkTimeStamp(data, construct1)
+        self.assertIs(result, True)
+
+
     def test_create_construct(self):
         print("test_create_construct()")
         construct = Construct()
@@ -304,11 +318,13 @@ class ViewTests(TestCase):
 
     def test_process_post(self):
         print("\n>>> test_process_post() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
-            POST = {"json_value":
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
-{
   "row_1": {
     "id": "hd_0",
     "class": "Header2",
@@ -334,8 +350,6 @@ class ViewTests(TestCase):
   }
 }
 '''}
-        construct = Construct(title_text="Construct name")
-        construct.save()
         request = Request()
         process_post(request, construct)
         structure_str = construct.struct_json
