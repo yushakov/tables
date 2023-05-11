@@ -220,7 +220,10 @@ def checkTimeStamp(data, construct):
         if int(data['timestamp']) > int(construct.last_save_date.timestamp()):
             return True
         else:
-            print(f"ERROR: wrong timestamp. Data: {int(data['timestamp'])}, construct: {int(construct.last_save_date.timestamp())}")
+            print(f"WARNING: wrong timestamp. Data: {int(data['timestamp'])}, " +
+                   f"construct: {int(construct.last_save_date.timestamp())}. " +
+                   f"Data is older by {int(construct.last_save_date.timestamp()) - int(data['timestamp'])} seconds. " +
+                   "Was it Re-Send?")
     else:
         print("ERROR: no timestamp")
     return False
