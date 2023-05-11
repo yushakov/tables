@@ -1,6 +1,7 @@
 from django.test import TestCase
 import numpy as np
 import datetime as dt
+import json
 from list.views import check_integrity,   \
                        is_yyyy_mm_dd,     \
                        is_month_day_year, \
@@ -360,11 +361,13 @@ class ViewTests(TestCase):
 
     def test_check_integrity_resend_post(self):
         print("\n>>> test_check_integrity_resend_post() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_earlier = int(dt.datetime.now().timestamp()) + 3
         class Request:
             method = "POST"
-            POST = {"json_value":
+            POST = {"json_value": "{" + f'"timestamp": "{time_earlier}",' + \
 '''
-{
   "row_1": {
     "id": "hd_0",
     "class": "Header2",
@@ -390,13 +393,11 @@ class ViewTests(TestCase):
   }
 }
 '''}
-        construct = Construct(title_text="Construct name")
-        construct.save()
         request = Request()
         process_post(request, construct)
-        request.POST = {"json_value" :
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        request.POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
-{
   "row_1": {
     "id": "hd_0",
     "class": "Header2",
@@ -446,8 +447,52 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 3)
 
 
-    def test_check_integrity_wrong_resend_post(self):
-        print("\n>>> test_check_integrity_wrong_resend_post() <<<")
+    def test_check_integrity_wrong_post_2(self):
+        print("\n>>> test_check_integrity_wrong_post_2() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_earlier = int(dt.datetime.now().timestamp()) - 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_earlier}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 0)
+
+
+    def test_check_integrity_wrong_post_1(self):
+        print("\n>>> test_check_integrity_wrong_post_1() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
         class Request:
             method = "POST"
             POST = {"json_value":
@@ -478,15 +523,63 @@ class ViewTests(TestCase):
   }
 }
 '''}
-        construct = Construct(title_text="Construct name")
-        construct.save()
         request = Request()
-        process_post(request, construct)
         process_post(request, construct)
         structure_str = construct.struct_json
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
         self.assertIs(len(struc_dict), 0)
+
+
+    def test_check_integrity_wrong_resend_post(self):
+        '''
+            Passes timestamp check, but structure is wrong.
+            This one should not break the construct's structure.
+        '''
+        print("\n>>> test_check_integrity_wrong_resend_post() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_earlier = int(dt.datetime.now().timestamp()) + 3
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_earlier}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        post_json_line = json.loads(request.POST["json_value"])
+        post_json_line["timestamp"] = str(time_later)
+        request.POST["json_value"] = json.dumps(post_json_line)
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 3)
 
 
     def test_check_integrity_wrong_structure_2(self):

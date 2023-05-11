@@ -162,7 +162,7 @@ def check_integrity(structure_str, choices):
     if choice_ids == ids_in_struct:
         return struc
     else:
-        print(f'Integrity mismatch')
+        print(f'ERROR: Integrity mismatch')
         print(f'Choices: {choice_ids}')
         print(f'Structure: {ids_in_struct}')
         voc = {str(ch.id): ch.name_txt[:30] for ch in choices}
@@ -219,7 +219,10 @@ def checkTimeStamp(data, construct):
     if 'timestamp' in data:
         if int(data['timestamp']) > int(construct.last_save_date.timestamp()):
             return True
-    print("ERROR: no timestamp or wrong timestamp")
+        else:
+            print(f"ERROR: wrong timestamp. Data: {int(data['timestamp'])}, construct: {int(construct.last_save_date.timestamp())}")
+    else:
+        print("ERROR: no timestamp")
     return False
 
 
