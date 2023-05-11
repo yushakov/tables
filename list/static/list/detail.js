@@ -586,6 +586,7 @@ function saveChoices() {
            {"id": String(row.id), "class": String(row.classList), "cells": cell_dict};
     });
     modified.innerText = 'no';
+    out["timestamp"] = String(Math.round(Date.now()/1000));
     document.getElementById('json_input').value = JSON.stringify(out);
     return true;
 }
