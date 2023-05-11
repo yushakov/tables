@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.utils.html import format_html
 from django.utils import timezone
+from datetime import timedelta
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
@@ -26,7 +27,8 @@ class Construct(models.Model):
         return self.title_text
 
     def save(self, *args, **kwargs):
-        self.last_save_date = timezone.now()
+        delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
+        self.last_save_date = timezone.now() + delta_to_make_construct_a_bit_younger
         super(Construct, self).save(*args, **kwargs)
 
     @admin.display(description='Progress')
