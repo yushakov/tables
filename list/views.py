@@ -245,8 +245,9 @@ def detail(request, construct_id):
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
-    construct.overall_progress_percent_num = construct_progress
-    construct.save()
+    if construct.overall_progress_percent_num != construct_progress:
+        construct.overall_progress_percent_num = construct_progress
+        construct.save()
     context = {'construct': construct,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
