@@ -8,6 +8,15 @@ from datetime import timedelta
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
 
+
+class Client(models.Model):
+    name = models.CharField(max_length=100)
+    contact_info = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
     listed_date = models.DateTimeField('date listed', default=timezone.now)
@@ -93,3 +102,66 @@ class Choice(models.Model):
             print(f'New "{self.name_txt[:50]}" in DB')
         self.construct.save()
         super(Choice, self).save(*args, **kwargs)
+
+
+class Project(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class Transaction(models.Model):
+    INCOMING = 'IN'
+    OUTGOING = 'OUT'
+
+    TRANSACTION_TYPES = [
+        (INCOMING, 'Incoming'),
+        (OUTGOING, 'Outgoing'),
+    ]
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    transaction_type = models.CharField(max_length=3, choices=TRANSACTION_TYPES)
+    construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+    date = models.DateField()
+
+    def __str__(self):
+        return f'{self.transaction_type} - {self.amount}'
+
+
+class Invoice(models.Model):
+    number = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    issue_date = models.DateField()
+    due_date = models.DateField()
+    seller = models.CharField(max_length=100)
+    construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+    transactions = models.ManyToManyField(Transaction, through='InvoiceTransaction')
+
+    def __str__(self):
+        return self.number
+
+
+class Receipt(models.Model):
+    number = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    date = models.DateField()
+    transaction = models.OneToOneField(Transaction, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.number
+
+
+class InvoiceTransaction(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    class Meta:
+        unique_together = ('invoice', 'transaction')
+
+    def __str__(self):
+        return f'{self.invoice} - {self.transaction}'
+
