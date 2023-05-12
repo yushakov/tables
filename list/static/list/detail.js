@@ -86,6 +86,7 @@ function showPrettyRaw(x) {
            if(row.rowIndex == 0) {
                row.cells[g_action_cell_idx].innerHTML = '';
                row.cells[g_del_cell_idx].style.display = 'none';
+               row.cells[g_prog_pcnt_cell_idx].style.display = 'none';
                return;
            } else {
                row.cells[g_action_cell_idx].innerHTML = row.rowIndex;
@@ -95,9 +96,11 @@ function showPrettyRaw(x) {
            }
            if(row.classList.contains('Choice')) {
                row.cells[g_del_cell_idx].style.display = 'none';
+               row.cells[g_prog_pcnt_cell_idx].style.display = 'none';
            } else {
                var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
                header_del.style.display = 'none';
+               row.cells[g_prog_pcnt_cell_idx-g_header_del_col_span+1].style.display = 'none';
            }
         });
         hideable.forEach(function(element) {
@@ -109,6 +112,7 @@ function showPrettyRaw(x) {
            row.cells[g_action_cell_idx].innerHTML = getActionCellHtml(row.rowIndex);
            if(row.rowIndex == 0) {
                row.cells[g_del_cell_idx].style.display = 'table-cell';
+               row.cells[g_prog_pcnt_cell_idx].style.display = 'table-cell';
                return;
            }
            if(row.cells[g_name_cell_idx].classList.contains('delete')) {
@@ -116,9 +120,11 @@ function showPrettyRaw(x) {
            }
            if(row.classList.contains('Choice')) {
                row.cells[g_del_cell_idx].style.display    = 'table-cell';
+               row.cells[g_prog_pcnt_cell_idx].style.display = 'table-cell';
            } else {
                var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
                header_del.style.display = 'block';
+               row.cells[g_prog_pcnt_cell_idx-g_header_del_col_span+1].style.display = 'table-cell';
            }
         });
         hideable.forEach(function(element) {
