@@ -52,6 +52,12 @@ class Construct(models.Model):
     def goto(self):
         return format_html("<a href='/list/{}'>view</a>", self.id)
 
+    def balance(self):
+        all_tas = self.transaction_set.all()
+        income  = sum([ta.amount for ta in all_tas if ta.transaction_type == f"{ta.TRANSACTION_TYPES[0]}"])
+        outcome = sum([ta.amount for ta in all_tas if ta.transaction_type == f"{ta.TRANSACTION_TYPES[1]}"])
+        return income - outcome
+
 class Worker(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
@@ -135,6 +141,24 @@ class Transaction(models.Model):
     def __str__(self):
         return f'{self.transaction_type} - {self.amount}'
 
+    def add(construct, amount, date=None, direction=None, number='000000'):
+        transaction = Transaction()
+        transaction.construct = construct
+        transaction.amount = amount
+        if date is None:
+            transaction.date = timezone.now()
+        else:
+            transaction.date = date
+        if direction is None or direction == 'in':
+            transaction.transaction_type = Transaction.TRANSACTION_TYPES[0]
+        elif direction == 'out':
+            transaction.transaction_type = Transaction.TRANSACTION_TYPES[1]
+        else:
+            print(f"ERROR: unsupported direction '{direction}'")
+            return None
+        transaction.save()
+        return transaction
+
 
 class Invoice(models.Model):
     number = models.CharField(max_length=100)
@@ -149,11 +173,33 @@ class Invoice(models.Model):
     def __str__(self):
         return self.number
 
+    def add(construct, seller_name, amount, direction=None, issued=None, due=None):
+        invoice = Invoice()
+        invoice.amount = amount 
+        if direction is None or direction == 'in':
+            invoice.invoice_type = Transaction.TRANSACTION_TYPES[0]
+        elif direction == 'out':
+            invoice.invoice_type = Transaction.TRANSACTION_TYPES[1]
+        else:
+            print(f"ERROR: unsupported direction '{direction}'")
+            return None
+        if issued is None:
+            invoice.issue_date = timezone.now()
+        else:
+            invoice.issue_date = issued
+        if due is None:
+            invoice.due_date = timezone.now()
+        else:
+            invoice.due_date = due
+        invoice.construct = construct
+        invoice.save()
+        return invoice
+
 
 class InvoiceTransaction(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
-    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    #paid_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
 
     class Meta:
         unique_together = ('invoice', 'transaction')

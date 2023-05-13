@@ -12,6 +12,96 @@ from list.views import check_integrity,   \
 from list.models import Construct, Choice, Invoice, Transaction
 
 class ModelTests(TestCase):
+    def test_construct_balance(self):
+        construct = Construct()
+        construct.save()
+        ta1 = Transaction.add(construct, 100.0)
+        ta2 = Transaction.add(construct, 130.0)
+        ta3 = Transaction.add(construct, 50.0, direction='out')
+        ta4 = Transaction.add(construct, 75.0, direction='out')
+        construct.transaction_set.add(ta1, ta2, ta3, ta4)
+        balance = construct.balance()
+        self.assertIs(105.0 - 1.e-10 < float(balance) < 105.0 + 1.e-10, True)
+
+    def test_add_invoice_to_transaction(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, due='2023-05-13')
+        ta = Transaction.add(construct, 100.0)
+        ta.invoice_set.add(invoice)
+        self.assertIs(invoice.amount - ta.amount < 1.e-10, True)
+
+    def test_add_transaction_to_invoice(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, due='2023-05-13')
+        ta = Transaction.add(construct, 100.0)
+        invoice.transactions.add(ta)
+        invoice.save()
+        self.assertIs(invoice.amount - ta.amount < 1.e-10, True)
+
+    def test_transaction_1(self):
+        construct = Construct()
+        construct.save()
+        ta = Transaction.add(construct, 10.0)
+        self.assertIs(ta.id > 0, True)
+
+    def test_add_invoice_method_7(self):
+        construct = Construct()
+        construct.save()
+        invoice_id = None
+        try:
+            invoice = Invoice.add(construct, "John Smith", 100.0, due='May 13, 2023')
+        except:
+            invoice = None
+        self.assertIs(invoice, None)
+
+    def test_add_invoice_method_6(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, due='2023-05-13')
+        self.assertIs(invoice.id > 0, True)
+
+    def test_add_invoice_method_5(self):
+        construct = Construct()
+        construct.save()
+        invoice_id = None
+        try:
+            invoice = Invoice.add(construct, "John Smith", 100.0, issued='May 13, 2023')
+        except:
+            invoice = None
+        self.assertIs(invoice, None)
+
+    def test_add_invoice_method_4(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, issued='2023-05-13')
+        self.assertIs(invoice.id > 0, True)
+
+    def test_add_invoice_method_3(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='nah')
+        self.assertIs(invoice, None)
+
+    def test_add_invoice_method_2(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='out')
+        self.assertIs(invoice.id > 0, True)
+
+    def test_add_invoice_method_1(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        self.assertIs(invoice.id > 0, True)
+
+    def test_add_incoming_invoice_method(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0)
+        self.assertIs(invoice.id > 0, True)
+
     def test_add_incoming_invoice(self):
         print("\n>>> test_add_incoming_invoice() <<<")
         construct = Construct()
@@ -22,7 +112,9 @@ class ModelTests(TestCase):
         invoice.issue_date = dt.datetime.now()
         invoice.due_date = dt.datetime.now()
         invoice.construct = construct
+        invoice.seller = "Vasya"
         invoice.save()
+        self.assertIs(invoice.id > 0, True)
 
 
 class ViewTests(TestCase):
