@@ -87,7 +87,11 @@ class Choice(models.Model):
     actual_end_date = models.DateField(default=timezone.now)
 
     def __str__(self):
-        return f'{self.id}: ' + self.name_txt + f' ({self.construct})'
+        maxNameLen = 70
+        out_name = self.name_txt
+        if len(out_name) > maxNameLen:
+            out_name = out_name[:maxNameLen] + "..."
+        return f'{self.id}: ' + out_name + f' ({self.construct})'
 
     def save(self, *args, **kwargs):
         if self.pk:  # pk will be None for a new instance
