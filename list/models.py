@@ -130,6 +130,7 @@ class Transaction(models.Model):
     transaction_type = models.CharField(max_length=3, choices=TRANSACTION_TYPES)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     date = models.DateField()
+    receipt_number = models.CharField(max_length=100, default="000000")
 
     def __str__(self):
         return f'{self.transaction_type} - {self.amount}'
@@ -143,16 +144,6 @@ class Invoice(models.Model):
     seller = models.CharField(max_length=100)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     transactions = models.ManyToManyField(Transaction, through='InvoiceTransaction')
-
-    def __str__(self):
-        return self.number
-
-
-class Receipt(models.Model):
-    number = models.CharField(max_length=100)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    date = models.DateField()
-    transaction = models.OneToOneField(Transaction, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.number
