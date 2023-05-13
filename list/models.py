@@ -139,6 +139,7 @@ class Transaction(models.Model):
 class Invoice(models.Model):
     number = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    invoice_type = models.CharField(max_length=3, choices=Transaction.TRANSACTION_TYPES, default=Transaction.TRANSACTION_TYPES[0])
     issue_date = models.DateField()
     due_date = models.DateField()
     seller = models.CharField(max_length=100)

@@ -9,7 +9,21 @@ from list.views import check_integrity,   \
                        update_choice,     \
                        process_post,      \
                        checkTimeStamp
-from list.models import Construct, Choice
+from list.models import Construct, Choice, Invoice, Transaction
+
+class ModelTests(TestCase):
+    def test_add_incoming_invoice(self):
+        print("\n>>> test_add_incoming_invoice() <<<")
+        construct = Construct()
+        construct.save()
+        invoice = Invoice()
+        invoice.amount = 10.0
+        invoice.type = Transaction.TRANSACTION_TYPES[0]
+        invoice.issue_date = dt.datetime.now()
+        invoice.due_date = dt.datetime.now()
+        invoice.construct = construct
+        invoice.save()
+
 
 class ViewTests(TestCase):
     def test_checkTimeStamp(self):
