@@ -80,6 +80,7 @@ function showPrettyRaw(x) {
     var table = document.getElementById("choices");
     var rows  = Array.from(table.rows);
     var btn   = document.getElementById("PrettyRawBtn");
+	if(!freezeActiveRow()) return false;
     const hideable = document.querySelectorAll(".hide_for_pretty");
     if(btn.innerText == "Show Pretty") {
         rows.forEach(function(row) {
