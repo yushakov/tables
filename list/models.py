@@ -69,6 +69,15 @@ class Construct(models.Model):
         income = sum([ta.amount for ta in in_transactions])
         return income
 
+    def progress_cost(self):
+        choices = self.choice_set.all()
+        cost = 0.0
+        for ch in choices:
+            price = ch.quantity_num * ch.price_num * ch.progress_percent_num * 0.01
+            cost += price
+        return cost
+
+
 class Worker(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
@@ -205,6 +214,13 @@ class Invoice(models.Model):
         invoice.construct = construct
         invoice.save()
         return invoice
+
+    def save(self, *args, **kwargs):
+        if self.id is not None:
+            for ta in self.transactions.all():
+                if f"{ta.transaction_type}" != f"{self.invoice_type}":
+                    raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
+        super(Invoice, self).save(*args, **kwargs)
 
 
 class InvoiceTransaction(models.Model):

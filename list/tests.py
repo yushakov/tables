@@ -12,6 +12,57 @@ from list.views import check_integrity,   \
 from list.models import Construct, Choice, Invoice, Transaction
 
 class ModelTests(TestCase):
+    def test_progress_cost(self):
+        construct = Construct()
+        construct.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        cost = construct.progress_cost()
+        self.assertIs(np.allclose([cost], [3.5]), True)
+
+    def test_same_direction_of_invoice_and_its_transactions_2(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        ta = Transaction.add(construct, 100.0, direction='in')
+        ta.invoice_set.add(invoice)
+        result = ''
+        try:
+            invoice.save()
+            result = 'saved'
+        except:
+            result = 'impossible'
+        self.assertIs(result, 'saved')
+
+    def test_same_direction_of_invoice_and_its_transactions_1(self):
+        construct = Construct()
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        ta = Transaction.add(construct, 100.0, direction='out')
+        ta.invoice_set.add(invoice)
+        result = ''
+        try:
+            invoice.save()
+            result = 'saved'
+        except:
+            result = 'impossible'
+        self.assertIs(result, 'impossible')
+
+    def test_outcoming_invoice_paid(self):
+        pass
+
+    def test_incoming_invoice_paid(self):
+        pass
+
     def test_construct_income(self):
         construct = Construct()
         construct.save()
