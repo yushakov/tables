@@ -252,7 +252,7 @@ def detail(request, construct_id):
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'construct_total_vat': construct_total_price * (1. + 0.01*construct.vat_percent_num),
-               'construct_paid': construct.paid_num}
+               'construct_paid': construct.income()}
     return render(request, 'list/detail.html', context)
 
 

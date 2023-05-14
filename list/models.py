@@ -54,19 +54,19 @@ class Construct(models.Model):
 
     def balance(self):
         transactions = self.transaction_set.all()
-        income  = sum([ta.amount for ta in transactions if ta.transaction_type == f"{ta.TYPES[0]}"])
-        outcome = sum([ta.amount for ta in transactions if ta.transaction_type == f"{ta.TYPES[1]}"])
+        income  = sum([ta.amount for ta in transactions if ta.transaction_type == ta.INCOMING])
+        outcome = sum([ta.amount for ta in transactions if ta.transaction_type == ta.OUTGOING])
         return income - outcome
 
     def debt(self):
         invoices = self.invoice_set.all()
-        income  = sum([iv.amount for iv in invoices if iv.invoice_type == f"{Transaction.TYPES[0]}"])
-        outcome = sum([iv.amount for iv in invoices if iv.invoice_type == f"{Transaction.TYPES[1]}"])
+        income  = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.INCOMING])
+        outcome = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.OUTGOING])
         return income - outcome
 
     def income(self):
-        in_transactions = self.transaction_set.filter(transaction_type__startswith = "('IN'")
-        income = sum([ta.amount for ta in in_transactions])
+        in_transactions = self.transaction_set.filter(transaction_type = Transaction.INCOMING)
+        income = sum([float(ta.amount) for ta in in_transactions])
         return income
 
     def progress_cost(self):
@@ -162,7 +162,8 @@ class Transaction(models.Model):
     details_txt = models.TextField(default='-')
 
     def __str__(self):
-        return f'From: {self.from_txt}, to: {self.to_txt}, {self.transaction_type}, {self.date}, £ {self.amount}'
+        return f'From: {self.from_txt}, To: {self.to_txt}, ' + \
+               f'Within: {self.construct.title_text}, {self.transaction_type}, {self.date}, £ {self.amount}'
 
     def add(construct, amount, date=None, direction=None, number='000000'):
         transaction = Transaction()
@@ -173,9 +174,9 @@ class Transaction(models.Model):
         else:
             transaction.date = date
         if direction is None or direction == 'in':
-            transaction.transaction_type = Transaction.TYPES[0]
+            transaction.transaction_type = Transaction.INCOMING
         elif direction == 'out':
-            transaction.transaction_type = Transaction.TYPES[1]
+            transaction.transaction_type = Transaction.OUTGOING
         else:
             print(f"ERROR: unsupported direction '{direction}'")
             return None
@@ -186,7 +187,7 @@ class Transaction(models.Model):
 class Invoice(models.Model):
     number = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    invoice_type = models.CharField(max_length=3, choices=Transaction.TYPES, default=Transaction.TYPES[0])
+    invoice_type = models.CharField(max_length=3, choices=Transaction.TYPES, default=Transaction.INCOMING)
     issue_date = models.DateField()
     due_date = models.DateField()
     seller = models.CharField(max_length=100)
@@ -200,9 +201,9 @@ class Invoice(models.Model):
         invoice = Invoice()
         invoice.amount = amount 
         if direction is None or direction == 'in':
-            invoice.invoice_type = Transaction.TYPES[0]
+            invoice.invoice_type = Transaction.INCOMING
         elif direction == 'out':
-            invoice.invoice_type = Transaction.TYPES[1]
+            invoice.invoice_type = Transaction.OUTGOING
         else:
             print(f"ERROR: unsupported direction '{direction}'")
             return None
