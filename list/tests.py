@@ -12,6 +12,17 @@ from list.views import check_integrity,   \
 from list.models import Construct, Choice, Invoice, Transaction
 
 class ModelTests(TestCase):
+    def test_construct_income(self):
+        construct = Construct()
+        construct.save()
+        ta1 = Transaction.add(construct, 100.0)
+        ta2 = Transaction.add(construct, 130.0)
+        ta3 = Transaction.add(construct, 50.0, direction='out')
+        ta4 = Transaction.add(construct, 75.0, direction='out')
+        construct.transaction_set.add(ta1, ta2, ta3, ta4)
+        income = construct.income()
+        self.assertIs(230.0 - 1.e-10 < float(income) < 230.0 + 1.e-10, True)
+
     def test_construct_debt(self):
         construct = Construct()
         construct.save()

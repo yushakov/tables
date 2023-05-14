@@ -64,6 +64,11 @@ class Construct(models.Model):
         outcome = sum([iv.amount for iv in invoices if iv.invoice_type == f"{Transaction.TYPES[1]}"])
         return income - outcome
 
+    def income(self):
+        in_transactions = self.transaction_set.filter(transaction_type__startswith = "('IN'")
+        income = sum([ta.amount for ta in in_transactions])
+        return income
+
 class Worker(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
