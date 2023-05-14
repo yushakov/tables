@@ -152,14 +152,17 @@ class Transaction(models.Model):
         (OUTGOING, 'Outgoing'),
     ]
 
+    from_txt = models.CharField(max_length=200, default='')
+    to_txt = models.CharField(max_length=200, default='')
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     transaction_type = models.CharField(max_length=3, choices=TYPES)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     date = models.DateField()
     receipt_number = models.CharField(max_length=100, default="000000")
+    details_txt = models.TextField(default='-')
 
     def __str__(self):
-        return f'{self.transaction_type} - {self.amount}'
+        return f'From: {self.from_txt}, to: {self.to_txt}, {self.transaction_type}, {self.date}, £ {self.amount}'
 
     def add(construct, amount, date=None, direction=None, number='000000'):
         transaction = Transaction()
