@@ -53,9 +53,15 @@ class Construct(models.Model):
         return format_html("<a href='/list/{}'>view</a>", self.id)
 
     def balance(self):
-        all_tas = self.transaction_set.all()
-        income  = sum([ta.amount for ta in all_tas if ta.transaction_type == f"{ta.TRANSACTION_TYPES[0]}"])
-        outcome = sum([ta.amount for ta in all_tas if ta.transaction_type == f"{ta.TRANSACTION_TYPES[1]}"])
+        transactions = self.transaction_set.all()
+        income  = sum([ta.amount for ta in transactions if ta.transaction_type == f"{ta.TYPES[0]}"])
+        outcome = sum([ta.amount for ta in transactions if ta.transaction_type == f"{ta.TYPES[1]}"])
+        return income - outcome
+
+    def debt(self):
+        invoices = self.invoice_set.all()
+        income  = sum([iv.amount for iv in invoices if iv.invoice_type == f"{Transaction.TYPES[0]}"])
+        outcome = sum([iv.amount for iv in invoices if iv.invoice_type == f"{Transaction.TYPES[1]}"])
         return income - outcome
 
 class Worker(models.Model):
@@ -127,13 +133,13 @@ class Transaction(models.Model):
     INCOMING = 'IN'
     OUTGOING = 'OUT'
 
-    TRANSACTION_TYPES = [
+    TYPES = [
         (INCOMING, 'Incoming'),
         (OUTGOING, 'Outgoing'),
     ]
 
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    transaction_type = models.CharField(max_length=3, choices=TRANSACTION_TYPES)
+    transaction_type = models.CharField(max_length=3, choices=TYPES)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     date = models.DateField()
     receipt_number = models.CharField(max_length=100, default="000000")
@@ -150,9 +156,9 @@ class Transaction(models.Model):
         else:
             transaction.date = date
         if direction is None or direction == 'in':
-            transaction.transaction_type = Transaction.TRANSACTION_TYPES[0]
+            transaction.transaction_type = Transaction.TYPES[0]
         elif direction == 'out':
-            transaction.transaction_type = Transaction.TRANSACTION_TYPES[1]
+            transaction.transaction_type = Transaction.TYPES[1]
         else:
             print(f"ERROR: unsupported direction '{direction}'")
             return None
@@ -163,7 +169,7 @@ class Transaction(models.Model):
 class Invoice(models.Model):
     number = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    invoice_type = models.CharField(max_length=3, choices=Transaction.TRANSACTION_TYPES, default=Transaction.TRANSACTION_TYPES[0])
+    invoice_type = models.CharField(max_length=3, choices=Transaction.TYPES, default=Transaction.TYPES[0])
     issue_date = models.DateField()
     due_date = models.DateField()
     seller = models.CharField(max_length=100)
@@ -177,9 +183,9 @@ class Invoice(models.Model):
         invoice = Invoice()
         invoice.amount = amount 
         if direction is None or direction == 'in':
-            invoice.invoice_type = Transaction.TRANSACTION_TYPES[0]
+            invoice.invoice_type = Transaction.TYPES[0]
         elif direction == 'out':
-            invoice.invoice_type = Transaction.TRANSACTION_TYPES[1]
+            invoice.invoice_type = Transaction.TYPES[1]
         else:
             print(f"ERROR: unsupported direction '{direction}'")
             return None

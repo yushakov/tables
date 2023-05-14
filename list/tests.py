@@ -12,6 +12,17 @@ from list.views import check_integrity,   \
 from list.models import Construct, Choice, Invoice, Transaction
 
 class ModelTests(TestCase):
+    def test_construct_debt(self):
+        construct = Construct()
+        construct.save()
+        iv1 = Invoice.add(construct, "John", 100.0)
+        iv2 = Invoice.add(construct, "Paul", 130.0)
+        iv3 = Invoice.add(construct, "George", 50.0, direction='out')
+        iv4 = Invoice.add(construct, "Ringo", 75.0, direction='out')
+        construct.invoice_set.add(iv1, iv2, iv3, iv4)
+        debt = construct.debt()
+        self.assertIs(105.0 - 1.e-10 < float(debt) < 105.0 + 1.e-10, True)
+
     def test_construct_balance(self):
         construct = Construct()
         construct.save()
@@ -108,7 +119,7 @@ class ModelTests(TestCase):
         construct.save()
         invoice = Invoice()
         invoice.amount = 10.0
-        invoice.type = Transaction.TRANSACTION_TYPES[0]
+        invoice.type = Transaction.TYPES[0]
         invoice.issue_date = dt.datetime.now()
         invoice.due_date = dt.datetime.now()
         invoice.construct = construct
