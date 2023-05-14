@@ -60,8 +60,8 @@ class Construct(models.Model):
 
     def debt(self):
         invoices = self.invoice_set.all()
-        income  = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.INCOMING])
-        outcome = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.OUTGOING])
+        income  = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.INCOMING and iv.status != Invoice.PAID])
+        outcome = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.OUTGOING and iv.status != Invoice.PAID])
         return income - outcome
 
     def income(self):
@@ -185,9 +185,16 @@ class Transaction(models.Model):
 
 
 class Invoice(models.Model):
+    PAID = 'Paid'
+    UNPAID = 'Unpaid'
+    STATUS = [
+        (PAID, 'Paid'),
+        (UNPAID, 'Unpaid')
+    ]
     number = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     invoice_type = models.CharField(max_length=3, choices=Transaction.TYPES, default=Transaction.INCOMING)
+    status = models.CharField(max_length=6, choices=STATUS, default=UNPAID)
     issue_date = models.DateField()
     due_date = models.DateField()
     seller = models.CharField(max_length=100)
