@@ -165,6 +165,18 @@ class Transaction(models.Model):
         return f'From: {self.from_txt}, To: {self.to_txt}, ' + \
                f'Within: {self.construct.title_text}, {self.transaction_type}, {self.date}, £ {self.amount}'
 
+    @admin.display(description='Project')
+    def within(self):
+        return f"{self.construct.title_text}"
+
+    @admin.display(description='From')
+    def get_from_txt(self):
+        return f"{self.from_txt}"
+
+    @admin.display(description='To')
+    def get_to_txt(self):
+        return f"{self.to_txt}"
+
     def add(construct, amount, date=None, direction=None, number='000000'):
         transaction = Transaction()
         transaction.construct = construct
