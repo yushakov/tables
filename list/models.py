@@ -145,6 +145,17 @@ class Project(models.Model):
         return self.name
 
 
+def get_id(model_class):
+    '''
+        Generate an ID string basing on the max ID of the DB entries.
+    '''
+    OutLen = 17
+    max_id = model_class.objects.aggregate(models.Max('id'))['id__max']
+    if max_id is None:
+        max_id = 0
+    return str(uuid.uuid3(uuid.NAMESPACE_OID, str(max_id+1))).replace('-','').upper()[:OutLen]
+
+
 class Transaction(models.Model):
     INCOMING = 'IN'
     OUTGOING = 'OUT'
@@ -162,6 +173,7 @@ class Transaction(models.Model):
     date = models.DateField()
     receipt_number = models.CharField(max_length=100, default="000000")
     details_txt = models.TextField(default='-')
+    photo = models.ImageField(upload_to="receipts/%Y/%m/%d", default=ContentFile(b"<img>", name="default.jpg"))
 
     def __str__(self):
         return f'From: {self.from_txt}, To: {self.to_txt}, ' + \
@@ -206,7 +218,7 @@ class Invoice(models.Model):
     ]
 
     def get_id():
-        return str(uuid.uuid4()).replace('-','').upper()[:12]
+        return get_id(Invoice)
 
     number = models.CharField(max_length=100, default=get_id)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
