@@ -7,5 +7,6 @@ urlpatterns = [
     #path('', views.IndexView.as_view(), name='index'),
     path('', views.index, name='index'),
     path('<int:construct_id>/', views.detail, name='detail'),
-    path('<int:construct_id>/gantt/', views.gantt, name='gantt')
+    path('<int:construct_id>/gantt/', views.gantt, name='gantt'),
+    path('invoice/<int:invoice_id>/', views.view_invoice, name='view_invoice')
 ]

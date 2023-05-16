@@ -176,8 +176,8 @@ class Transaction(models.Model):
     photo = models.ImageField(upload_to="receipts/%Y/%m/%d", default=ContentFile(b"<img>", name="default.jpg"))
 
     def __str__(self):
-        return f'From: {self.from_txt}, To: {self.to_txt}, ' + \
-               f'Within: {self.construct.title_text}, {self.transaction_type}, {self.date}, £ {self.amount}'
+        return f'{self.receipt_number}, From: {self.from_txt}, ' + \
+               f'Date: {self.date}, £ {self.amount}'
 
     @admin.display(description='Project')
     def within(self):
@@ -237,6 +237,10 @@ class Invoice(models.Model):
     @admin.display(description="Project")
     def within(self):
         return f"{self.construct.title_text}"
+
+    @admin.display(description="Number")
+    def number_link(self):
+        return format_html("<a href='/list/invoice/{}'>{}</a>", self.id, self.number)
 
     def add(construct, seller_name, amount, direction=None, issued=None, due=None):
         invoice = Invoice()

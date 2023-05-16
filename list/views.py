@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views import generic
-from .models import Construct, Choice
+from .models import Construct, Choice, Invoice
 import json
 from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
@@ -283,3 +283,8 @@ def gantt(request, construct_id):
     context = {'construct': construct, 'ch_list': ch_list, 'start': common_start.strftime('%B'),
                'marking': json.dumps(marking), 'total': total, 'labels': labels}
     return render(request, 'list/gantt.html', context)
+
+def view_invoice(request, invoice_id):
+    invoice = get_object_or_404(Invoice, pk=invoice_id)
+    context = {'invoice': invoice}
+    return render(request, 'list/view_invoice.html', context)
