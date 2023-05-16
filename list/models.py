@@ -195,7 +195,7 @@ class Transaction(models.Model):
         transaction.save()
         return transaction
 
-
+import uuid
 class Invoice(models.Model):
     PAID = 'Paid'
     UNPAID = 'Unpaid'
@@ -203,7 +203,11 @@ class Invoice(models.Model):
         (PAID, 'Paid'),
         (UNPAID, 'Unpaid')
     ]
-    number = models.CharField(max_length=100)
+
+    def get_id():
+        return str(uuid.uuid4()).replace('-','').upper()[:12]
+
+    number = models.CharField(max_length=100, default=get_id)
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     invoice_type = models.CharField(max_length=3, choices=Transaction.TYPES, default=Transaction.INCOMING)
     status = models.CharField(max_length=6, choices=STATUS, default=UNPAID)
@@ -215,6 +219,10 @@ class Invoice(models.Model):
 
     def __str__(self):
         return self.number
+
+    @admin.display(description="Project")
+    def within(self):
+        return f"{self.construct.title_text}"
 
     def add(construct, seller_name, amount, direction=None, issued=None, due=None):
         invoice = Invoice()

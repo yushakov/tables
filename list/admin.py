@@ -7,8 +7,11 @@ class ConstructAdmin(admin.ModelAdmin):
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ["get_from_txt", "get_to_txt", "within", "transaction_type", "date", "amount"]
 
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = ["seller", "within", "number", "invoice_type", "issue_date", "due_date", "amount"]
+
 admin.site.register(Construct, ConstructAdmin)
 admin.site.register(Worker)
 admin.site.register(Choice)
-admin.site.register(Invoice)
+admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Transaction, TransactionAdmin)
