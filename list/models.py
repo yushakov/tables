@@ -4,6 +4,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator, RegexVa
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import timedelta
+import uuid
+from django.core.files.base import ContentFile
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
@@ -195,7 +197,6 @@ class Transaction(models.Model):
         transaction.save()
         return transaction
 
-import uuid
 class Invoice(models.Model):
     PAID = 'Paid'
     UNPAID = 'Unpaid'
@@ -216,6 +217,7 @@ class Invoice(models.Model):
     seller = models.CharField(max_length=100)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     transactions = models.ManyToManyField(Transaction, through='InvoiceTransaction')
+    photo = models.ImageField(upload_to="invoices/%Y/%m/%d", default=ContentFile(b"<img>", name="default.jpg"))
 
     def __str__(self):
         return self.number
