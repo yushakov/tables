@@ -232,7 +232,7 @@ class Invoice(models.Model):
     photo = models.ImageField(upload_to="invoices/%Y/%m/%d", default=ContentFile(b"<img>", name="default.jpg"))
 
     def __str__(self):
-        return self.number
+        return f"{self.number}; from: {self.seller}; date: {self.issue_date}; £{self.amount}"
 
     @admin.display(description="Project")
     def within(self):
