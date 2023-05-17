@@ -206,6 +206,7 @@ class Transaction(models.Model):
         else:
             print(f"ERROR: unsupported direction '{direction}'")
             return None
+        transaction.photo = ContentFile(b"<img>", name="default.jpg")
         transaction.save()
         return transaction
 
@@ -244,6 +245,7 @@ class Invoice(models.Model):
 
     def add(construct, seller_name, amount, direction=None, issued=None, due=None):
         invoice = Invoice()
+        invoice.seller = seller_name
         invoice.amount = amount 
         if direction is None or direction == 'in':
             invoice.invoice_type = Transaction.INCOMING
@@ -261,6 +263,7 @@ class Invoice(models.Model):
         else:
             invoice.due_date = due
         invoice.construct = construct
+        invoice.photo = ContentFile(b"<img>", name="default.jpg")
         invoice.save()
         return invoice
 

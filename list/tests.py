@@ -105,7 +105,7 @@ class ModelTests(TestCase):
         self.assertIs(invoice.amount - ta.amount < 1.e-10, True)
 
     def test_add_transaction_to_invoice(self):
-        construct = Construct()
+        construct = Construct(title_text='Test project add_transaction_to_invoice()')
         construct.save()
         invoice = Invoice.add(construct, "John Smith", 100.0, due='2023-05-13')
         ta = Transaction.add(construct, 100.0)
