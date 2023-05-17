@@ -458,7 +458,8 @@ function get_progress_cost() {
     rows.forEach(function(row) {
         var total_price_cells = row.getElementsByClassName("choice_total_price");
         var progress_cells    = row.getElementsByClassName("choice_progress_percent");
-        if(total_price_cells.length == 1 && progress_cells.length == 1) {
+        if(total_price_cells.length == 1 && progress_cells.length == 1 &&
+           !total_price_cells[0].classList.contains('delete')) {
             var total_price      = Number(total_price_cells[0].innerText.replace(/£/,"").replace(/,/g,"").trim());
             var progress_percent = Number(progress_cells[0].innerText.replace(/%/,"").trim());
             progress_cost += total_price * 0.01*progress_percent;
