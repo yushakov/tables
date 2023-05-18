@@ -30,5 +30,16 @@
         <td><b>Status:</b></td>
         <td>{{ invoice.status }}</td>
     </tr>
+    {% if invoice.status == 'Paid' %}
+    <tr>
+        <td><b>Paid By:</b></td>
+        <td>
+            {% for tra in transactions %}
+                <a href="{% url 'list:view_transaction' tra.id %}">{{ tra.number }}</a>:
+                &#163; {{ tra.amount }}. From: {{ tra.from }}.<br />
+            {% endfor %}
+        </td>
+    </tr>
+    {% endif %}
 </table>
 

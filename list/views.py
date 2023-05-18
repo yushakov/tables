@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views import generic
-from .models import Construct, Choice, Invoice
+from .models import Construct, Choice, Invoice, Transaction
 import json
 from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
@@ -284,7 +284,35 @@ def gantt(request, construct_id):
                'marking': json.dumps(marking), 'total': total, 'labels': labels}
     return render(request, 'list/gantt.html', context)
 
+
+def getTransactions(invoice):
+    out = list()
+    if invoice.status == 'Paid':
+        transactions = invoice.transactions.all()
+        for tra in transactions:
+            tra_dict = dict()
+            tra_dict['id']     = tra.id
+            tra_dict['number'] = tra.receipt_number
+            tra_dict['from']   = tra.from_txt
+            tra_dict['amount'] = str(tra.amount)
+            out.append(tra_dict)
+    return out
+
+
 def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
-    context = {'invoice': invoice}
+    tra_list = getTransactions(invoice)
+    context = {'invoice': invoice, 'transactions': tra_list}
     return render(request, 'list/view_invoice.html', context)
+
+
+def getInvoices(transaction):
+    return transaction.invoice_set.all()
+
+
+def view_transaction(request, transaction_id):
+    transaction = get_object_or_404(Transaction, pk=transaction_id)
+    inv_list = getInvoices(transaction)
+    invoices = {'len': len(inv_list), 'list': inv_list}
+    context = {'transaction': transaction, 'invoices': invoices}
+    return render(request, 'list/view_transaction.html', context)

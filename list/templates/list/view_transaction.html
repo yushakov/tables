@@ -1,0 +1,41 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<h2>Transaction</h2>
+<table id='construct_list'>
+    <tr>
+        <td><b>Project:</b></td>
+        <td>{{ transaction.construct.title_text }}</td>
+    </tr>
+    <tr>
+        <td><b>Number:</b></td>
+        <td>{{ transaction.receipt_number }}</td>
+    </tr>
+    <tr>
+        <td><b>From:</b></td>
+        <td>{{ transaction.from_txt }}</td>
+    </tr>
+    <tr>
+        <td><b>To:</b></td>
+        <td>{{ transaction.to_txt }}</td>
+    </tr>
+    <tr>
+        <td><b>Amount:</b></td>
+        <td>&#163; {{ transaction.amount }}</td>
+    </tr>
+    <tr>
+        <td><b>Date:</b></td>
+        <td>{{ transaction.date }}</td>
+    </tr>
+    {% if invoices.len > 0 %}
+    <tr>
+        <td><b>Pays For:</b></td>
+        <td>
+            {% for inv in invoices.list %}
+                <a href="{% url 'list:view_invoice' inv.id %}">{{ inv.number }}</a>:
+                &#163; {{ inv.amount }}. From: {{ inv.seller }}.<br />
+            {% endfor %}
+        </td>
+    </tr>
+    {% endif %}
+</table>
+
