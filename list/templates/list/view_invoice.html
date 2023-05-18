@@ -42,4 +42,13 @@
     </tr>
     {% endif %}
 </table>
-
+{% if invoice.photo %}
+    <br />
+    <a href="{{ invoice.photo.url }}">
+        {% if invoice.photo.width > 500 %}
+            <img src="{{ invoice.photo.url }}" width="500">
+        {% else %}
+            <img src="{{ invoice.photo.url }}">
+        {% endif %}
+    </a>
+{% endif %}

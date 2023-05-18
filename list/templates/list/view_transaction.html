@@ -38,4 +38,13 @@
     </tr>
     {% endif %}
 </table>
-
+{% if transaction.photo %}
+    <br />
+    <a href="{{ transaction.photo.url }}">
+        {% if transaction.photo.width > 500 %}
+            <img src="{{ transaction.photo.url }}" width="500">
+        {% else %}
+            <img src="{{ transaction.photo.url }}">
+        {% endif %}
+    </a>
+{% endif %}
