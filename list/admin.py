@@ -5,7 +5,7 @@ class ConstructAdmin(admin.ModelAdmin):
     list_display = ["title_text", "goto", "listed_date", "overall_progress", "email"]
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ["get_from_txt", "get_to_txt", "within", "transaction_type", "date", "amount"]
+    list_display = ["get_from_txt", "get_to_txt", "number_link", "within", "transaction_type", "date", "amount"]
 
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ["seller", "within", "number_link", "invoice_type", "issue_date", "due_date", "amount"]

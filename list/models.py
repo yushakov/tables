@@ -191,6 +191,10 @@ class Transaction(models.Model):
     def get_to_txt(self):
         return f"{self.to_txt}"
 
+    @admin.display(description="Number")
+    def number_link(self):
+        return format_html("<a href='/list/transaction/{}'>{}</a>", self.id, self.receipt_number)
+
     def add(construct, amount, date=None, direction=None, number='000000'):
         transaction = Transaction()
         transaction.construct = construct
