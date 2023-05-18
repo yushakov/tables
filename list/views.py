@@ -1,7 +1,8 @@
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction
+from .forms import TransactionSubmitForm
 import json
 from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
@@ -316,3 +317,16 @@ def view_transaction(request, transaction_id):
     invoices = {'len': len(inv_list), 'list': inv_list}
     context = {'transaction': transaction, 'invoices': invoices}
     return render(request, 'list/view_transaction.html', context)
+
+
+def submit_transaction(request):
+    if request.method == 'POST':
+        form = TransactionSubmitForm(request.POST)
+        if form.is_valid():
+            form.save()
+            #obj = Transaction.get_latest_transaction()
+            obj = Transaction.objects.latest()
+            return redirect(obj)
+    else:
+        form = TransactionSubmitForm()
+    return render(request, 'list/submit_transaction.html', {'form': form})

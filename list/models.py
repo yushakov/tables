@@ -170,14 +170,22 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     transaction_type = models.CharField(max_length=3, choices=TYPES)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
-    date = models.DateField()
+    date = models.DateField(default=timezone.now)
     receipt_number = models.CharField(max_length=100, default="000000")
     details_txt = models.TextField(default='-')
     photo = models.ImageField(upload_to="receipts/%Y/%m/%d", default=ContentFile(b"<img>", name="default.jpg"))
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return f'Tra:{self.receipt_number}, From: {self.from_txt}, ' + \
                f'Date: {self.date}, £ {self.amount}'
+
+    def get_absolute_url(self):
+        return f"/list/transaction/{self.id}"
 
     @admin.display(description='Project')
     def within(self):
@@ -213,6 +221,7 @@ class Transaction(models.Model):
         transaction.photo = ContentFile(b"<img>", name="default.jpg")
         transaction.save()
         return transaction
+
 
 class Invoice(models.Model):
     PAID = 'Paid'
