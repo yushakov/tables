@@ -1,6 +1,9 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Invoice</h2>
+<a href="{% url 'admin:list_invoice_changelist' %}">see all invoices</a>
+<br />
+<br />
 <table id='construct_list'>
     <tr>
         <td><b>Project:</b></td>
