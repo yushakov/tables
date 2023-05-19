@@ -26,7 +26,21 @@ class TransactionSubmitForm(ModelForm):
         cleaned_data = super().clean()
         construct = cleaned_data.get('construct')
         invoices  = cleaned_data.get('invoices')
-        if construct and invoices:
+        transaction_type = cleaned_data.get('transaction_type')
+        if construct and invoices and transaction_type:
             for inv in invoices:
                 if inv.construct.id != construct.id:
                     self.add_error('invoices', _('Invoices should belong to the same project as the transaction.'))
+                if inv.invoice_type != transaction_type:
+                    self.add_error('invoices', _('Invoices should be of the same direction (In or Out) as the transaction.'))
+
+    def save(self, commit=True):
+        transaction = super(TransactionSubmitForm, self).save(commit=False)
+        form_invoices = self.cleaned_data.get('invoices')
+        if commit:
+            transaction.save()
+            for inv in form_invoices:
+                transaction.invoice_set.add(inv)
+                inv.status = Invoice.PAID
+                inv.save()
+        return transaction
