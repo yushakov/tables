@@ -156,6 +156,10 @@ def get_id(model_class):
     return str(uuid.uuid3(uuid.NAMESPACE_OID, str(max_id+1))).replace('-','').upper()[:OutLen]
 
 
+def empty_image():
+    return ContentFile(b"<img>", name="default.jpg")
+
+
 class Transaction(models.Model):
     INCOMING = 'IN'
     OUTGOING = 'OUT'
@@ -173,7 +177,7 @@ class Transaction(models.Model):
     date = models.DateField(default=timezone.now)
     receipt_number = models.CharField(max_length=100, default="000000")
     details_txt = models.TextField(default='-')
-    photo = models.ImageField(upload_to="receipts/%Y/%m/%d", default=ContentFile(b"<img>", name="default.jpg"))
+    photo = models.ImageField(upload_to="receipts/%Y/%m/%d", default=empty_image)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -243,7 +247,7 @@ class Invoice(models.Model):
     seller = models.CharField(max_length=100)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     transactions = models.ManyToManyField(Transaction, through='InvoiceTransaction')
-    photo = models.ImageField(upload_to="invoices/%Y/%m/%d", default=ContentFile(b"<img>", name="default.jpg"))
+    photo = models.ImageField(upload_to="invoices/%Y/%m/%d", default=empty_image)
 
     def __str__(self):
         return f"Inv:{self.number};({self.construct.title_text[:10]}...) from: {self.seller}; " + \
