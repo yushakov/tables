@@ -21,7 +21,6 @@ class TransactionSubmitForm(ModelForm):
                   'details_txt': _('Details or Notes:'),
                   'photo': _('Photo')
                   }
-
     def clean(self):
         cleaned_data = super().clean()
         construct = cleaned_data.get('construct')

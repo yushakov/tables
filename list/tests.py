@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 import numpy as np
 import datetime as dt
 import json
@@ -191,6 +191,62 @@ class ModelTests(TestCase):
 
 
 class ViewTests(TestCase):
+    def test_open_transaction_submit_form(self):
+        c = Client()
+        response = c.get("/list/transaction/submit/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_submit_transaction_form(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        self.assertEqual(response.status_code, 302)
+        
+    def test_submit_transaction_form_with_invoice(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        invoice = Invoice.add(cons, "John Smith", 100.0, direction='in')
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'invoices': [str(invoice.id)],
+                'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        self.assertEqual(response.status_code, 302)
+
+    def test_submit_transaction_form_with_wrong_invoice(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        invoice = Invoice.add(cons, "John Smith", 100.0, direction='out')
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'invoices': [str(invoice.id)],
+                'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        self.assertEqual(response.status_code, 200)
+
+    def test_submit_transaction_form_with_two_invoices(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        invoice1 = Invoice.add(cons, "John", 100.0, direction='in')
+        invoice2 = Invoice.add(cons, "Paul", 200.0, direction='in')
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'invoices': [str(invoice1.id), str(invoice2.id)],
+                'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        self.assertEqual(response.status_code, 302)
+
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")
         construct1 = Construct()

@@ -324,7 +324,6 @@ def submit_transaction(request):
         form = TransactionSubmitForm(request.POST)
         if form.is_valid():
             form.save()
-            #obj = Transaction.get_latest_transaction()
             obj = Transaction.objects.latest()
             return redirect(obj)
     else:
