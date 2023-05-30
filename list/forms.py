@@ -26,6 +26,8 @@ class TransactionSubmitForm(ModelForm):
         construct = cleaned_data.get('construct')
         invoices  = cleaned_data.get('invoices')
         transaction_type = cleaned_data.get('transaction_type')
+        photo = cleaned_data.get('photo')
+        print(f"TransactionSubmitForm.clean(). photo: {photo}")
         if construct and invoices and transaction_type:
             for inv in invoices:
                 if inv.construct.id != construct.id:
@@ -36,6 +38,8 @@ class TransactionSubmitForm(ModelForm):
     def save(self, commit=True):
         transaction = super(TransactionSubmitForm, self).save(commit=False)
         form_invoices = self.cleaned_data.get('invoices')
+        print("TransactionSubmitForm.save()")
+        print(transaction.photo)
         if commit:
             transaction.save()
             for inv in form_invoices:

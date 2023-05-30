@@ -226,6 +226,11 @@ class Transaction(models.Model):
         transaction.save()
         return transaction
 
+    def save(self, *args, **kwargs):
+        print("Transaction.save()")
+        print(self.photo)
+        super(Transaction, self).save(*args, **kwargs)
+
 
 class Invoice(models.Model):
     PAID = 'Paid'
