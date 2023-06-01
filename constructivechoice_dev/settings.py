@@ -16,7 +16,8 @@ import netifaces
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = BASE_DIR / 'uploads/'
-MEDIA_URL = '/uploads/'
+MEDIA_URL = 'uploads/'
+FILE_UPLOAD_PERMISSIONS = 0o644
 
 
 # Quick-start development settings - unsuitable for production
@@ -76,6 +77,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media'
             ],
         },
     },
@@ -131,7 +133,7 @@ USE_THOUSAND_SEPARATOR = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
+STATIC_ROOT = BASE_DIR / 'static/'
 STATIC_URL = 'static/'
 
 # Default primary key field type
