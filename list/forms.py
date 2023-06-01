@@ -3,7 +3,8 @@ from .models import Transaction, Invoice
 from django.utils.translation import gettext_lazy as _
 
 class TransactionSubmitForm(ModelForm):
-    invoices = ModelMultipleChoiceField(queryset=Invoice.objects.all(), required=False)
+    invoice_objects = Invoice.objects.filter(status=Invoice.UNPAID)
+    invoices = ModelMultipleChoiceField(queryset=invoice_objects, required=False)
     class Meta:
         model = Transaction
         fields = ['from_txt', 'to_txt', 'amount', 'transaction_type',
