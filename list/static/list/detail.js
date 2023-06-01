@@ -433,7 +433,7 @@ function updateMoneyInfo(total_price) {
     var project_vat       = document.getElementById("project_vat").innerHTML;
     var progress_cost     = document.getElementById("progress_cost");
     var progress_vat      = document.getElementById("progress_vat");
-    var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").trim());
+    var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").replace(/,/g,"").trim());
     var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
     var progress_cost_value = Math.round(get_progress_cost());
