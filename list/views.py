@@ -7,6 +7,9 @@ import json
 from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
+import logging
+
+logger = logging.getLogger(__name__)
 
 class IndexView(generic.ListView):
     template_name = 'list/index.html'
@@ -70,12 +73,12 @@ def update_choice(choice_id, cell_data):
             print(f"cell_data['cells']: {cells}")
             return -2
         if cells['class'].find('delete') >= 0:
-            print(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
-            print(choice.__dict__)
+            logger.info(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
+            logger.info(choice.__dict__)
             choice.delete()
             return -1
         else:
-            print(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
+            logger.info(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
             data = prepare_data(cells)
             choice.name_txt =                 data['name_txt']
             choice.notes_txt =                data['notes_txt']
@@ -144,7 +147,7 @@ def save_update(data, construct):
             choice_id = create_choice(data[key], construct)
         add_to_structure(structure, data[key], choice_id)
     string_structure = json.dumps(structure)
-    print('Project structure:\n', string_structure)
+    logger.info('Project structure:\n', string_structure)
     construct.struct_json = string_structure
     construct.save()
 
@@ -163,9 +166,9 @@ def check_integrity(structure_str, choices):
     if choice_ids == ids_in_struct:
         return struc
     else:
-        print(f'ERROR: Integrity mismatch')
-        print(f'Choices: {choice_ids}')
-        print(f'Structure: {ids_in_struct}')
+        logger.error(f'ERROR: Integrity mismatch')
+        logger.error(f'Choices: {choice_ids}')
+        logger.error(f'Structure: {ids_in_struct}')
         voc = {str(ch.id): ch.name_txt[:30] for ch in choices}
         for ch in choices:
             print(f'{ch.id}: {ch.name_txt[:30]}')
