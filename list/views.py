@@ -249,10 +249,12 @@ def detail(request, construct_id):
     if construct.overall_progress_percent_num != construct_progress:
         construct.overall_progress_percent_num = construct_progress
         construct.save()
+    total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
     context = {'construct': construct,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
-               'construct_total_vat': construct_total_price * (1. + 0.01*construct.vat_percent_num),
+               'total_and_profit': total_and_profit,
+               'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'construct_paid': construct.income()}
     return render(request, 'list/detail.html', context)
 

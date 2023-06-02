@@ -28,7 +28,7 @@
     <td><b>Total:</b></td>
     <td id='project_total'>&#163; {{ construct_total }}</td>
     <td><b>Progress:</b></td>
-    <td id='progress_cost'>&#163; 1234</td>
+    <td id='progress_cost'>&#163; updating...</td>
     <td></td>
     <td></td>
 </tr>
@@ -36,24 +36,24 @@
     <td><b>Phone:</b></td>
     <td>{{ construct.phone_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td><b>VAT:</b></td>
-    <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
+    <td><b>+ {{ construct.company_profit_percent_num }}% profit:</b></td>
+    <td id='project_total_profit'>&#163; {{ total_and_profit|floatformat:2 }}</td>
     <td rowspan='2'><b>Progress<br> + VAT:</b></td>
-    <td id='progress_vat' rowspan='2'>&#163; 1234</td>
+    <td id='progress_vat' rowspan='2'>&#163; updating...</td>
 </tr>
 <tr>
     <td><b>Owner:</b></td>
     <td>{{ construct.owner_name_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td><b>Total + VAT:</b></td>
-    <td id='project_total_vat'>&#163; {{ construct_total_vat }}</td>
+    <td><b>VAT:</b></td>
+    <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
 </tr>
 <tr>
+    <td><div id='profit_percent' style='displane:none'>{{ construct.company_profit_percent_num }}</div></td>
     <td></td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td><b>Total + Profit + VAT:</b></td>
+    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat }}</td>
     <td><b>Paid:</b></td>
     <td id='paid'>&#163; {{ construct_paid }}</td>
 </tr>
@@ -64,7 +64,7 @@
     <td></td>
     <td></td>
     <td><b>To be paid:</b></td>
-    <td id='to_be_paid'>&#163; 1234</td>
+    <td id='to_be_paid'>&#163; updating...</td>
 </tr>
 </tbody>
 </table>

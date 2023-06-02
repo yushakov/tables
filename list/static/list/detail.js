@@ -428,8 +428,10 @@ function updateHeaders() {
 }
 
 function updateMoneyInfo(total_price) {
+    var profit_percent    = Number(document.getElementById("profit_percent").innerText);
     var project_total     = document.getElementById("project_total");
-    var project_total_vat = document.getElementById("project_total_vat");
+    var project_total_profit     = document.getElementById("project_total_profit");
+    var project_total_profit_vat = document.getElementById("project_total_profit_vat");
     var project_vat       = document.getElementById("project_vat").innerHTML;
     var progress_cost     = document.getElementById("progress_cost");
     var progress_vat      = document.getElementById("progress_vat");
@@ -448,8 +450,10 @@ function updateMoneyInfo(total_price) {
     progress_cost.innerHTML = '&#163; ' + progress_cost_value;
     progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
     project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
-    project_total_vat.innerHTML
-        = '&#163; ' + Number(Math.round(total_price * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
+    var total_and_profit = Number(total_price * (1.0 + 0.01 * profit_percent));
+    project_total_profit.innerHTML = '&#163; ' + Number(Math.round(total_and_profit)).toLocaleString(gLocale);
+    project_total_profit_vat.innerHTML
+        = '&#163; ' + Number(Math.round(total_and_profit * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
 }
 
 function get_progress_cost() {
