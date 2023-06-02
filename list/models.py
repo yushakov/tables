@@ -6,6 +6,9 @@ from django.utils import timezone
 from datetime import timedelta
 import uuid
 from django.core.files.base import ContentFile
+import logging
+
+logger = logging.getLogger(__name__)
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
@@ -94,7 +97,7 @@ def instances_are_equal(instance1, instance2, fields=None):
         fields = [f.name for f in instance1._meta.fields]
     for field in fields:
         if getattr(instance1, field) != getattr(instance2, field):
-            print(f'"{getattr(instance1, field)}" != "{getattr(instance2, field)}"')
+            logger.debug(f'"{getattr(instance1, field)}" != "{getattr(instance2, field)}"')
             return False
     return True
 
@@ -125,13 +128,13 @@ class Choice(models.Model):
         if self.pk:  # pk will be None for a new instance
             existing_instance = Choice.objects.get(pk=self.pk)
             if instances_are_equal(existing_instance, self):
-                print('Nothing to update, instances are equal...')
+                logger.debug('Nothing to update, instances are equal...')
                 return
         # save(), if the instance is new or changed
         if self.pk:
-            print(f'send {self.pk} to DB')
+            logger.info(f'send {self.pk} to DB')
         else:
-            print(f'New "{self.name_txt[:50]}" in DB')
+            logger.info(f'New "{self.name_txt[:50]}" in DB')
         self.construct.save()
         super(Choice, self).save(*args, **kwargs)
 
@@ -220,15 +223,15 @@ class Transaction(models.Model):
         elif direction == 'out':
             transaction.transaction_type = Transaction.OUTGOING
         else:
-            print(f"ERROR: unsupported direction '{direction}'")
+            logger.error(f"ERROR: unsupported direction '{direction}'")
             return None
         transaction.photo = ContentFile(b"<img>", name="default.jpg")
         transaction.save()
         return transaction
 
     def save(self, *args, **kwargs):
-        print("Transaction.save()")
-        print(self.photo)
+        logger.debug("Transaction.save()")
+        logger.debug(self.photo)
         super(Transaction, self).save(*args, **kwargs)
 
 
@@ -278,7 +281,7 @@ class Invoice(models.Model):
         elif direction == 'out':
             invoice.invoice_type = Transaction.OUTGOING
         else:
-            print(f"ERROR: unsupported direction '{direction}'")
+            logger.error(f"ERROR: unsupported direction '{direction}'")
             return None
         if issued is None:
             invoice.issue_date = timezone.now()

@@ -69,8 +69,8 @@ def update_choice(choice_id, cell_data):
         try:
             choice = Choice.objects.get(pk=choice_id)
         except Exception:
-            print(f"EXCEPTION on trying to update choice: {choice_id}")
-            print(f"cell_data['cells']: {cells}")
+            logger.error(f"EXCEPTION on trying to update choice: {choice_id}")
+            logger.error(f"cell_data['cells']: {cells}")
             return -2
         if cells['class'].find('delete') >= 0:
             logger.info(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
@@ -166,7 +166,7 @@ def check_integrity(structure_str, choices):
     if choice_ids == ids_in_struct:
         return struc
     else:
-        logger.error(f'ERROR: Integrity mismatch')
+        logger.critical(f'ERROR: Integrity mismatch')
         logger.error(f'Choices: {choice_ids}')
         logger.error(f'Structure: {ids_in_struct}')
         voc = {str(ch.id): ch.name_txt[:30] for ch in choices}
@@ -191,7 +191,7 @@ def getStructChoiceDict(construct):
         raise ValidationError(f"JSON structure does not correspond to choices of {construct}",
                                 code="Bad integrity")
     else:
-        print(f'Integrity Ok: {construct}')
+        logger.info(f'Integrity Ok: {construct}')
     choice_dict = {str(ch.id):ch for ch in choices}
     return struc_dict, choice_dict
 
@@ -224,19 +224,19 @@ def checkTimeStamp(data, construct):
         if int(data['timestamp']) > int(construct.last_save_date.timestamp()):
             return True
         else:
-            print(f"WARNING: wrong timestamp. Data: {int(data['timestamp'])}, " +
+            logger.warning(f"WARNING: wrong timestamp. Data: {int(data['timestamp'])}, " +
                    f"construct: {int(construct.last_save_date.timestamp())}. " +
                    f"Data is older by {int(construct.last_save_date.timestamp()) - int(data['timestamp'])} seconds. " +
                    "Was it Re-Send?")
     else:
-        print("ERROR: no timestamp")
+        logger.error("ERROR: no timestamp")
     return False
 
 
 def process_post(request, construct):
     if request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
-        print(datetime.now(), 'POST data in detail():\n', data)
+        logger.debug(datetime.now(), 'POST data in detail():\n', data)
         if checkTimeStamp(data, construct):
             save_update(data, construct)
 
@@ -327,8 +327,8 @@ def view_transaction(request, transaction_id):
 def submit_transaction(request):
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
-        print("views.py, submit_transaction()")
-        print(request.POST['photo'])
+        logger.debug("views.py, submit_transaction()")
+        logger.debug(request.POST['photo'])
         if form.is_valid():
             form.save()
             obj = Transaction.objects.latest()
