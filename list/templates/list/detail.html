@@ -110,7 +110,7 @@
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
-        <td align='right' class='choice_total_price'>&#163;{{ items.choice_total_price }}</td>
+        <td align='right' class='choice_total_price'>&#163;{{ items.choice_total_price|floatformat:2 }}</td>
         <td>
             {{ items.choice.workers }}
         </td>

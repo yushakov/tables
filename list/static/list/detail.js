@@ -313,7 +313,7 @@ function freezeActiveRow() {
 				active_row.cells[g_qty_cell_idx ].style.textAlign = 'right';
 				active_row.cells[g_units_cell_idx].innerHTML = encodeHTML(units);
 				active_row.cells[g_tot_prc_cell_idx].innerHTML
-                                           = '&#163; ' + Number(price_num * Number(qty)).toLocaleString(gLocale);
+                                           = '&#163; ' + Number(Math.round(price_num * Number(qty))).toLocaleString(gLocale);
                 active_row.cells[g_tot_prc_cell_idx].classList.add("choice_total_price");
 				active_row.cells[g_tot_prc_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_asgn_to_cell_idx].innerHTML = encodeHTML(asgnTo);
