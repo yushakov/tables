@@ -17,7 +17,7 @@ import netifaces
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = BASE_DIR / 'uploads/'
 MEDIA_URL = 'uploads/'
-FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_PERMISSIONS = 0o666
 
 
 # Quick-start development settings - unsuitable for production
