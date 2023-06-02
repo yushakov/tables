@@ -438,7 +438,7 @@ function updateMoneyInfo(total_price) {
     var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").replace(/,/g,"").trim());
     var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
-    var progress_cost_value = Math.round(get_progress_cost());
+    var progress_cost_value = Math.round(get_progress_cost() * (1.0 + 0.01 * profit_percent));
     var progress_vat_value = Math.round(progress_cost_value * (1.0 + 0.01 * vat));
     var to_be_paid_value = progress_vat_value - paid_value;
     to_be_paid.innerHTML = '&#163; ' + Number(to_be_paid_value).toLocaleString(gLocale);
@@ -447,7 +447,7 @@ function updateMoneyInfo(total_price) {
     } else {
         to_be_paid.style = "color: blue";
     }
-    progress_cost.innerHTML = '&#163; ' + progress_cost_value;
+    progress_cost.innerHTML = '&#163; ' + Number(progress_cost_value).toLocaleString(gLocale);;
     progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
     project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
     var total_and_profit = Number(total_price * (1.0 + 0.01 * profit_percent));
