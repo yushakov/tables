@@ -3,7 +3,7 @@
 <h2>{{ construct_name }}</h2>
 <a href="{% url 'list:detail' construct_id %}">go to the project</a>
 {% if incoming_transactions %}
-<h3>Incoming transactions: &#163; {{ income|floatformat:2 }}</h3>
+<h3 id='incoming-transactions'>Incoming transactions: &#163; {{ income|floatformat:2 }}</h3>
 <select id='incoming-transaction-select'>
 	{% for tra in incoming_transactions %}
 	<option value="{% url 'list:view_transaction' tra.id %}">
@@ -23,7 +23,7 @@
 </script>
 {% endif %}
 {% if outgoing_transactions %}
-<h3>Outgoing transactions: &#163; {{ outcome|floatformat:2 }}</h3>
+<h3 id='outgoing-transactions'>Outgoing transactions: &#163; {{ outcome|floatformat:2 }}</h3>
 <select id='outgoing-transaction-select'>
 	{% for tra in outgoing_transactions %}
 	<option value="{% url 'list:view_transaction' tra.id %}">
@@ -43,7 +43,7 @@
 </script>
 {% endif %}
 {% if salary_transactions %}
-<h3>Salary transactions: &#163; {{ total_salary|floatformat:2 }}</h3>
+<h3 id='salary-transactions'>Salary transactions (subset of the outgoing transactions above): &#163; {{ total_salary|floatformat:2 }}</h3>
 <select id='salary-transaction-select'>
 	{% for tra in salary_transactions %}
 	<option value="{% url 'list:view_transaction' tra.id %}">
@@ -63,6 +63,6 @@
 </script>
 {% endif %}
 <h3>Incoming invoices</h3>
-<h3>Incoming invoices unpaid</h3>
+<h3 id="incoming-unpaid-invoices">Incoming invoices unpaid</h3>
 <h3>Outgoing invoices</h3>
-<h3>Outgoing invoices unpaid</h3>
+<h3 id="outgoing-unpaid-invoices">Outgoing invoices unpaid</h3>

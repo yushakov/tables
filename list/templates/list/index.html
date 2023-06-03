@@ -43,16 +43,22 @@
             {{ construct.full_progress_cost }}
         </td>
         <td align ='right'>
+            <a href="{% url 'list:flows' construct.id %}#incoming-transactions">
             {{ construct.round_income }}
+            </a>
         </td>
         <td align ='right'>
+            <a href="{% url 'list:flows' construct.id %}#outgoing-transactions">
             {{ construct.round_outcome }}
+            </a>
         </td>
         <td align ='right'>
             {{ construct.round_expenses }}
         </td>
         <td align ='right'>
+            <a href="{% url 'list:flows' construct.id %}#salary-transactions">
             {{ construct.round_salaries }}
+            </a>
         </td>
         <td align ='right'>
             {{ construct.company_profit }}<br>
@@ -68,10 +74,14 @@
             {{ construct.progress_minus_income }}
         </td>
         <td align ='right'>
+            <a href="{% url 'list:flows' construct.id %}#outgoing-unpaid-invoices">
             {{ construct.invoices_to_pay }}
+            </a>
         </td>
         <td align ='right'>
+            <a href="{% url 'list:flows' construct.id %}#incoming-unpaid-invoices">
             {{ construct.invoices_pending_pay }}
+            </a>
         </td>
         </tr>
     {% endfor %}
