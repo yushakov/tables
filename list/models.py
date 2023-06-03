@@ -76,11 +76,28 @@ class Construct(models.Model):
 
     def progress_cost(self):
         choices = self.choice_set.all()
+        if choices is None: return 0.0
         cost = 0.0
         for ch in choices:
             price = ch.quantity_num * ch.price_num * ch.progress_percent_num * 0.01
             cost += price
         return cost
+
+    def overall_progress_percent(self):
+        choices = self.choice_set.all()
+        if choices is None: return 0.0
+        total_cost, progress_cost = 0.0, 0.0
+        for ch in choices:
+            ch_price = ch.quantity_num * ch.price_num
+            total_cost += ch_price
+            progress_cost += ch_price * ch.progress_percent_num * 0.01
+        if total_cost > 1.e-5:
+            return 100.0 * progress_cost / total_cost
+        else:
+            return 0.0
+
+    def withCompanyProfit(self, value):
+        return value * (1.0 + 0.01 * self.company_profit_percent_num)
 
 
 class Worker(models.Model):

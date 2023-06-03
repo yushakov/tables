@@ -12,6 +12,34 @@ from list.views import check_integrity,   \
 from list.models import Construct, Choice, Invoice, Transaction
 
 class ModelTests(TestCase):
+    def test_overall_progress_percent(self):
+        construct = Construct()
+        construct.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 2',
+             notes_txt             = '',
+             quantity_num          = 2,
+             price_num             = '20.0',
+             progress_percent_num  = 25.0,
+             units_of_measure_text = 'nr',
+             workers               = 'Paul',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 7.0)
+        choice.save()
+        progress = construct.overall_progress_percent()
+        self.assertEqual(progress, 100.*13.5/50)
+
     def test_progress_cost(self):
         construct = Construct()
         construct.save()
