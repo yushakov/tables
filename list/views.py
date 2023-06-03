@@ -339,6 +339,7 @@ def submit_transaction(request):
 
 
 def getTotalAmount(transactions):
+    if transactions is None: return 0.0
     total = 0.0
     for tra in transactions:
         total += float(tra.amount)
@@ -349,11 +350,15 @@ def flows(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING)
     outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING)
+    salary_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING,
+            details_txt__icontains='salary')
     invoices = construct.invoice_set.all()
     context = {'incoming_transactions': incoming_transactions,
             'income': getTotalAmount(incoming_transactions),
             'outgoing_transactions': outgoing_transactions,
             'outcome': getTotalAmount(outgoing_transactions),
+            'salary_transactions': salary_transactions,
+            'total_salary': getTotalAmount(salary_transactions),
             'invoices': invoices,
             'construct_id': construct.id,
             'construct_name': construct.title_text}

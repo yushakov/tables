@@ -42,3 +42,23 @@
 		});
 </script>
 {% endif %}
+{% if salary_transactions %}
+<h3>Salary transactions: &#163; {{ total_salary|floatformat:2 }}</h3>
+<select id='salary-transaction-select'>
+	{% for tra in salary_transactions %}
+	<option value="{% url 'list:view_transaction' tra.id %}">
+	&#163; {{ tra.amount|floatformat:2 }}
+	from {{ tra.from_txt }}
+	to {{ tra.to_txt }}
+	on {{ tra.date }}
+	</option>
+	{% endfor %}
+</select>
+<div id='salary-transaction-link'></div>
+<script>
+	document.getElementById('salary-transaction-select').addEventListener('change', function() {
+			var link = document.getElementById('salary-transaction-link');
+			link.innerHTML = "<a href='" + this.value + "'>VIEW</a>";
+		});
+</script>
+{% endif %}
