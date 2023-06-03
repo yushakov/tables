@@ -3,13 +3,19 @@
 <h2>Transaction</h2>
 <a href="{% url 'list:submit_transaction' %}">add a new transaction</a>
 &nbsp;
+<a href="{% url 'admin:list_transaction_change' transaction.id %}">modify this one</a>
+&nbsp;
 <a href="{% url 'admin:list_transaction_changelist' %}">see all transactions</a>
 <br />
 <br />
 <table id='construct_list'>
     <tr>
         <td><b>Project:</b></td>
-        <td>{{ transaction.construct.title_text }}</td>
+        <td>
+		<a href="{% url 'list:detail' transaction.construct.id %}">
+		{{ transaction.construct.title_text }}
+		</a>
+	</td>
     </tr>
     <tr>
         <td><b>Number:</b></td>
