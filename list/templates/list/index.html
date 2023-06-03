@@ -12,12 +12,12 @@
         <th>Cost</th>
         <th>Pogressed</th>
         <th>Income</th>
+        <th>Outcome</th>
         <th>Expenses</th>
-        <th>Company Profit</th>
         <th>Salaries</th>
-        <th>Pure Profit</th>
-        <th>Progress &minus; Income</th>
-        <th>Invoices to Pay</th>
+        <th>Company Profit</th>
+        <th>_Progress<br>Income</th>
+        <th>Invoices to Pay<br>(debt)</th>
         <th>Reqstd Payments</th>
     </thead>
     <tbody>
@@ -34,12 +34,43 @@
         <td>
             <a href="{% url 'list:gantt' construct.id %}">Gantt</a>
         </td>
+        <td align ='right'>
+            {{ construct.full_cost }}
+        </td>
+        <td align ='right'>
+            {{ construct.full_progress_cost }}
+        </td>
+        <td align ='right'>
+            {{ construct.round_income }}
+        </td>
+        <td align ='right'>
+            {{ construct.round_outcome }}
+        </td>
+        <td align ='right'>
+            {{ construct.round_expenses }}
+        </td>
+        <td align ='right'>
+            {{ construct.round_salaries }}
+        </td>
+        <td align ='right'>
+            {{ construct.company_profit }}<br>
+            ({{ construct.company_profit_percent|floatformat:1 }}%)
+        </td>
+        <td align ='right'>
+            {{ construct.progress_minus_income }}
+        </td>
+        <td align ='right'>
+            {{ construct.invoices_to_pay }}
+        </td>
+        <td align ='right'>
+            {{ construct.invoices_pending_pay }}
+        </td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
 
-<br><br>
+<!--br><br>
 <table id='construct_money_scope'>
     <thead>
         <tr>
@@ -48,7 +79,7 @@
             <th>Profit</th>
             <th>Paid</th>
             <th>To be paid<br>for progress</th>
-            <th>Worker<br>invoices</th> <!-- Which need to be paid -->
+            <th>Worker<br>invoices</th> <-- Which need to be paid >
         </tr>
     </thead>
 <tbody>
@@ -60,7 +91,7 @@
         <td></td>
     </tr>
 </tbody>
-</table>
+</table-->
 {% else %}
     <p>No projects are available.</p>
 {% endif %}

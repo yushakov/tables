@@ -62,6 +62,10 @@ table#construct_list td, table#construct_list th {
     padding: 6px;
 }
 
+table#construct_list th {
+    text-align: center;
+}
+
 table#construct_money_scope {
     border-collapse: collapse;
     border: none;

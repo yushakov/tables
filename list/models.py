@@ -69,10 +69,69 @@ class Construct(models.Model):
         outcome = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.OUTGOING and iv.status != Invoice.PAID])
         return income - outcome
 
+    @property
+    def invoices_to_pay(self):
+        invoices = self.invoice_set.filter(invoice_type=Transaction.OUTGOING, status=Invoice.UNPAID)
+        if invoices is None: return 0.0
+        return round(sum([iv.amount for iv in invoices]))
+
+    @property
+    def invoices_pending_pay(self):
+        invoices = self.invoice_set.filter(invoice_type=Transaction.INCOMING, status=Invoice.UNPAID)
+        if invoices is None: return 0.0
+        return round(sum([iv.amount for iv in invoices]))
+
     def income(self):
         in_transactions = self.transaction_set.filter(transaction_type = Transaction.INCOMING)
+        if in_transactions is None: return 0.0
         income = sum([float(ta.amount) for ta in in_transactions])
         return income
+
+    def salaries(self):
+        transactions = self.transaction_set.filter(transaction_type=Transaction.OUTGOING, details_txt__icontains='salary')
+        if transactions is None: return 0.0
+        summ = sum([float(ta.amount) for ta in transactions])
+        return summ
+
+    def outcome(self):
+        out_transactions = self.transaction_set.filter(transaction_type = Transaction.OUTGOING)
+        if out_transactions is None: return 0.0
+        outcome = sum([float(ta.amount) for ta in out_transactions])
+        return outcome
+
+    def expenses(self):
+        return self.outcome() - self.salaries()
+
+    @property
+    def round_salaries(self):
+        return round(self.salaries())
+
+    @property
+    def company_profit(self):
+        return round(self.income() - self.outcome())
+
+    @property
+    def company_profit_percent(self):
+        income = self.income()
+        if income < 1.e-5:
+            return 0.0
+        return 100. * float(self.company_profit) / self.income()
+
+    @property
+    def round_expenses(self):
+        return round(self.expenses())
+
+    @property
+    def round_income(self):
+        return round(self.income())
+
+    @property
+    def round_outcome(self):
+        return round(self.outcome())
+
+    @property
+    def progress_minus_income(self):
+        return round(self.full_progress_cost - self.income())
 
     def progress_cost(self):
         choices = self.choice_set.all()
@@ -98,6 +157,19 @@ class Construct(models.Model):
 
     def withCompanyProfit(self, value):
         return value * (1.0 + 0.01 * self.company_profit_percent_num)
+
+    def withVat(self, value):
+        return value * (1.0 + 0.01 * self.vat_percent_num)
+
+    @property
+    def full_cost(self):
+        choices = self.choice_set.all()
+        choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
+        return round(self.withVat(self.withCompanyProfit(choices_cost)))
+
+    @property
+    def full_progress_cost(self):
+        return round(self.withVat(self.withCompanyProfit(self.progress_cost())))
 
 
 class Worker(models.Model):
