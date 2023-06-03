@@ -1,5 +1,16 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
+<script>
+    function setUpViewLink(select_id, link_id) {
+        var select_value = document.getElementById(select_id).value;
+        var link = document.getElementById(link_id);
+        link.innerHTML = "<a href='" + select_value + "'>VIEW</a>";
+        document.getElementById(select_id).addEventListener('change', function() {
+                var link = document.getElementById(link_id);
+                link.innerHTML = "<a href='" + this.value + "'>VIEW</a>";
+            });
+    }
+</script>
 <h2>{{ construct_name }}</h2>
 <a href="{% url 'list:detail' construct_id %}">go to the project</a>
 {% if incoming_transactions %}
@@ -16,10 +27,7 @@
 </select>
 <div id='incoming-transaction-link'></div>
 <script>
-	document.getElementById('incoming-transaction-select').addEventListener('change', function() {
-			var link = document.getElementById('incoming-transaction-link');
-			link.innerHTML = "<a href='" + this.value + "'>VIEW</a>";
-		});
+    setUpViewLink('incoming-transaction-select', 'incoming-transaction-link');
 </script>
 {% endif %}
 {% if outgoing_transactions %}
@@ -36,14 +44,12 @@
 </select>
 <div id='outgoing-transaction-link'></div>
 <script>
-	document.getElementById('outgoing-transaction-select').addEventListener('change', function() {
-			var link = document.getElementById('outgoing-transaction-link');
-			link.innerHTML = "<a href='" + this.value + "'>VIEW</a>";
-		});
+    setUpViewLink('outgoing-transaction-select', 'outgoing-transaction-link');
 </script>
 {% endif %}
 {% if salary_transactions %}
-<h3 id='salary-transactions'>Salary transactions (subset of the outgoing transactions above): &#163; {{ total_salary|floatformat:2 }}</h3>
+<h3 id='salary-transactions'>Salary transactions (subset of the outgoing transactions above):
+    &#163; {{ total_salary|floatformat:2 }}</h3>
 <select id='salary-transaction-select'>
 	{% for tra in salary_transactions %}
 	<option value="{% url 'list:view_transaction' tra.id %}">
@@ -56,10 +62,7 @@
 </select>
 <div id='salary-transaction-link'></div>
 <script>
-	document.getElementById('salary-transaction-select').addEventListener('change', function() {
-			var link = document.getElementById('salary-transaction-link');
-			link.innerHTML = "<a href='" + this.value + "'>VIEW</a>";
-		});
+    setUpViewLink('salary-transaction-select', 'salary-transaction-link');
 </script>
 {% endif %}
 <h3>Incoming invoices</h3>
