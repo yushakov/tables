@@ -16,6 +16,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('<int:construct_id>/', views.detail, name='detail'),
     path('<int:construct_id>/gantt/', views.gantt, name='gantt'),
+    path('<int:construct_id>/flows/', views.flows, name='flows'),
     path('invoice/', redirect_to_admin_invoices),
     path('invoice/<int:invoice_id>/', views.view_invoice, name='view_invoice'),
     path('transaction/', redirect_to_admin_transactions),

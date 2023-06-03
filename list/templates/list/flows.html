@@ -1,0 +1,44 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<h2>{{ construct_name }}</h2>
+<a href="{% url 'list:detail' construct_id %}">go to the project</a>
+{% if incoming_transactions %}
+<h3>Incoming transactions: &#163; {{ income|floatformat:2 }}</h3>
+<select id='incoming-transaction-select'>
+	{% for tra in incoming_transactions %}
+	<option value="{% url 'list:view_transaction' tra.id %}">
+	&#163; {{ tra.amount|floatformat:2 }}
+	from {{ tra.from_txt }}
+	to {{ tra.to_txt }}
+	on {{ tra.date }}
+	</option>
+	{% endfor %}
+</select>
+<div id='incoming-transaction-link'></div>
+<script>
+	document.getElementById('incoming-transaction-select').addEventListener('change', function() {
+			var link = document.getElementById('incoming-transaction-link');
+			link.innerHTML = "<a href='" + this.value + "'>VIEW</a>";
+		});
+</script>
+{% endif %}
+{% if outgoing_transactions %}
+<h3>Outgoing transactions: &#163; {{ outcome|floatformat:2 }}</h3>
+<select id='outgoing-transaction-select'>
+	{% for tra in outgoing_transactions %}
+	<option value="{% url 'list:view_transaction' tra.id %}">
+	&#163; {{ tra.amount|floatformat:2 }}
+	from {{ tra.from_txt }}
+	to {{ tra.to_txt }}
+	on {{ tra.date }}
+	</option>
+	{% endfor %}
+</select>
+<div id='outgoing-transaction-link'></div>
+<script>
+	document.getElementById('outgoing-transaction-select').addEventListener('change', function() {
+			var link = document.getElementById('outgoing-transaction-link');
+			link.innerHTML = "<a href='" + this.value + "'>VIEW</a>";
+		});
+</script>
+{% endif %}

@@ -336,3 +336,25 @@ def submit_transaction(request):
     else:
         form = TransactionSubmitForm()
     return render(request, 'list/submit_transaction.html', {'form': form})
+
+
+def getTotalAmount(transactions):
+    total = 0.0
+    for tra in transactions:
+        total += float(tra.amount)
+    return total
+
+
+def flows(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING)
+    outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING)
+    invoices = construct.invoice_set.all()
+    context = {'incoming_transactions': incoming_transactions,
+            'income': getTotalAmount(incoming_transactions),
+            'outgoing_transactions': outgoing_transactions,
+            'outcome': getTotalAmount(outgoing_transactions),
+            'invoices': invoices,
+            'construct_id': construct.id,
+            'construct_name': construct.title_text}
+    return render(request, 'list/flows.html', context)
