@@ -11,6 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
+coeff_valid = [MinValueValidator(0.0), MaxValueValidator(1.0)] 
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
 
 
@@ -34,6 +35,7 @@ class Construct(models.Model):
     overall_progress_percent_num = models.FloatField('progress', default=0.0, validators=percent_valid)
     vat_percent_num = models.FloatField(validators=percent_valid, default='5')
     company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
+    owner_profit_coeff = models.FloatField(validators=coeff_valid, default='0.13')
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
     
@@ -111,6 +113,15 @@ class Construct(models.Model):
         return round(self.income() - self.outcome())
 
     @property
+    def owner_profit(self):
+        return round(self.withOutVat(self.income()) * self.owner_profit_coeff)
+
+    @property
+    def salaries_part(self):
+        # Income - VAT - Owner Profit - Outcome
+        return round(self.withOutVat(self.income()) - self.owner_profit - self.outcome())
+
+    @property
     def company_profit_percent(self):
         income = self.income()
         if income < 1.e-5:
@@ -160,6 +171,9 @@ class Construct(models.Model):
 
     def withVat(self, value):
         return value * (1.0 + 0.01 * self.vat_percent_num)
+
+    def withOutVat(self, value):
+        return value * (1.0 - 0.01 * self.vat_percent_num)
 
     @property
     def full_cost(self):
