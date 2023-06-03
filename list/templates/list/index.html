@@ -5,6 +5,21 @@
 <br><br>
 {% if active_construct_list %}
 <table id='construct_list'>
+    <thead>
+        <th>Project name</th>
+        <th>Progress</th>
+        <th>Chart</th>
+        <th>Cost</th>
+        <th>Pogressed</th>
+        <th>Income</th>
+        <th>Expenses</th>
+        <th>Company Profit</th>
+        <th>Salaries</th>
+        <th>Pure Profit</th>
+        <th>Progress &minus; Income</th>
+        <th>Invoices to Pay</th>
+        <th>Reqstd Payments</th>
+    </thead>
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
@@ -17,7 +32,7 @@
             </div>
         </td>
         <td>
-            <a href="{% url 'list:gantt' construct.id %}">Gantt Chart</a>
+            <a href="{% url 'list:gantt' construct.id %}">Gantt</a>
         </td>
         </tr>
     {% endfor %}
