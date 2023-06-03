@@ -219,6 +219,50 @@ class ModelTests(TestCase):
 
 
 class ViewTests(TestCase):
+    def test_call_flows_page(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/" + str(cons.id) + "/flows/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_flows_page_with_invoices(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        Invoice.add(cons, "John", 100.0, direction='in', status='paid')
+        Invoice.add(cons, "Paul", 120.0, direction='in', status='unpaid')
+        Invoice.add(cons, "George", 102.0, direction='out', status='paid')
+        Invoice.add(cons, "Ringo", 123.0, direction='out', status='unpaid')
+        response = c.get("/list/" + str(cons.id) + "/flows/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_flows_page_with_transactions(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        Transaction.add(cons, 100.0, direction='in',  details='-')
+        Transaction.add(cons, 120.0, direction='in',  details='salary')
+        Transaction.add(cons, 102.0, direction='out', details='-')
+        Transaction.add(cons, 123.0, direction='out', details='SalAry')
+        response = c.get("/list/" + str(cons.id) + "/flows/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_flows_page_with_invoices_and_transactions(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        Invoice.add(cons, "John", 100.0, direction='in', status='paid')
+        Invoice.add(cons, "Paul", 120.0, direction='in', status='unpaid')
+        Invoice.add(cons, "George", 102.0, direction='out', status='paid')
+        Invoice.add(cons, "Ringo", 123.0, direction='out', status='unpaid')
+        Transaction.add(cons, 100.0, direction='in',  details='-')
+        Transaction.add(cons, 120.0, direction='in',  details='salary')
+        Transaction.add(cons, 102.0, direction='out', details='-')
+        Transaction.add(cons, 123.0, direction='out', details='SalAry')
+        response = c.get("/list/" + str(cons.id) + "/flows/")
+        self.assertEqual(response.status_code, 200)
+
     def test_open_transaction_submit_form(self):
         c = Client()
         response = c.get("/list/transaction/submit/")

@@ -313,10 +313,11 @@ class Transaction(models.Model):
     def number_link(self):
         return format_html("<a href='/list/transaction/{}'>{}</a>", self.id, self.receipt_number)
 
-    def add(construct, amount, date=None, direction=None, number='000000'):
+    def add(construct, amount, date=None, direction=None, number='000000', details='-'):
         transaction = Transaction()
         transaction.construct = construct
         transaction.amount = amount
+        transaction.details_txt = details
         if date is None:
             transaction.date = timezone.now()
         else:
@@ -375,10 +376,14 @@ class Invoice(models.Model):
     def get_transactions(self):
         return self.transactions.all()
 
-    def add(construct, seller_name, amount, direction=None, issued=None, due=None):
+    def add(construct, seller_name, amount, direction=None, issued=None, due=None, status=None):
         invoice = Invoice()
         invoice.seller = seller_name
         invoice.amount = amount 
+        if status is None or status == 'unpaid':
+            invoice.status = Invoice.UNPAID
+        else:
+            invoice.status = Invoice.PAID
         if direction is None or direction == 'in':
             invoice.invoice_type = Transaction.INCOMING
         elif direction == 'out':
