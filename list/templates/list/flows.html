@@ -13,6 +13,7 @@
 </script>
 <h2>{{ construct_name }}</h2>
 <a href="{% url 'list:detail' construct_id %}">go to the project</a>
+
 {% if incoming_transactions %}
 <h3 id='incoming-transactions'>Incoming transactions: &#163; {{ income|floatformat:2 }}</h3>
 <select id='incoming-transaction-select'>
@@ -30,6 +31,7 @@
     setUpViewLink('incoming-transaction-select', 'incoming-transaction-link');
 </script>
 {% endif %}
+
 {% if outgoing_transactions %}
 <h3 id='outgoing-transactions'>Outgoing transactions: &#163; {{ outcome|floatformat:2 }}</h3>
 <select id='outgoing-transaction-select'>
@@ -47,6 +49,7 @@
     setUpViewLink('outgoing-transaction-select', 'outgoing-transaction-link');
 </script>
 {% endif %}
+
 {% if salary_transactions %}
 <h3 id='salary-transactions'>Salary transactions (subset of the outgoing transactions above):
     &#163; {{ total_salary|floatformat:2 }}</h3>
@@ -65,7 +68,83 @@
     setUpViewLink('salary-transaction-select', 'salary-transaction-link');
 </script>
 {% endif %}
-<h3>Incoming invoices</h3>
-<h3 id="incoming-unpaid-invoices">Incoming invoices unpaid</h3>
-<h3>Outgoing invoices</h3>
-<h3 id="outgoing-unpaid-invoices">Outgoing invoices unpaid</h3>
+
+{% if incoming_invoices %}
+<h3>Incoming invoices: &#163; {{ incoming_invoices_total|floatformat:2 }}</h3>
+<select id='incoming-invoices-select'>
+	{% for inv in incoming_invoices %}
+        <option value="{% url 'list:view_invoice' inv.id %}">
+            &#163; {{ inv.amount|floatformat:2 }}
+            from {{ inv.seller }},
+            issued: {{ inv.issue_date }},
+            due: {{ inv.due_date }}.
+            {{ inv.status }}.
+            {{ inv.invoice_type }}.
+        </option>
+	{% endfor %}
+</select>
+<div id='incoming-invoices-link'></div>
+<script>
+    setUpViewLink('incoming-invoices-select', 'incoming-invoices-link');
+</script>
+{% endif %}
+
+{% if incoming_unpaid_invoices %}
+<h3 id="incoming-unpaid-invoices">Incoming invoices unpaid: &#163; {{ incoming_unpaid_invoices_total|floatformat:2 }}</h3>
+<select id='incoming-unpaid-invoices-select'>
+	{% for inv in incoming_unpaid_invoices %}
+        <option value="{% url 'list:view_invoice' inv.id %}">
+            &#163; {{ inv.amount|floatformat:2 }}
+            from {{ inv.seller }},
+            issued: {{ inv.issue_date }},
+            due: {{ inv.due_date }}.
+            {{ inv.status }}.
+            {{ inv.invoice_type }}.
+        </option>
+	{% endfor %}
+</select>
+<div id='incoming-unpaid-invoices-link'></div>
+<script>
+    setUpViewLink('incoming-unpaid-invoices-select', 'incoming-unpaid-invoices-link');
+</script>
+{% endif %}
+
+{% if outgoing_invoices %}
+<h3>Outgoing invoices: &#163; {{ outgoing_invoices_total|floatformat:2 }}</h3>
+<select id='outgoing-invoices-select'>
+	{% for inv in outgoing_invoices %}
+        <option value="{% url 'list:view_invoice' inv.id %}">
+            &#163; {{ inv.amount|floatformat:2 }}
+            from {{ inv.seller }},
+            issued: {{ inv.issue_date }},
+            due: {{ inv.due_date }}.
+            {{ inv.status }}.
+            {{ inv.invoice_type }}.
+        </option>
+	{% endfor %}
+</select>
+<div id='outgoing-invoices-link'></div>
+<script>
+    setUpViewLink('outgoing-invoices-select', 'outgoing-invoices-link');
+</script>
+{% endif %}
+
+{% if outgoing_unpaid_invoices %}
+<h3 id="outgoing-unpaid-invoices">Outgoing invoices unpaid: &#163; {{ outgoing_unpaid_invoices_total|floatformat:2 }}</h3>
+<select id='outgoing-unpaid-invoices-select'>
+	{% for inv in outgoing_unpaid_invoices %}
+        <option value="{% url 'list:view_invoice' inv.id %}">
+            &#163; {{ inv.amount|floatformat:2 }}
+            from {{ inv.seller }},
+            issued: {{ inv.issue_date }},
+            due: {{ inv.due_date }}.
+            {{ inv.status }}.
+            {{ inv.invoice_type }}.
+        </option>
+	{% endfor %}
+</select>
+<div id='outgoing-unpaid-invoices-link'></div>
+<script>
+    setUpViewLink('outgoing-unpaid-invoices-select', 'outgoing-unpaid-invoices-link');
+</script>
+{% endif %}

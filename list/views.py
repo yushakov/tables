@@ -352,14 +352,24 @@ def flows(request, construct_id):
     outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING)
     salary_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING,
             details_txt__icontains='salary')
-    invoices = construct.invoice_set.all()
+    incoming_invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING)
+    incoming_unpaid_invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING, status=Invoice.UNPAID)
+    outgoing_invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING)
+    outgoing_unpaid_invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING, status=Invoice.UNPAID)
     context = {'incoming_transactions': incoming_transactions,
             'income': getTotalAmount(incoming_transactions),
             'outgoing_transactions': outgoing_transactions,
             'outcome': getTotalAmount(outgoing_transactions),
             'salary_transactions': salary_transactions,
             'total_salary': getTotalAmount(salary_transactions),
-            'invoices': invoices,
+            'incoming_invoices': incoming_invoices,
+            'incoming_invoices_total': getTotalAmount(incoming_invoices),
+            'incoming_unpaid_invoices': incoming_unpaid_invoices,
+            'incoming_unpaid_invoices_total': getTotalAmount(incoming_unpaid_invoices),
+            'outgoing_invoices': outgoing_invoices,
+            'outgoing_invoices_total': getTotalAmount(outgoing_invoices),
+            'outgoing_unpaid_invoices': outgoing_unpaid_invoices,
+            'outgoing_unpaid_invoices_total': getTotalAmount(outgoing_unpaid_invoices),
             'construct_id': construct.id,
             'construct_name': construct.title_text}
     return render(request, 'list/flows.html', context)
