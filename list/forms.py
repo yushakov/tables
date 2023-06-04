@@ -2,6 +2,13 @@ from django.forms import ModelForm, ModelMultipleChoiceField
 from .models import Transaction, Invoice
 from django.utils.translation import gettext_lazy as _
 
+
+class InvoiceSubmitForm(ModelForm):
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+
+
 class TransactionSubmitForm(ModelForm):
     invoice_objects = Invoice.objects.filter(status=Invoice.UNPAID)
     invoices = ModelMultipleChoiceField(queryset=invoice_objects, required=False)

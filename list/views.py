@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction
 from .forms import TransactionSubmitForm
+from .forms import InvoiceSubmitForm
 import json
 from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
@@ -343,6 +344,17 @@ def submit_transaction(request):
         form = TransactionSubmitForm()
     return render(request, 'list/submit_transaction.html', {'form': form})
 
+@login_required
+def submit_invoice(request):
+    if request.method == 'POST':
+        form = InvoiceSubmitForm(request.POST)
+        if form.is_valid():
+            form.save()
+            obj = Invoice.objects.latest()
+            return redirect(obj)
+    else:
+        form = InvoiceSubmitForm()
+    return render(request, 'list/submit_invoice.html', {'form': form})
 
 def getTotalAmount(transactions):
     if transactions is None: return 0.0
