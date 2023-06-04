@@ -18,6 +18,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
+from django.contrib.auth import views as auth_views
 
 
 def redirect_to_admin(request):
@@ -28,4 +29,5 @@ urlpatterns = [
     path('', redirect_to_admin),
     path('list/', include('list.urls')),
     path('admin/', admin.site.urls),
+    path("accounts/login/", auth_views.LoginView.as_view(template_name='list/login.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
