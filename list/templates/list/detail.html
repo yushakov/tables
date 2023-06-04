@@ -1,3 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}{{ construct.title_text }}{% endblock %}
+{% block content %}
 {% load static %}
 <script src="{% static 'list/detail.js' %}">
 </script>
@@ -174,3 +177,4 @@
 <div style='display:none' id='active_row'>-1</div>
 <div style='display:none' id='modified'>no</div>
 <script>updateHeaders();</script>
+{% endblock %}

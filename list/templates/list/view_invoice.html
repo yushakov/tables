@@ -1,3 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Submit an Invoice{% endblock %}
+{% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Invoice</h2>
@@ -55,3 +58,4 @@
         {% endif %}
     </a>
 {% endif %}
+{% endblock %}

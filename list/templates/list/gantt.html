@@ -1,3 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Gantt: {{ construct.title_text }}{% endblock %}
+{% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <link rel="stylesheet" href="{% static 'list/gantt.css' %}">
@@ -49,3 +52,4 @@
     </tbody>
 </table>
 </div>
+{% endblock %}

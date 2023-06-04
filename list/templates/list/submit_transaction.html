@@ -1,3 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Submit a Transaction{% endblock %}
+{% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Submit a Transaction</h2>
@@ -9,3 +12,4 @@
     </table>
     <input type="submit" value="Submit">
 </form>
+{% endblock %}

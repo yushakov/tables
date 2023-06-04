@@ -1,3 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Flows: {{ construct_name }}{% endblock %}
+{% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <script>
@@ -148,3 +151,4 @@
     setUpViewLink('outgoing-unpaid-invoices-select', 'outgoing-unpaid-invoices-link');
 </script>
 {% endif %}
+{% endblock %}

@@ -1,3 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Transaction{% endblock %}
+{% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Transaction</h2>
@@ -59,3 +62,4 @@
         {% endif %}
     </a>
 {% endif %}
+{% endblock %}
