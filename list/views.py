@@ -8,6 +8,7 @@ from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
 import logging
+from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class IndexView(generic.ListView):
         """Return the projects"""
         return Construct.objects.order_by('overall_progress_percent_num')
 
-
+@login_required
 def index(request):
     constructs = Construct.objects.order_by('-listed_date')
     price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
@@ -241,6 +242,7 @@ def process_post(request, construct):
             save_update(data, construct)
 
 
+@login_required
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
@@ -281,6 +283,7 @@ def getMarking(choice_list):
     return common_start, marking, total, labels
 
 
+@login_required
 def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
@@ -305,6 +308,7 @@ def getTransactions(invoice):
     return out
 
 
+@login_required
 def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     tra_list = getTransactions(invoice)
@@ -316,6 +320,7 @@ def getInvoices(transaction):
     return transaction.invoice_set.all()
 
 
+@login_required
 def view_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
     inv_list = getInvoices(transaction)
@@ -324,6 +329,7 @@ def view_transaction(request, transaction_id):
     return render(request, 'list/view_transaction.html', context)
 
 
+@login_required
 def submit_transaction(request):
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
@@ -346,6 +352,7 @@ def getTotalAmount(transactions):
     return total
 
 
+@login_required
 def flows(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING)
