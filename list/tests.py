@@ -1,4 +1,5 @@
 from django.test import TestCase, Client
+from django.contrib.auth.models import User
 import numpy as np
 import datetime as dt
 import json
@@ -219,8 +220,43 @@ class ModelTests(TestCase):
 
 
 class ViewTests(TestCase):
+    def setUp(self):
+        self.user =  User.objects.create_user('yuran', 'yuran@domain.ru', 'secret')
+
+    def test_login_page_list(self):
+        c = Client()
+        response = c.get('/list/')
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_login_page_detail(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        response = c.get('/list/' + str(cons.id) +'/')
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_login_page_flows(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        response = c.get('/list/' + str(cons.id) +'/flows/')
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_login_page_gantt(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        response = c.get('/list/' + str(cons.id) +'/gantt/')
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+        self.assertEqual(response.status_code, 302)
+
+
     def test_call_flows_page(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/flows/")
@@ -228,6 +264,7 @@ class ViewTests(TestCase):
 
     def test_flows_page_with_invoices(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         Invoice.add(cons, "John", 100.0, direction='in', status='paid')
@@ -239,6 +276,7 @@ class ViewTests(TestCase):
 
     def test_flows_page_with_transactions(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         Transaction.add(cons, 100.0, direction='in',  details='-')
@@ -250,6 +288,7 @@ class ViewTests(TestCase):
 
     def test_flows_page_with_invoices_and_transactions(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         Invoice.add(cons, "John", 100.0, direction='in', status='paid')
@@ -265,10 +304,29 @@ class ViewTests(TestCase):
 
     def test_open_transaction_submit_form(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         response = c.get("/list/transaction/submit/")
         self.assertEqual(response.status_code, 200)
 
+    def test_login_transaction_submit_form(self):
+        c = Client()
+        response = c.get("/list/transaction/submit/")
+        self.assertEqual(response.status_code, 302)
+
     def test_submit_transaction_form(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, 302)
+        
+    def test_login_submit_transaction_form(self):
         c = Client()
         cons = Construct()
         cons.save()
@@ -277,10 +335,12 @@ class ViewTests(TestCase):
                 'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, 302)
         
     def test_submit_transaction_form_with_invoice(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         invoice = Invoice.add(cons, "John Smith", 100.0, direction='in')
@@ -290,10 +350,12 @@ class ViewTests(TestCase):
                 'invoices': [str(invoice.id)],
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, 302)
 
     def test_submit_transaction_form_with_wrong_invoice(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         invoice = Invoice.add(cons, "John Smith", 100.0, direction='out')
@@ -307,6 +369,7 @@ class ViewTests(TestCase):
 
     def test_submit_transaction_form_with_two_invoices(self):
         c = Client()
+        c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         invoice1 = Invoice.add(cons, "John", 100.0, direction='in')
@@ -317,6 +380,7 @@ class ViewTests(TestCase):
                 'invoices': [str(invoice1.id), str(invoice2.id)],
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, 302)
 
     def test_checkTimeStamp(self):
