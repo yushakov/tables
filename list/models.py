@@ -211,6 +211,8 @@ class Choice(models.Model):
     workers = models.CharField(max_length=800, default='Somebody')
     name_txt = models.CharField(max_length=200)
     notes_txt = models.TextField(default='-')
+    constructive_notes = models.TextField(default='-')
+    client_notes = models.TextField(default='-')
     quantity_num = models.FloatField(default='1')
     units_of_measure_text = models.CharField(max_length=100, default='-')
     price_num = models.FloatField()
