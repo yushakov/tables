@@ -221,7 +221,7 @@ class ModelTests(TestCase):
 
 class ViewTests(TestCase):
     def setUp(self):
-        self.user =  User.objects.create_user('yuran', 'yuran@domain.ru', 'secret')
+        self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
 
     def test_login_page_list(self):
         c = Client()

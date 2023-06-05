@@ -9,7 +9,7 @@ from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
 import logging
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class IndexView(generic.ListView):
         return Construct.objects.order_by('overall_progress_percent_num')
 
 @login_required
+@permission_required("list.view_construct")
 def index(request):
     constructs = Construct.objects.order_by('-listed_date')
     price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
@@ -244,6 +245,7 @@ def process_post(request, construct):
 
 
 @login_required
+@permission_required("list.view_construct")
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
@@ -285,6 +287,7 @@ def getMarking(choice_list):
 
 
 @login_required
+@permission_required("list.view_construct")
 def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
@@ -310,6 +313,7 @@ def getTransactions(invoice):
 
 
 @login_required
+@permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     tra_list = getTransactions(invoice)
@@ -322,6 +326,7 @@ def getInvoices(transaction):
 
 
 @login_required
+@permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
     inv_list = getInvoices(transaction)
@@ -331,6 +336,8 @@ def view_transaction(request, transaction_id):
 
 
 @login_required
+@permission_required("list.add_transaction")
+@permission_required("list.change_transaction")
 def submit_transaction(request):
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
@@ -345,6 +352,7 @@ def submit_transaction(request):
     return render(request, 'list/submit_transaction.html', {'form': form})
 
 @login_required
+@permission_required("list.add_invoice")
 def submit_invoice(request):
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST)
@@ -365,6 +373,7 @@ def getTotalAmount(transactions):
 
 
 @login_required
+@permission_required("list.view_construct")
 def flows(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING)
