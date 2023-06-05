@@ -50,6 +50,13 @@
             {% endfor %}
         </td>
     </tr>
+    {% else %}
+    <tr>
+        <td></td>
+        <td>
+            <a href="{% url 'list:submit_transaction' %}">pay</a>
+        </td>
+    </tr>
     {% endif %}
 </table>
 {% if invoice.photo %}

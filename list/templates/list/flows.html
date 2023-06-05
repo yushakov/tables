@@ -93,7 +93,7 @@
 {% endif %}
 
 {% if incoming_unpaid_invoices %}
-<h3 id="incoming-unpaid-invoices">Incoming invoices unpaid: &#163; {{ incoming_unpaid_invoices_total|floatformat:2 }}</h3>
+<h3 id="incoming-unpaid-invoices">Incoming invoices UNPAID: &#163; {{ incoming_unpaid_invoices_total|floatformat:2 }}</h3>
 <select id='incoming-unpaid-invoices-select'>
 	{% for inv in incoming_unpaid_invoices %}
         <option value="{% url 'list:view_invoice' inv.id %}">
@@ -133,7 +133,7 @@
 {% endif %}
 
 {% if outgoing_unpaid_invoices %}
-<h3 id="outgoing-unpaid-invoices">Outgoing invoices unpaid: &#163; {{ outgoing_unpaid_invoices_total|floatformat:2 }}</h3>
+<h3 id="outgoing-unpaid-invoices">Outgoing invoices UNPAID: &#163; {{ outgoing_unpaid_invoices_total|floatformat:2 }}</h3>
 <select id='outgoing-unpaid-invoices-select'>
 	{% for inv in outgoing_unpaid_invoices %}
         <option value="{% url 'list:view_invoice' inv.id %}">
