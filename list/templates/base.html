@@ -8,6 +8,14 @@
 </head>
 <body>
     <main>
+        {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="right-align">LOGOUT</a>&nbsp;&nbsp
+            <style>
+                .right-align {
+                    float: right;
+                }
+            </style>
+        {% endif %}
         {% block content %}
         {% endblock %}
     </main>

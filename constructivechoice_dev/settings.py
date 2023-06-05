@@ -19,6 +19,7 @@ MEDIA_ROOT = BASE_DIR / 'uploads/'
 MEDIA_URL = 'uploads/'
 FILE_UPLOAD_PERMISSIONS = 0o666
 
+LOGIN_REDIRECT_URL = "/list/"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
