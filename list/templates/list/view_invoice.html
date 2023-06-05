@@ -10,7 +10,11 @@
 <table id='construct_list'>
     <tr>
         <td><b>Project:</b></td>
-        <td>{{ invoice.construct.title_text }}</td>
+        <td>
+            <a href="{% url 'list:detail' invoice.construct.id %}">
+            {{ invoice.construct.title_text }}
+            </a>
+        </td>
     </tr>
     <tr>
         <td><b>Number:</b></td>

@@ -6,7 +6,19 @@ from django.utils.translation import gettext_lazy as _
 class InvoiceSubmitForm(ModelForm):
     class Meta:
         model = Invoice
-        fields = '__all__'
+        fields = ['construct', 'seller', 'amount','number', 
+                  'invoice_type', 'status', 'issue_date', 'due_date', 'photo']
+        labels = {
+                    'construct': _('Project:'),
+                    'seller': _('From:'),
+                    'amount': _('Amount:'),
+                    'number': _('Number:'),
+                    'invoice_type': _('In or Out'),
+                    'status': _('Status:'),
+                    'issue_date': _('Issue Date:'),
+                    'due_date': _('Due Date'),
+                    'photo': _('Photo:')
+                 }
 
 
 class TransactionSubmitForm(ModelForm):
@@ -35,7 +47,6 @@ class TransactionSubmitForm(ModelForm):
         invoices  = cleaned_data.get('invoices')
         transaction_type = cleaned_data.get('transaction_type')
         photo = cleaned_data.get('photo')
-        print(f"TransactionSubmitForm.clean(). photo: {photo}")
         if construct and invoices and transaction_type:
             for inv in invoices:
                 if inv.construct.id != construct.id:
@@ -46,8 +57,6 @@ class TransactionSubmitForm(ModelForm):
     def save(self, commit=True):
         transaction = super(TransactionSubmitForm, self).save(commit=False)
         form_invoices = self.cleaned_data.get('invoices')
-        print("TransactionSubmitForm.save()")
-        print(transaction.photo)
         if commit:
             transaction.save()
             for inv in form_invoices:

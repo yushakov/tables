@@ -354,16 +354,25 @@ class Invoice(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     invoice_type = models.CharField(max_length=3, choices=Transaction.TYPES, default=Transaction.INCOMING)
     status = models.CharField(max_length=6, choices=STATUS, default=UNPAID)
-    issue_date = models.DateField()
-    due_date = models.DateField()
+    issue_date = models.DateField(default=timezone.now)
+    due_date = models.DateField(default=timezone.now)
     seller = models.CharField(max_length=100)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     transactions = models.ManyToManyField(Transaction, through='InvoiceTransaction')
     photo = models.ImageField(upload_to="invoices/%Y/%m/%d", default=empty_image)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        get_latest_by = 'created_at'
+
 
     def __str__(self):
         return f"Inv:{self.number};({self.construct.title_text[:10]}...) from: {self.seller}; " + \
                f"date: {self.issue_date}; £{self.amount} {self.invoice_type}"
+
+    def get_absolute_url(self):
+        return f"/list/invoice/{self.id}"
 
     @admin.display(description="Project")
     def within(self):
