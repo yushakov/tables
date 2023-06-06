@@ -51,7 +51,10 @@ class Construct(models.Model):
     def copy(self, new_title):
         if len(Construct.objects.filter(title_text=new_title.strip())) > 0:
             return None
-        new_construct = Construct(title_text=new_title)
+        new_construct = Construct(title_text=new_title,
+                vat_percent_num = self.vat_percent_num,
+                company_profit_percent_num = self.company_profit_percent_num,
+                owner_profit_coeff = self.owner_profit_coeff)
         new_construct.save()
         json_dic = json.loads(self.struct_json)
         choices = self.choice_set.all()
