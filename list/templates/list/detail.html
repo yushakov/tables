@@ -23,6 +23,7 @@
 <tr>
     <td><b>Address:</b></td>
     <td onclick='modify(this);'>{{ construct.address_text }}</td>
+    <td><a href="{% url 'admin:list_construct_change' construct.id %}">Modify<br>basics</a></td>
 </tr>
 <tr>
     <td><b>Email:</b></td>
