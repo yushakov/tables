@@ -179,7 +179,8 @@ class Construct(models.Model):
             total_cost += ch_price
             progress_cost += ch_price * ch.progress_percent_num * 0.01
         if total_cost > 1.e-5:
-            return 100.0 * progress_cost / total_cost
+            self.overall_progress_percent_num = 100.0 * progress_cost / total_cost
+            return self.overall_progress_percent_num
         else:
             return 0.0
 
