@@ -7,6 +7,7 @@ from datetime import timedelta
 import uuid
 from django.core.files.base import ContentFile
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,22 @@ class Construct(models.Model):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
         self.last_save_date = timezone.now() + delta_to_make_construct_a_bit_younger
         super(Construct, self).save(*args, **kwargs)
+
+    def copy(self, new_title):
+        if len(Construct.objects.filter(title_text=new_title.strip())) > 0:
+            return None
+        new_construct = Construct(title_text=new_title)
+        new_construct.save()
+        json_dic = json.loads(self.struct_json)
+        choices = self.choice_set.all()
+        for line in json_dic.keys():
+            if json_dic[line]['type'] != 'Choice': continue
+            ch = choices.get(id=json_dic[line]['id'])
+            new_choice = ch.copy(new_construct)
+            json_dic[line]['id'] = str(new_choice.id)
+        new_construct.struct_json = json.dumps(json_dic)
+        new_construct.save()
+        return new_construct
 
     @admin.display(description='Progress')
     def overall_progress(self):
@@ -221,6 +238,22 @@ class Choice(models.Model):
     plan_days_num = models.FloatField()
     actual_start_date = models.DateField(default=timezone.now)
     actual_end_date = models.DateField(default=timezone.now)
+
+    def copy(self, construct):
+        new_choice = Choice(construct=construct,
+                workers = self.workers,
+                name_txt = self.name_txt,
+                notes_txt = self.notes_txt,
+                constructive_notes = self.constructive_notes,
+                client_notes = self.client_notes,
+                quantity_num = self.quantity_num,
+                units_of_measure_text = self.units_of_measure_text,
+                price_num = self.price_num,
+                progress_percent_num = self.progress_percent_num,
+                plan_start_date = self.plan_start_date,
+                plan_days_num = self.plan_days_num)
+        new_choice.save()
+        return new_choice
 
     def __str__(self):
         maxNameLen = 70
