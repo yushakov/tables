@@ -27,6 +27,7 @@ def redirect_to_admin(request):
 def redirect_to_list(request):
     return redirect('admin:list')
 
+admin.site.site_header = 'Constructive Choice Projects Administration'
 
 urlpatterns = [
     path('', redirect_to_admin),
