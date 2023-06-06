@@ -253,7 +253,7 @@ class Choice(models.Model):
                 quantity_num = self.quantity_num,
                 units_of_measure_text = self.units_of_measure_text,
                 price_num = self.price_num,
-                progress_percent_num = self.progress_percent_num,
+                progress_percent_num = 0,
                 plan_start_date = self.plan_start_date,
                 plan_days_num = self.plan_days_num)
         new_choice.save()
