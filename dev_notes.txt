@@ -252,3 +252,7 @@ a4c6475 Revised some log printouts
 
 Создаём static директорию в корне проекта (где manage.py) и задаём её в качестве STATIC_ROOT в settings.py.
 Запускаем manage.py collectstatic, и все статичные файлы собираются в эту директорию. Указываем её как алиас в конфигурации nginx.
+
+06.06.2023
+----------
+Как сделать диаграммы Ганта с помощью Bokeh: https://stackoverflow.com/questions/31820578/how-to-plot-stacked-event-duration-gantt-charts

@@ -194,7 +194,7 @@ class Construct(models.Model):
         return value * (1.0 + 0.01 * self.vat_percent_num)
 
     def withOutVat(self, value):
-        return value * (1.0 - 0.01 * self.vat_percent_num)
+        return value / (1.0 + 0.01 * self.vat_percent_num)
 
     @property
     def full_cost(self):
