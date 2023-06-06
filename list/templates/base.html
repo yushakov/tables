@@ -5,11 +5,12 @@
     <link rel="shortcut icon" type="image/ico" href="{% static 'images/favicon.ico' %}" >
     <meta charset="utf-8">
     <title>{% block title %}Constructive Choice Project Management{% endblock %}</title>
+    {% block extra-head %}{% endblock %}
 </head>
 <body>
     <main>
         {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="right-align">LOGOUT</a>&nbsp;&nbsp
+            <a href="{% url 'logout' %}" class="right-align" id='logout-link'>LOGOUT</a>&nbsp;&nbsp
             <style>
                 .right-align {
                     float: right;

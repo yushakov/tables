@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Wait please...{% endblock %}
+{% block extra-head %}
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #f3f3f3;
+        font-family: Arial, sans-serif;
+    }
+    .processing-container {
+        text-align: center;
+    }
+</style>
+<script>
+    const seconds = 1
+    setTimeout(function() {
+            window.location.href = "{% url 'list:detail' param %}";
+    }, seconds * 1000);
+</script>
+{% endblock %}
+{% block content %}
+<script>
+    var logout_link = document.getElementById('logout-link');
+    logout_link.style.display = 'none';
+</script>
+{% load static %}
+<div class="processing-container">
+    <h1>Wait please...</h1>
+    <img src="{% static 'images/wait.gif' %}" alt="Processing...">
+</div>
+{% endblock %}

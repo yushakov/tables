@@ -267,6 +267,18 @@ def detail(request, construct_id):
     return render(request, 'list/detail.html', context)
 
 
+@login_required
+@permission_required("list.add_construct")
+@permission_required("list.change_construct")
+def clone_construct(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    new_name = 'Copy ' + str(datetime.now()) + ' ' + str(construct.title_text)
+    new_construct = construct.copy(new_name)
+    context = {'next_page': 'list:index',
+               'param': f'{new_construct.id}'}
+    return render(request, 'list/wait.html', context)
+
+
 def getMarking(choice_list):
     starts, ends = [], []
     marking = {}

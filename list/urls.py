@@ -22,5 +22,6 @@ urlpatterns = [
     path('invoice/submit/', views.submit_invoice, name='submit_invoice'),
     path('transaction/', redirect_to_admin_transactions),
     path('transaction/<int:transaction_id>/', views.view_transaction, name='view_transaction'),
-    path('transaction/submit/', views.submit_transaction, name='submit_transaction')
+    path('transaction/submit/', views.submit_transaction, name='submit_transaction'),
+    path('<int:construct_id>/clone/', views.clone_construct, name='clone')
 ]
