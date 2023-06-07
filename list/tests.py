@@ -389,6 +389,21 @@ class ViewTests(TestCase):
         self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, 302)
 
+    def test_submit_transaction_form_with_invoice_and_get_InvoiceTransaction_object(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        invoice = Invoice.add(cons, "John Smith", 100.0, direction='in')
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'invoices': [str(invoice.id)],
+                'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        inv_tra = invoice.invoicetransaction_set.all()
+        self.assertEqual(len(inv_tra), 1)
+
     def test_submit_transaction_form_with_wrong_invoice(self):
         c = Client()
         c.login(username="yuran", password="secret")
@@ -418,6 +433,22 @@ class ViewTests(TestCase):
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, 302)
+
+    def test_submit_transaction_form_with_two_invoices_and_get_two_InvoiceTransaction_objects(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        invoice1 = Invoice.add(cons, "John", 100.0, direction='in')
+        invoice2 = Invoice.add(cons, "Paul", 200.0, direction='in')
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'invoices': [str(invoice1.id), str(invoice2.id)],
+                'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        inv_tra = cons.invoicetransaction_set.all()
+        self.assertEqual(len(inv_tra), 2)
 
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")

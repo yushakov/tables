@@ -63,4 +63,8 @@ class TransactionSubmitForm(ModelForm):
                 transaction.invoice_set.add(inv)
                 inv.status = Invoice.PAID
                 inv.save()
+            inv_tra = transaction.invoicetransaction_set.all()
+            for intra in inv_tra:
+                intra.construct = transaction.construct
+                intra.save()
         return transaction
