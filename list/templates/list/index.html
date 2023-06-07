@@ -5,6 +5,8 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h1>Projects</h1>
 <a href="{% url 'admin:list_construct_add' %}">add a project</a>
+&nbsp;&nbsp;
+<a href="{% url 'admin:index' %}">admin home page</a>
 <br><br>
 {% if active_construct_list %}
 <table id='construct_list'>
