@@ -11,6 +11,7 @@ from list.views import check_integrity,   \
                        process_post,      \
                        checkTimeStamp
 from list.models import Construct, Choice, Invoice, Transaction
+import os
 
 class ModelTests(TestCase):
     def test_copy_construct(self):
@@ -48,6 +49,47 @@ class ModelTests(TestCase):
         json2_dic = json.loads(new_construct.struct_json)
         self.assertEqual(len(json1_dic.keys()), len(json2_dic.keys()))
         self.assertIs(construct.struct_json == new_construct.struct_json, False)
+
+    def test_construct_export_import(self):
+        print('>>> test_construct_export_import() <<<')
+        construct_name = 'Some test Construct'
+        construct = Construct(title_text=construct_name)
+        construct.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '-',
+             constructive_notes    = 'just do it',
+             client_notes          = 'yes, lets go',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 2',
+             notes_txt             = '-',
+             constructive_notes    = 'be yourself',
+             client_notes          = 'show me',
+             quantity_num          = 2,
+             price_num             = '20.0',
+             progress_percent_num  = 25.0,
+             units_of_measure_text = 'nr',
+             workers               = 'Paul',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 7.0)
+        choice.save()
+        fname = 'test_export_construct_export_import.json'
+        construct.export_to_json(fname)
+        construct.delete()
+        cons = Construct.objects.all()
+        self.assertEqual(len(cons), 0)
+        Construct.import_from_json(fname)
+        cons = Construct.objects.all()
+        self.assertEqual(cons[0].title_text, construct_name)
+        os.remove(fname)
 
     def test_construct_export_to_json(self):
         print('>>> test_construct_export_to_json() <<<')
