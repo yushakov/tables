@@ -473,7 +473,7 @@ class Invoice(models.Model):
 
 
 class InvoiceTransaction(models.Model):
-    construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+    construct = models.ForeignKey(Construct, on_delete=models.CASCADE, null=True, blank=True)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
     #paid_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
