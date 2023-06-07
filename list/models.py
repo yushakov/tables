@@ -8,6 +8,7 @@ import uuid
 from django.core.files.base import ContentFile
 import logging
 import json
+from django.core import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,17 @@ class Construct(models.Model):
         new_construct.struct_json = json.dumps(json_dic)
         new_construct.save()
         return new_construct
+
+    def export_to_json(self, fname):
+        construct = self
+        choices = Choice.objects.filter(construct__id=construct.id)
+        transactions = Transaction.objects.filter(construct__id=construct.id)
+        invoices = Invoice.objects.filter(construct__id=construct.id)
+        invoice_transactions = InvoiceTransaction.objects.filter(construct__id=construct.id)
+        data = serializers.serialize('json', [*choices, *transactions, *invoices, *invoice_transactions],
+                   use_natural_foreign_keys=True, use_natural_primary_keys=True)
+        with open(fname, 'w') as outfile:
+            outfile.write(data)
 
     @admin.display(description='Progress')
     def overall_progress(self):
@@ -461,6 +473,7 @@ class Invoice(models.Model):
 
 
 class InvoiceTransaction(models.Model):
+    construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
     #paid_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
