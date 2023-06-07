@@ -79,6 +79,12 @@ class Construct(models.Model):
         with open(fname, 'w') as outfile:
             outfile.write(data)
 
+    def import_from_json(fname):
+        with open(fname, 'r') as data_file:
+            for obj in serializers.deserialize("json", data_file):
+                print(obj.object)
+                obj.save()
+
     @admin.display(description='Progress')
     def overall_progress(self):
         return f"{self.overall_progress_percent_num :.2f} %" 
