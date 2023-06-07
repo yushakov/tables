@@ -49,6 +49,38 @@ class ModelTests(TestCase):
         self.assertEqual(len(json1_dic.keys()), len(json2_dic.keys()))
         self.assertIs(construct.struct_json == new_construct.struct_json, False)
 
+    def test_construct_export_to_json(self):
+        print('>>> test_construct_export_to_json() <<<')
+        construct = Construct(title_text='Some Test Construct')
+        construct.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '-',
+             constructive_notes    = 'just do it',
+             client_notes          = 'yes, lets go',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 2',
+             notes_txt             = '-',
+             constructive_notes    = 'be yourself',
+             client_notes          = 'show me',
+             quantity_num          = 2,
+             price_num             = '20.0',
+             progress_percent_num  = 25.0,
+             units_of_measure_text = 'nr',
+             workers               = 'Paul',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 7.0)
+        choice.save()
+        construct.export_to_json('/dev/stdout')
+
     def test_overall_progress_percent(self):
         construct = Construct()
         construct.save()
