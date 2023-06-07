@@ -74,7 +74,7 @@ class Construct(models.Model):
         transactions = Transaction.objects.filter(construct__id=construct.id)
         invoices = Invoice.objects.filter(construct__id=construct.id)
         invoice_transactions = InvoiceTransaction.objects.filter(construct__id=construct.id)
-        data = serializers.serialize('json', [*choices, *transactions, *invoices, *invoice_transactions],
+        data = serializers.serialize('json', [self, *choices, *transactions, *invoices, *invoice_transactions],
                    use_natural_foreign_keys=True, use_natural_primary_keys=True)
         with open(fname, 'w') as outfile:
             outfile.write(data)
