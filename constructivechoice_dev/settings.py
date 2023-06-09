@@ -41,7 +41,7 @@ def ip_addresses():
     return ip_list
 
 ALLOWED_HOSTS = ip_addresses()
-ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
+ALLOWED_HOSTS.append('bestarryandmerry.ru')
 
 
 # Application definition

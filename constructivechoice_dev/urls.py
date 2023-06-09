@@ -27,9 +27,9 @@ def redirect_to_admin(request):
 def redirect_to_list(request):
     return redirect('admin:list')
 
-admin.site.site_header = 'Constructive Choice Projects Administration'
+admin.site.site_header = 'Liza Projects Administration'
 admin.site.index_title = 'Site Administration'
-admin.site.site_title = 'Constructive Choice Projects'
+admin.site.site_title = 'Liza Projects'
 
 urlpatterns = [
     path('', redirect_to_admin),
