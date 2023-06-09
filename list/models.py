@@ -40,6 +40,10 @@ class Construct(models.Model):
     owner_profit_coeff = models.FloatField(validators=coeff_valid, default='0.13')
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
+
+    class Meta:
+        verbose_name = 'Parcel'
+        verbose_name_plural = 'Parcels'
     
     def __str__(self):
         return self.title_text
@@ -254,6 +258,10 @@ class Choice(models.Model):
     plan_days_num = models.FloatField()
     actual_start_date = models.DateField(default=timezone.now)
     actual_end_date = models.DateField(default=timezone.now)
+
+    class Meta:
+        verbose_name = 'Parcel Item'
+        verbose_name_plural = 'Parcel Items'
 
     def copy(self, construct):
         new_choice = Choice(construct=construct,
