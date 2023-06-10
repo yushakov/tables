@@ -13,7 +13,7 @@ const g_del_cell_idx       = 11;
 
 const g_JsonNames = ['action', 'name', 'price', 'quantity', 'units',
                      'total_price', 'assigned_to', 'day_start', 'days',
-                     'progress_bar', 'progress', 'delete_action'];
+                     'progress', 'notes', 'delete_action'];
 
 const g_header_del_col_span = 5;
 const gLocale = "en-US";
@@ -265,7 +265,8 @@ function modifyRow(ths) {
 	    = "<textarea id='inpName' rows='5' cols='40'>" + name + "</textarea>";
     if(active_row.classList.contains("Choice")) {
         var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
-        var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
+        //var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
+        var progress = active_row.cells[g_progress_cell_idx].innerText.replace('%','').trim();
         active_row.cells[g_price_cell_idx    ].innerHTML
             = "<input id='inpPrice' type='text' size='5'    value='" + price + "'/>";
         active_row.cells[g_qty_cell_idx      ].innerHTML
@@ -322,11 +323,14 @@ function freezeActiveRow() {
 				active_row.cells[g_plan_days_cell_idx].style.textAlign = 'center';
                 active_row.cells[g_progress_cell_idx].classList.add("progress-cell");
                 active_row.cells[g_progress_cell_idx].innerHTML = 
-                        "<div class='project-progress' style='width: " + progress + "%'>"
-                            + progress + "&nbsp;%</div>";
-                active_row.cells[g_prog_pcnt_cell_idx].innerHTML = 
-                        "<td align='right'>" + progress + " %</td>";
-                active_row.cells[g_prog_pcnt_cell_idx].classList.add("choice_progress_percent");
+                    "<div class='project-progress' style='width: " + progress + "%'>" +
+                        "<div class='choice_progress_percent'>"
+                            + progress + "&nbsp;%" +
+                        "</div>" +
+                    "</div>";
+                //active_row.cells[g_prog_pcnt_cell_idx].innerHTML = 
+                //        "<td align='right'>" + progress + " %</td>";
+                //active_row.cells[g_prog_pcnt_cell_idx].classList.add("choice_progress_percent");
 			}
 			else if(active_row.classList.contains("Header2")) {
                 del_cell_idx -= g_header_del_col_span-1;
@@ -556,7 +560,7 @@ function addRow(id, className) {
 	var dayStartCell = newRow.insertCell(g_day_start_cell_idx);
 	var planDaysCell = newRow.insertCell(g_plan_days_cell_idx);
 	var progressCell = newRow.insertCell(g_progress_cell_idx);
-	var progPcntCell = newRow.insertCell(g_prog_pcnt_cell_idx);
+    var progPcntCell = newRow.insertCell(g_prog_pcnt_cell_idx);
     var del_cell_freeze = newRow.insertCell(g_del_cell_idx);
     del_cell_freeze.innerHTML =
         "<a href='#' onclick='freezeActiveRow(); return false;'>FREEZE</a>";

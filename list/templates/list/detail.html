@@ -131,10 +131,25 @@
         <td align='center'>{{ items.choice.plan_days_num }}</td>
         <td class="progress-cell">
             <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
-                {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
+                <div class='choice_progress_percent'>
+                    {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
+                </div>
             </div>
         </td>
-        <td align='right' class='choice_progress_percent'>{{ items.choice.progress_percent_num }} %</td>
+        <!--td align='right'>{{ items.choice.progress_percent_num }} %</td-->
+        <td>
+            {% if items.choice.constructive_notes|length > 2 or items.choice.client_notes|length > 2 %}
+            <div class='notes-link'>
+                <p title="Constructive: &quot;{{ items.choice.constructive_notes }}&quot;
+                .....Client: &quot;{{ items.choice.client_notes}}&quot;">
+                    <a href='#'>NOTES</a>
+                </p></div>
+            {% else %}
+            <div class='notes-link'><a href='#'>notes</a></div>
+            {% endif %}
+            <div class='constructive-notes'>{{ items.choice.constructive_notes }}</div>
+            <div class='client-notes'>{{ items.choice.client_notes}}</div>
+        </td>
         <td class='del_modif_cell'>
     {% else %}
         <td class='td_header_2' colspan='5'>{{ items.choice.name_txt }}</td>
@@ -167,11 +182,13 @@
     <td><input type='submit' value='Save modifications'></td>
     <td class='hide_for_pretty'><button onclick="freezeActiveRow(); return false;">freeze</button></td>
     <td><button id='PrettyRawBtn' onclick="showPrettyRaw(this);     return false;">Show Pretty</button></td>
-    <!--td class='hide_for_pretty'><a href='#' onclick="test1();       return false;">test1</a></td>
+    {% if False %}
+    <td class='hide_for_pretty'><a href='#' onclick="test1();       return false;">test1</a></td>
     <td class='hide_for_pretty'><a href='#' onclick="test2();       return false;">test2</a></td>
     <td class='hide_for_pretty'><a href='#' onclick="addHouse();    return false;">add House</a></td>
     <td class='hide_for_pretty'><a href='#' onclick="addGarage();   return false;">add Garage</a></td>
-    <td class='hide_for_pretty'><a href='#' onclick="bigTest();     return false;">Big Test</a></td-->
+    <td class='hide_for_pretty'><a href='#' onclick="bigTest();     return false;">Big Test</a></td>
+    {% endif %}
 </tr>
 </table>
 </form>
