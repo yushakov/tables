@@ -7,7 +7,8 @@ class InvoiceSubmitForm(ModelForm):
     class Meta:
         model = Invoice
         fields = ['construct', 'seller', 'amount','number', 
-                  'invoice_type', 'status', 'issue_date', 'due_date', 'photo']
+                  'invoice_type', 'status', 'issue_date',
+                  'due_date', 'photo', 'details_txt']
         labels = {
                     'construct': _('Project:'),
                     'seller': _('From:'),
@@ -17,7 +18,8 @@ class InvoiceSubmitForm(ModelForm):
                     'status': _('Status:'),
                     'issue_date': _('Issue Date:'),
                     'due_date': _('Due Date'),
-                    'photo': _('Photo:')
+                    'photo': _('Photo:'),
+                    'details_txt': _('Details:')
                  }
 
 
