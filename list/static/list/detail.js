@@ -27,6 +27,26 @@ window.onbeforeunload = function() {
     return true;
 }
 
+function showNotesForm(ths) {
+    var parent = ths.parentNode.parentNode.parentNode;
+    var elements = parent.getElementsByClassName('notes-form');
+    var form = elements[0];
+    form.style.display = 'block';
+    return false;
+}
+
+function hideNotesForm(ths) {
+    var parent = ths.parentNode;
+    parent.style.display = 'none';
+}
+
+function notesMouseOver(ths) {
+}
+
+function notesMouseOut(ths) {
+}
+
+
 function getDeleteCellHtml() {
     return "<a href='#' onclick='return setDelete(this);'"
         + "onmouseover='delMouseOver(this);' "

@@ -136,16 +136,31 @@
                 </div>
             </div>
         </td>
-        <!--td align='right'>{{ items.choice.progress_percent_num }} %</td-->
+        {% comment %}
+        <td align='right'>{{ items.choice.progress_percent_num }} %</td>
+        {% endcomment %}
         <td>
             {% if items.choice.constructive_notes|length > 2 or items.choice.client_notes|length > 2 %}
-            <div class='notes-link'>
-                <p title="Constructive: &quot;{{ items.choice.constructive_notes }}&quot;
-                .....Client: &quot;{{ items.choice.client_notes}}&quot;">
-                    <a href='#'>NOTES</a>
-                </p></div>
+                <div class='notes-form'>
+                    <form action=''>
+                        <button type="button" onclick="hideNotesForm(this)">Hide Notes</button><br><br>
+                        {{ items.choice.name_txt }}<br><br>
+                        <label for='constructive_notes'>Constructive notes</label><br>
+                        <textarea name='constructive_notes' rows='10' cols='45'>{{ items.choice.constructive_notes }}</textarea><br><br>
+                        <label for='client_notes'>Client notes</label><br>
+                        <textarea name='client_notes' rows='10' cols='45'>{{ items.choice.client_notes }}</textarea>
+                    </form>
+                </div>
+                <div class='notes-link'>
+                    <p title="Constructive: &quot;{{ items.choice.constructive_notes }}&quot;
+                    .....Client: &quot;{{ items.choice.client_notes}}&quot;">
+                        <a href='#' onclick="return showNotesForm(this);"
+                                    onmouseover="notesMouseOver(this);"
+                                    onmouseout="notesMouseOut(this);">NOTES</a>
+                    </p>
+                </div>
             {% else %}
-            <div class='notes-link'><a href='#'>notes</a></div>
+                <div class='notes-link'><a href='#'>notes</a></div>
             {% endif %}
             <div class='constructive-notes'>{{ items.choice.constructive_notes }}</div>
             <div class='client-notes'>{{ items.choice.client_notes}}</div>
