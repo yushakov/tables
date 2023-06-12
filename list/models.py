@@ -418,6 +418,7 @@ class Invoice(models.Model):
     transactions = models.ManyToManyField(Transaction, through='InvoiceTransaction')
     photo = models.ImageField(upload_to="invoices/%Y/%m/%d", default=empty_image)
     created_at = models.DateTimeField(auto_now_add=True)
+    details_txt = models.TextField(default='-')
 
     class Meta:
         ordering = ['-created_at']
