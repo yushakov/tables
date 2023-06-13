@@ -63,6 +63,8 @@ def prepare_data(cells):
     elif is_yyyy_mm_dd(cells['day_start']):
         data['plan_start_date'] = datetime.strptime(cells['day_start'], "%Y-%m-%d").date()
     data['plan_days_num'] = float(cells['days'])
+    data['constructive_notes'] = cells['notes']['constructive_notes']
+    data['client_notes'] = cells['notes']['client_notes']
     return data
 
 def update_choice(choice_id, cell_data):
@@ -92,6 +94,8 @@ def update_choice(choice_id, cell_data):
             choice.progress_percent_num =     data['progress_percent_num']
             choice.plan_start_date =          data['plan_start_date']
             choice.plan_days_num =            data['plan_days_num']          
+            choice.constructive_notes =       data['constructive_notes']
+            choice.client_notes =             data['client_notes']
             choice.save()
             return int(choice_id)
         return -1
@@ -113,7 +117,9 @@ def create_choice(cell_data, construct):
              workers               = data['workers'],
              progress_percent_num  = data['progress_percent_num'],
              plan_start_date       = data['plan_start_date'],
-             plan_days_num         = data['plan_days_num'])
+             plan_days_num         = data['plan_days_num'],
+             constructive_notes    = data['constructive_notes'],
+             client_notes          = data['client_notes'])
         choice.save()
         return choice.id
     # can be just header
