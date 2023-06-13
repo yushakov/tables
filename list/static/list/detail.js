@@ -41,8 +41,17 @@ function showNotesForm(ths) {
 }
 
 function hideNotesForm(ths) {
-    var parent = ths.parentNode;
-    parent.style.display = 'none';
+    var div = ths.parentNode.parentNode;
+    div.style.display = 'none';
+    var cell = div.parentNode;
+    var constr_notes = cell.getElementsByClassName('constructive_notes');
+    var client_notes = cell.getElementsByClassName('client_notes');
+    var link = cell.getElementsByClassName('link-txt');
+    if(constr_notes[0].value.length > 2 || client_notes[0].value.length > 2) {
+        link[0].innerText = 'NOTES';
+    } else {
+        link[0].innerText = 'notes';
+    }
 }
 
 function notesMouseOver(ths) {
