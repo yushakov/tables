@@ -31,7 +31,11 @@ function showNotesForm(ths) {
     var parent = ths.parentNode.parentNode.parentNode;
     var elements = parent.getElementsByClassName('notes-form');
     var form = elements[0];
+    var centerX = window.innerWidth / 2;
+    var centerY = window.innerHeight / 2 + window.scrollY;
     form.style.display = 'block';
+    form.style.top = (centerY - form.offsetHeight / 2) + 'px';
+    form.style.left = (centerX - form.offsetWidth / 2) + 'px';
     return false;
 }
 
