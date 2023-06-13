@@ -144,10 +144,12 @@
                 <form action=''>
                     <button type="button" onclick="hideNotesForm(this)">Hide Notes</button><br><br>
                     {{ items.choice.name_txt }}<br><br>
-                    <label>Constructive notes</label><br>
-                    <textarea class='constructive_notes' rows='10' cols='45'>{{ items.choice.constructive_notes }}</textarea><br><br>
-                    <label>Client notes</label><br>
-                    <textarea class='client_notes' rows='10' cols='45'>{{ items.choice.client_notes }}</textarea>
+                    <p>Constructive notes</p><br>
+                    <textarea class='constructive_notes' name='con-notes' rows='10' cols='45'>
+{{ items.choice.constructive_notes }}</textarea><br><br>
+                    <p>Client notes</p><br>
+                    <textarea class='client_notes' name='cli-notes' rows='10' cols='45'>
+{{ items.choice.client_notes }}</textarea>
                 </form>
             </div>
             <div class='notes-link'>

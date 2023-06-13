@@ -8,7 +8,7 @@ const g_asgn_to_cell_idx   = 6;
 const g_day_start_cell_idx = 7;
 const g_plan_days_cell_idx = 8;
 const g_progress_cell_idx  = 9;
-const g_prog_pcnt_cell_idx = 10;
+const g_notes_cell_idx = 10;
 const g_del_cell_idx       = 11;
 
 const g_JsonNames = ['action', 'name', 'price', 'quantity', 'units',
@@ -121,7 +121,7 @@ function showPrettyRaw(x) {
            if(row.rowIndex == 0) {
                row.cells[g_action_cell_idx].innerHTML = '';
                row.cells[g_del_cell_idx].style.display = 'none';
-               row.cells[g_prog_pcnt_cell_idx].style.display = 'none';
+               row.cells[g_notes_cell_idx].style.display = 'none';
                return;
            } else {
                row.cells[g_action_cell_idx].innerHTML = row.rowIndex;
@@ -131,11 +131,11 @@ function showPrettyRaw(x) {
            }
            if(row.classList.contains('Choice')) {
                row.cells[g_del_cell_idx].style.display = 'none';
-               row.cells[g_prog_pcnt_cell_idx].style.display = 'none';
+               row.cells[g_notes_cell_idx].style.display = 'none';
            } else {
                var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
                header_del.style.display = 'none';
-               row.cells[g_prog_pcnt_cell_idx-g_header_del_col_span+1].style.display = 'none';
+               row.cells[g_notes_cell_idx-g_header_del_col_span+1].style.display = 'none';
            }
         });
         hideable.forEach(function(element) {
@@ -147,7 +147,7 @@ function showPrettyRaw(x) {
            row.cells[g_action_cell_idx].innerHTML = getActionCellHtml(row.rowIndex);
            if(row.rowIndex == 0) {
                row.cells[g_del_cell_idx].style.display = 'table-cell';
-               row.cells[g_prog_pcnt_cell_idx].style.display = 'table-cell';
+               row.cells[g_notes_cell_idx].style.display = 'table-cell';
                return;
            }
            if(row.cells[g_name_cell_idx].classList.contains('delete')) {
@@ -155,11 +155,11 @@ function showPrettyRaw(x) {
            }
            if(row.classList.contains('Choice')) {
                row.cells[g_del_cell_idx].style.display    = 'table-cell';
-               row.cells[g_prog_pcnt_cell_idx].style.display = 'table-cell';
+               row.cells[g_notes_cell_idx].style.display = 'table-cell';
            } else {
                var header_del = row.cells[g_del_cell_idx-g_header_del_col_span+1];
                header_del.style.display = 'block';
-               row.cells[g_prog_pcnt_cell_idx-g_header_del_col_span+1].style.display = 'table-cell';
+               row.cells[g_notes_cell_idx-g_header_del_col_span+1].style.display = 'table-cell';
            }
         });
         hideable.forEach(function(element) {
@@ -299,7 +299,7 @@ function modifyRow(ths) {
 	    = "<textarea id='inpName' rows='5' cols='40'>" + name + "</textarea>";
     if(active_row.classList.contains("Choice")) {
         var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
-        //var progress = active_row.cells[g_prog_pcnt_cell_idx].innerText.replace('%','').trim();
+        //var progress = active_row.cells[g_notes_cell_idx].innerText.replace('%','').trim();
         var progress = active_row.cells[g_progress_cell_idx].innerText.replace('%','').trim();
         active_row.cells[g_price_cell_idx    ].innerHTML
             = "<input id='inpPrice' type='text' size='5'    value='" + price + "'/>";
@@ -362,9 +362,9 @@ function freezeActiveRow() {
                             + progress + "&nbsp;%" +
                         "</div>" +
                     "</div>";
-                //active_row.cells[g_prog_pcnt_cell_idx].innerHTML = 
+                //active_row.cells[g_notes_cell_idx].innerHTML = 
                 //        "<td align='right'>" + progress + " %</td>";
-                //active_row.cells[g_prog_pcnt_cell_idx].classList.add("choice_progress_percent");
+                //active_row.cells[g_notes_cell_idx].classList.add("choice_progress_percent");
 			}
 			else if(active_row.classList.contains("Header2")) {
                 del_cell_idx -= g_header_del_col_span-1;
@@ -521,7 +521,7 @@ function restoreDeleted(ths) {
     row.cells[g_day_start_cell_idx].classList.remove('delete');
     if(row.classList.contains('Choice')) {
         row.cells[g_plan_days_cell_idx].classList.remove('delete');
-        row.cells[g_prog_pcnt_cell_idx].classList.remove('delete');
+        row.cells[g_notes_cell_idx].classList.remove('delete');
     }
     var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/restoreDeleted/, "setDelete")
@@ -542,7 +542,7 @@ function setDelete(ths) {
     row.cells[g_day_start_cell_idx].classList.add('delete');
     if(row.classList.contains('Choice')) {
         row.cells[g_plan_days_cell_idx].classList.add('delete');
-        row.cells[g_prog_pcnt_cell_idx].classList.add('delete');
+        row.cells[g_notes_cell_idx].classList.add('delete');
     }
     var del_link = ths.parentNode.innerHTML;
     var new_del_link = del_link.replace(/setDelete/, "restoreDeleted")
@@ -594,7 +594,7 @@ function addRow(id, className) {
 	var dayStartCell = newRow.insertCell(g_day_start_cell_idx);
 	var planDaysCell = newRow.insertCell(g_plan_days_cell_idx);
 	var progressCell = newRow.insertCell(g_progress_cell_idx);
-    var progPcntCell = newRow.insertCell(g_prog_pcnt_cell_idx);
+    var progPcntCell = newRow.insertCell(g_notes_cell_idx);
     var del_cell_freeze = newRow.insertCell(g_del_cell_idx);
     del_cell_freeze.innerHTML =
         "<a href='#' onclick='freezeActiveRow(); return false;'>FREEZE</a>";
@@ -616,6 +616,19 @@ function addRow(id, className) {
 	return false;
 }
 
+function getDictEntry(index, cell) {
+    if(index == g_notes_cell_idx) {
+        var constr_notes = cell.getElementsByClassName('constructive_notes');
+        var client_notes = cell.getElementsByClassName('client_notes');
+        if(constr_notes && client_notes && constr_notes.length > 0 && client_notes.length > 0) {
+            return {'constructive_notes': String(constr_notes[0].value),
+                    'client_notes': String(client_notes[0].value)};
+        }
+        return {'constructive_notes': "", 'client_notes': ""};
+    }
+    return String(cell.innerText);
+}
+
 function saveChoices() {
 	if(!freezeActiveRow()) return false;
     var modified_cell = document.getElementById('modified')
@@ -630,13 +643,14 @@ function saveChoices() {
         cells.forEach(function(cell) {
             if(cell.cellIndex == 0) return;
             if(cell.cellIndex == 1) cell_dict["class"] = String(cell.className);
-            cell_dict[g_JsonNames[cell.cellIndex]] = String(cell.innerText);
+            cell_dict[g_JsonNames[cell.cellIndex]] = getDictEntry(cell.cellIndex, cell);
         });
         out["row_" + String(row.rowIndex)] =
            {"id": String(row.id), "class": String(row.classList), "cells": cell_dict};
     });
     modified.innerText = 'no';
     out["timestamp"] = String(Math.round(Date.now()/1000));
+    console.log(out);
     document.getElementById('json_input').value = JSON.stringify(out);
     return true;
 }
