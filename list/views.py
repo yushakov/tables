@@ -63,8 +63,11 @@ def prepare_data(cells):
     elif is_yyyy_mm_dd(cells['day_start']):
         data['plan_start_date'] = datetime.strptime(cells['day_start'], "%Y-%m-%d").date()
     data['plan_days_num'] = float(cells['days'])
-    data['constructive_notes'] = cells['notes']['constructive_notes']
-    data['client_notes'] = cells['notes']['client_notes']
+    data['constructive_notes'] = ""
+    data['client_notes'] = ""
+    if 'notes' in cells.keys():
+        data['constructive_notes'] = cells['notes']['constructive_notes']
+        data['client_notes'] = cells['notes']['client_notes']
     return data
 
 def update_choice(choice_id, cell_data):
