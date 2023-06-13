@@ -36,6 +36,7 @@ function showNotesForm(ths) {
     form.style.display = 'block';
     form.style.top = (centerY - form.offsetHeight / 2) + 'px';
     form.style.left = (centerX - form.offsetWidth / 2) + 'px';
+    setModified();
     return false;
 }
 
