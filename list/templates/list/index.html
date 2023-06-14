@@ -30,7 +30,7 @@
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
-        <td>
+        <td class='construct-title'>
             <a href="{% url 'list:detail' construct.id %}">{{ construct.title_text }}</a>
         </td>
         <td align='left' class='progress-cell'>

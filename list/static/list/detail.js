@@ -62,12 +62,8 @@ function notesMouseOut(ths) {
 
 
 function getDeleteCellHtml() {
-    return "<a href='#' onclick='return setDelete(this);'"
-        + "onmouseover='delMouseOver(this);' "
-        + "onmouseout='delMouseOut(this);'>delete</a>"
-        + "&nbsp;|&nbsp; <a href='#' onclick='return modifyRow(this);'"
-        + "onmouseover='delMouseOver(this);'"
-        + "onmouseout='delMouseOut(this);'>modify</a>";
+    return "<a href='#' onclick='return setDelete(this);'>delete</a>"
+        + "&nbsp;|&nbsp; <a href='#' onclick='return modifyRow(this);'>modify</a>";
 }
 
 function updateRows() {
@@ -362,9 +358,6 @@ function freezeActiveRow() {
                             + progress + "&nbsp;%" +
                         "</div>" +
                     "</div>";
-                //active_row.cells[g_notes_cell_idx].innerHTML = 
-                //        "<td align='right'>" + progress + " %</td>";
-                //active_row.cells[g_notes_cell_idx].classList.add("choice_progress_percent");
 			}
 			else if(active_row.classList.contains("Header2")) {
                 del_cell_idx -= g_header_del_col_span-1;
