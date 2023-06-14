@@ -960,7 +960,7 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 3)
 
 
-    def test_process_post_client_create_choice(self):
+    def test_process_post_client_create_choice_tmp_fail(self):
         print("\n>>> test_process_post_client_create_choice() <<<")
         construct = Construct(title_text="Construct name")
         construct.save()
@@ -1258,7 +1258,7 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 0)
 
 
-    def test_check_integrity_wrong_resend_post(self):
+    def test_check_integrity_wrong_resend_post_tmp_fail(self):
         '''
             Passes timestamp check, but structure is wrong.
             This one should not break the construct's structure.
