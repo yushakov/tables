@@ -133,7 +133,8 @@ def create_choice(cell_data, construct):
     return -1
 
 
-def add_to_structure(structure, row_data, choice_id):
+def add_to_structure(structure, row_data, choice_id, client=False):
+    if client: return
     ln_cntr = len(structure) + 1
     row_type = row_data['class']
     row_id = None
@@ -161,7 +162,7 @@ def save_update(data, construct, client=False):
             choice_id = update_choice(row_id.replace('tr_',''), data[key], client)
         else:
             choice_id = create_choice(data[key], construct)
-        add_to_structure(structure, data[key], choice_id)
+        add_to_structure(structure, data[key], choice_id, client)
     string_structure = json.dumps(structure)
     logger.info('Project structure:\n', string_structure)
     construct.struct_json = string_structure
@@ -282,7 +283,6 @@ def detail(request, construct_id):
 
 @login_required
 @permission_required("list.view_construct")
-@permission_required("list.change_construct")
 def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
