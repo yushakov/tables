@@ -70,7 +70,7 @@ def prepare_data(cells):
         data['client_notes'] = cells['notes']['client_notes']
     return data
 
-def update_choice(choice_id, cell_data):
+def update_choice(choice_id, cell_data, client=False):
     # can be a header
     if cell_data['class'].find('Choice') >= 0:
         cells = cell_data['cells']
@@ -88,6 +88,10 @@ def update_choice(choice_id, cell_data):
         else:
             logger.info(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
             data = prepare_data(cells)
+            if client:
+                choice.client_notes = data['client_notes']
+                choice.save()
+                return int(choice_id)
             choice.name_txt =                 data['name_txt']
             choice.notes_txt =                data['notes_txt']
             choice.quantity_num =             data['quantity_num']
@@ -146,15 +150,15 @@ def add_to_structure(structure, row_data, choice_id):
     structure.update({f'line_{ln_cntr}':{'type':row_type, 'id':row_id}})
 
 
-def save_update(data, construct):
+def save_update(data, construct, client=False):
     structure = dict()
     ln_cntr = 1
     for key in data.keys():
         if not key.startswith("row_"): continue
         row_id = data[key]['id']
         choice_id = None
-        if row_id.startswith('tr_'):
-            choice_id = update_choice(row_id.replace('tr_',''), data[key])
+        if row_id.startswith('tr_') or client:
+            choice_id = update_choice(row_id.replace('tr_',''), data[key], client)
         else:
             choice_id = create_choice(data[key], construct)
         add_to_structure(structure, data[key], choice_id)
@@ -245,12 +249,12 @@ def checkTimeStamp(data, construct):
     return False
 
 
-def process_post(request, construct):
+def process_post(request, construct, client=False):
     if request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
         logger.debug(datetime.now(), 'POST data in detail():\n', data)
         if checkTimeStamp(data, construct):
-            save_update(data, construct)
+            save_update(data, construct, client)
 
 
 @login_required
@@ -274,6 +278,30 @@ def detail(request, construct_id):
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'construct_paid': construct.income()}
     return render(request, 'list/detail.html', context)
+
+
+@login_required
+@permission_required("list.view_construct")
+@permission_required("list.change_construct")
+def client(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    if request.method == 'POST':
+        process_post(request, construct, client=True)
+    struc_dict, choice_dict = getStructChoiceDict(construct)
+    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
+    if construct_total_price > 0.0:
+        construct_progress *= 100. / construct_total_price 
+    if construct.overall_progress_percent_num != construct_progress:
+        construct.overall_progress_percent_num = construct_progress
+        construct.save()
+    total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    context = {'construct': construct,
+               'ch_list': ch_list,
+               'construct_total': construct_total_price,
+               'total_and_profit': total_and_profit,
+               'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'construct_paid': construct.income()}
+    return render(request, 'list/client_view.html', context)
 
 
 @login_required
