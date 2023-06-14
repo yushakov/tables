@@ -992,8 +992,54 @@ class ViewTests(TestCase):
         structure_str = construct.struct_json
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
-        # Client can't create a new choice
+        # Client can't create neither choice nor header.
+        # But this is failing for now as a header gets created...
         self.assertIs(len(struc_dict), 0)
+
+
+    def test_process_post_client_update_choice_only(self):
+        print("\n>>> test_process_post_client_update_choice_only() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "my con notes", "client_notes": "tricky_str"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+        json_val = json.loads(request.POST['json_value'])
+        json_val['row_2']['id'] = 'tr_1'
+        request.POST["json_value"] = json.dumps(json_val)
+        request.POST["json_value"] = request.POST["json_value"].replace("tricky_str", "updated_str")
+        process_post(request, construct, client=True)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+        self.assertEqual(choices[0].client_notes, 'updated_str')
 
 
     def test_process_post_client_update_choice(self):

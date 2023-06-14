@@ -134,7 +134,6 @@ def create_choice(cell_data, construct):
 
 
 def add_to_structure(structure, row_data, choice_id, client=False):
-    if client: return
     ln_cntr = len(structure) + 1
     row_type = row_data['class']
     row_id = None
@@ -158,10 +157,12 @@ def save_update(data, construct, client=False):
         if not key.startswith("row_"): continue
         row_id = data[key]['id']
         choice_id = None
-        if row_id.startswith('tr_') or client:
+        if row_id.startswith('tr_'):
             choice_id = update_choice(row_id.replace('tr_',''), data[key], client)
-        else:
+        elif not client:
             choice_id = create_choice(data[key], construct)
+        else:
+            choice_id = -1
         add_to_structure(structure, data[key], choice_id, client)
     string_structure = json.dumps(structure)
     logger.info('Project structure:\n', string_structure)
