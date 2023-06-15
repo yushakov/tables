@@ -150,19 +150,21 @@ def add_to_structure(structure, row_data, choice_id, client=False):
     structure.update({f'line_{ln_cntr}':{'type':row_type, 'id':row_id}})
 
 
+def create_or_update_choice(row_id, row, construct, client=False):
+    if row_id.startswith('tr_'):
+        return update_choice(row_id.replace('tr_',''), row, client)
+    elif not client:
+        return create_choice(row, construct)
+    return -1
+
+
 def save_update(data, construct, client=False):
     structure = dict()
     client_try_to_change_structure = client
     for key in data.keys():
         if not key.startswith("row_"): continue
         row_id = data[key]['id']
-        choice_id = None
-        if row_id.startswith('tr_'):
-            choice_id = update_choice(row_id.replace('tr_',''), data[key], client)
-        elif not client:
-            choice_id = create_choice(data[key], construct)
-        else:
-            choice_id = -1
+        choice_id = create_or_update_choice(row_id, data[key], construct, client)
         add_to_structure(structure, data[key], choice_id, client)
     if client_try_to_change_structure: return
     string_structure = json.dumps(structure)
