@@ -1085,6 +1085,64 @@ class ViewTests(TestCase):
         self.assertEqual(choice.client_notes, 'my update')
 
 
+    def test_process_post_client_change_order(self):
+        print("\n>>> test_process_post_client_change_order() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "something smart", "client_notes": "bla bla bla"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 3)
+        json_val = json.loads(request.POST['json_value'])
+        json_val['row_2']['id'] = 'tr_1'
+        json_val['row_3']['id'] = 'tr_2'
+        row_3 = json_val['row_3']
+        json_val['row_3'] = dict(json_val['row_2'])
+        json_val['row_2'] = dict(row_3)
+        request.POST["json_value"] = json.dumps(json_val)
+        struct_before = json.dumps(construct.struct_json)
+        choice1_name_before = choices[0].name_txt
+        process_post(request, construct, client=True)
+        struct_after = json.dumps(construct.struct_json)
+        self.assertEqual(struct_before, struct_after)
+        choices = construct.choice_set.all()
+        choice1_name_after = choices[0].name_txt
+        self.assertEqual(choice1_name_before, choice1_name_after)
+
+
     def test_check_integrity_resend_post(self):
         print("\n>>> test_check_integrity_resend_post() <<<")
         construct = Construct(title_text="Construct name")
