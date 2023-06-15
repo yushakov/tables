@@ -8,23 +8,14 @@
 
 <h1>{{ construct.title_text }}</h1>
 
-<div class='hide_for_pretty'>
-&larr; <a href="{% url 'list:index' %}">back to the project list</a>
-<br><br>
-<b>Ctrl+Click</b> on a task name to move it <b>Down</b>.<br>
-<b>Alt+Click</b> to move it <b>Up</b>.<br><br>
-<a href="{% url 'list:gantt' construct.id %}">Gantt Chart</a> &rarr;
-</div>
-<br class='hide_for_pretty'>
 <table id='choices_head'>
 <tbody>
 <tr>
     <td><b>Address:</b></td>
-    <td onclick='modify(this);'>{{ construct.address_text }}</td>
+    <td>{{ construct.address_text }}</td>
     <td></td>
-    <td class='hide_for_pretty'><a href="{% url 'admin:list_construct_change' construct.id %}">Modify<br>basics</a></td>
-    <td class='hide_for_pretty'><a href="{% url 'list:clone' construct.id %}">Clone this<br>project</a></td>
-    <td class='hide_for_pretty'><a href="{% url 'list:client' construct.id %}">Client view</a></td>
+    <td></td>
+    <td></td>
 </tr>
 <tr>
     <td><b>Email:</b></td>
@@ -32,7 +23,7 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>Total:</b></td>
     <td id='project_total'>&#163; {{ construct_total }}</td>
-    <td class='hide_for_pretty'><a href="{% url 'list:flows' construct.id %}">Expenses, etc.</a></td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
@@ -88,24 +79,20 @@
 <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
 </div>
 <br>
-<form id='choices_form' action="{% url 'list:detail' construct.id %}" method='POST'>
+<form id='choices_form' action="{% url 'list:client' construct.id %}" method='POST'>
 {% csrf_token %}
 <table id='choices'>
 <thead><tr>
-    <td>
-        <a href="#" onclick="return addRow(0, 'Choice');">task</a> |
-        <a href="#" onclick="return addRow(0, 'Header2');">head</a>
-    </td>
+    <td></td>
     <th class="name_cell">Task name</th>
     <th>Unit price</th>
     <th>Quantity</th>
     <th><!--Units--></th>
     <th>Total price</th>
-    <th class='assign_cell'>Assigned to</th>
+    <th style='display:none'></th>
     <th>Date start</th>
     <th>Planned days</th>
     <th>Progress</th>
-    <th></th>
     <th></th>
 </tr></thead>
 <tbody>
@@ -115,19 +102,14 @@
     {% else %}
         <tr id='hd_{{ items.choice.id }}' class='{{ items.type }}'>
     {% endif %}
-        <td align='right'>
-            <a href="#" onclick="return addRow({{ items.idx }}, 'Choice');">task</a> |
-            <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
-        </td>
+        <td align='right'>{{ forloop.counter }}</td>
     {% if items.type == 'Choice' %}
         <td>{{ items.choice.name_txt }}</td>
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
         <td align='right' class='choice_total_price'>&#163;{{ items.choice_total_price|floatformat:2 }}</td>
-        <td>
-            {{ items.choice.workers }}
-        </td>
+        <td style='display:none'></td>
         <td>{{ items.choice.plan_start_date }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
         <td class="progress-cell">
@@ -163,20 +145,14 @@
             <div class='constructive-notes'>{{ items.choice.constructive_notes }}</div>
             <div class='client-notes'>{{ items.choice.client_notes}}</div>
         </td>
-        <td class='del_modif_cell'>
     {% else %}
         <td class='td_header_2' colspan='5'>{{ items.choice.name_txt }}</td>
         <td></td>
         <td></td>
         <td></td>
+        <td style='display:none'></td>
         <td></td>
-        <td></td>
-        <td class='del_modif_cell td_header_2'>
     {% endif %}
-            <a href='#' onclick="return setDelete(this);">delete</a>
-            &nbsp;|&nbsp;
-            <a href='#' onclick="return modifyRow(this);">modify</a>
-        </td>
         </tr>
 {% endfor %}
 </tbody>
@@ -189,15 +165,6 @@
         <input type='hidden' id='json_input' name='json_value' value=''>
     </td>
     <td><input type='submit' value='Save modifications'></td>
-    <td class='hide_for_pretty'><button onclick="freezeActiveRow(); return false;">freeze</button></td>
-    <td><button id='PrettyRawBtn' onclick="showPrettyRaw(this);     return false;">Show Pretty</button></td>
-    {% if False %}
-    <td class='hide_for_pretty'><a href='#' onclick="test1();       return false;">test1</a></td>
-    <td class='hide_for_pretty'><a href='#' onclick="test2();       return false;">test2</a></td>
-    <td class='hide_for_pretty'><a href='#' onclick="addHouse();    return false;">add House</a></td>
-    <td class='hide_for_pretty'><a href='#' onclick="addGarage();   return false;">add Garage</a></td>
-    <td class='hide_for_pretty'><a href='#' onclick="bigTest();     return false;">Big Test</a></td>
-    {% endif %}
 </tr>
 </table>
 </form>

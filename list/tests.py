@@ -1,5 +1,5 @@
 from django.test import TestCase, Client
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 import numpy as np
 import datetime as dt
 import json
@@ -332,6 +332,13 @@ class ModelTests(TestCase):
 class ViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
+        self.simple_user = User(username='simple', password='secret', email='simple@domain.com')
+        self.simple_user.save()
+        self.client_user = User.objects.create_user(username='client',
+                password='secret',
+                email='client@domain.com')
+        permission = Permission.objects.get(codename='view_construct')
+        self.client_user.user_permissions.add(permission)
 
     def test_login_page_list(self):
         c = Client()
@@ -344,6 +351,14 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/')
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_login_page_client_view(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        response = c.get('/list/' + str(cons.id) +'/client/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, 302)
 
@@ -363,13 +378,44 @@ class ViewTests(TestCase):
         self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, 302)
 
-
     def test_call_flows_page(self):
         c = Client()
         c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/flows/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_call_flows_page_simple_user(self):
+        c = Client()
+        c.login(username="simple", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/" + str(cons.id) + "/flows/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_call_gantt_page_simple_user(self):
+        c = Client()
+        c.login(username="simple", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/" + str(cons.id) + "/gantt/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_call_client_page_simple_user(self):
+        c = Client()
+        c.login(username="simple", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/" + str(cons.id) + "/client/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_call_client_page_client(self):
+        c = Client()
+        c.login(username="client", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/" + str(cons.id) + "/client/")
         self.assertEqual(response.status_code, 200)
 
     def test_flows_page_with_invoices(self):
@@ -884,8 +930,7 @@ class ViewTests(TestCase):
     "id": "hd_0",
     "class": "Header2",
     "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
-      "total_price": "", "assigned_to": "", "day_start": "delete | modify",
-      "notes": {"constructive_notes": "my con notes", "client_notes": "his pros notes"}
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
     }
   },
   "row_2": {
@@ -913,6 +958,189 @@ class ViewTests(TestCase):
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
         self.assertIs(len(struc_dict), 3)
+
+
+    def test_process_post_client_create_choice(self):
+        print("\n>>> test_process_post_client_create_choice() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "my con notes", "client_notes": "his pros notes"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct, client=True)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        # Client can't create neither choice nor header.
+        self.assertIs(len(struc_dict), 0)
+
+
+    def test_process_post_client_update_choice_only(self):
+        print("\n>>> test_process_post_client_update_choice_only() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "my con notes", "client_notes": "tricky_str"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+        json_val = json.loads(request.POST['json_value'])
+        json_val['row_2']['id'] = 'tr_1'
+        request.POST["json_value"] = json.dumps(json_val)
+        request.POST["json_value"] = request.POST["json_value"].replace("tricky_str", "updated_str")
+        process_post(request, construct, client=True)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+        self.assertEqual(choices[0].client_notes, 'updated_str')
+
+
+    def test_process_post_client_update_choice(self):
+        print("\n>>> test_process_post_client_update_choice() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '-',
+             constructive_notes    = 'just do it',
+             client_notes          = 'yes, lets go',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "tr_1",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "my con notes", "client_notes": "my update"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct, client=True)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 1)
+        choice = choices[0]
+        self.assertEqual(choice.constructive_notes, 'just do it')
+        self.assertEqual(choice.client_notes, 'my update')
+
+
+    def test_process_post_client_change_order(self):
+        print("\n>>> test_process_post_client_change_order() <<<")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "something smart", "client_notes": "bla bla bla"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 3)
+        json_val = json.loads(request.POST['json_value'])
+        json_val['row_2']['id'] = 'tr_1'
+        json_val['row_3']['id'] = 'tr_2'
+        row_3 = json_val['row_3']
+        json_val['row_3'] = dict(json_val['row_2'])
+        json_val['row_2'] = dict(row_3)
+        request.POST["json_value"] = json.dumps(json_val)
+        struct_before = json.dumps(construct.struct_json)
+        choice1_name_before = choices[0].name_txt
+        process_post(request, construct, client=True)
+        struct_after = json.dumps(construct.struct_json)
+        self.assertEqual(struct_before, struct_after)
+        choices = construct.choice_set.all()
+        choice1_name_after = choices[0].name_txt
+        self.assertEqual(choice1_name_before, choice1_name_after)
 
 
     def test_check_integrity_resend_post(self):
@@ -1087,7 +1315,7 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 0)
 
 
-    def test_check_integrity_wrong_resend_post(self):
+    def test_check_integrity_wrong_resend_post_tmp_fail(self):
         '''
             Passes timestamp check, but structure is wrong.
             This one should not break the construct's structure.
