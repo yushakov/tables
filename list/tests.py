@@ -960,7 +960,7 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 3)
 
 
-    def test_process_post_client_create_choice_tmp_fail(self):
+    def test_process_post_client_create_choice(self):
         print("\n>>> test_process_post_client_create_choice() <<<")
         construct = Construct(title_text="Construct name")
         construct.save()
@@ -993,7 +993,6 @@ class ViewTests(TestCase):
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
         # Client can't create neither choice nor header.
-        # But this is failing for now as a header gets created...
         self.assertIs(len(struc_dict), 0)
 
 

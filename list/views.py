@@ -152,7 +152,7 @@ def add_to_structure(structure, row_data, choice_id, client=False):
 
 def save_update(data, construct, client=False):
     structure = dict()
-    ln_cntr = 1
+    client_try_to_change_structure = client
     for key in data.keys():
         if not key.startswith("row_"): continue
         row_id = data[key]['id']
@@ -164,6 +164,7 @@ def save_update(data, construct, client=False):
         else:
             choice_id = -1
         add_to_structure(structure, data[key], choice_id, client)
+    if client_try_to_change_structure: return
     string_structure = json.dumps(structure)
     logger.info('Project structure:\n', string_structure)
     construct.struct_json = string_structure
