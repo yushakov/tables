@@ -561,6 +561,23 @@ function getActionCellHtml(idx) {
              + idx + ", \"Header2\");'>head</a>";
 }
 
+function getNoteCellHtml() {
+    return "<div class='notes-form'>" +
+            "<form></form>" +
+            "<form action='#'>" +
+                "<button type='button' onclick='hideNotesForm(this)'>Hide Notes</button><br><br>" +
+                "<p>Constructive notes</p>" +
+                "<textarea class='constructive_notes' name='con-notes' rows='10' cols='45'></textarea><br><br>" +
+                "<p>Client notes</p>" +
+                "<textarea class='client_notes' name='cli-notes' rows='10' cols='45'></textarea>" +
+            "</form>" +
+        "</div>" +
+        "<div class='notes-link'>" +
+            "<a href='#' title='<<<Constructive>>>: &quot;&quot;<br><<<Client>>>: &quot;&quot;'" +
+                "class='link-txt' onclick='return showNotesForm(this);'>notes</a>" +
+        "</div>";
+}
+
 function addRow(id, className) {
 	var table = document.getElementById("choices");
 	var active_row_holder = document.getElementById("active_row");
@@ -576,18 +593,18 @@ function addRow(id, className) {
     setModified();
 	var newId = newRow.rowIndex;
 	active_row_holder.innerHTML = newId;
-	newRow.className = className; // "Choice" or "Header2"
-	var actionCell   = newRow.insertCell(g_action_cell_idx);
-	var nameCell     = newRow.insertCell(g_name_cell_idx);
-	var priceCell    = newRow.insertCell(g_price_cell_idx);
-	var qtyCell      = newRow.insertCell(g_qty_cell_idx);
-	var unitsCell    = newRow.insertCell(g_units_cell_idx);
-	var totPriceCell = newRow.insertCell(g_tot_prc_cell_idx);
-	var asgnToCell   = newRow.insertCell(g_asgn_to_cell_idx);
-	var dayStartCell = newRow.insertCell(g_day_start_cell_idx);
-	var planDaysCell = newRow.insertCell(g_plan_days_cell_idx);
-	var progressCell = newRow.insertCell(g_progress_cell_idx);
-    var progPcntCell = newRow.insertCell(g_notes_cell_idx);
+	newRow.className    = className; // "Choice" or "Header2"
+	var actionCell      = newRow.insertCell(g_action_cell_idx);
+	var nameCell        = newRow.insertCell(g_name_cell_idx);
+	var priceCell       = newRow.insertCell(g_price_cell_idx);
+	var qtyCell         = newRow.insertCell(g_qty_cell_idx);
+	var unitsCell       = newRow.insertCell(g_units_cell_idx);
+	var totPriceCell    = newRow.insertCell(g_tot_prc_cell_idx);
+	var asgnToCell      = newRow.insertCell(g_asgn_to_cell_idx);
+	var dayStartCell    = newRow.insertCell(g_day_start_cell_idx);
+	var planDaysCell    = newRow.insertCell(g_plan_days_cell_idx);
+	var progressCell    = newRow.insertCell(g_progress_cell_idx);
+    var notesCell       = newRow.insertCell(g_notes_cell_idx);
     var del_cell_freeze = newRow.insertCell(g_del_cell_idx);
     del_cell_freeze.innerHTML =
         "<a href='#' onclick='freezeActiveRow(); return false;'>FREEZE</a>";
@@ -601,6 +618,7 @@ function addRow(id, className) {
         dayStartCell.innerHTML = "<input id='inpDayStart' type='text' size='5' value='" + getToday() + "'/>";
         planDaysCell.innerHTML = "<input id='inpPlanDays' type='text' size='2' value='1'/>";
         progressCell.innerHTML = "<input id='inpProgress' type='text' size='2' value='0.0'/>";
+        notesCell.innerHTML    = getNoteCellHtml();
 	} else {
 		priceCell.innerHTML = "";
 	}
