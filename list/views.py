@@ -268,6 +268,7 @@ def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
         process_post(request, construct)
+        construct.history_dump(request.user.id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
@@ -276,12 +277,14 @@ def detail(request, construct_id):
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    history = construct.get_last_history_record()
     context = {'construct': construct,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
-               'construct_paid': construct.income()}
+               'construct_paid': construct.income(),
+               'history': history}
     return render(request, 'list/detail.html', context)
 
 

@@ -1,3 +1,4 @@
+import os
 from django.contrib import admin
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
@@ -9,6 +10,8 @@ from django.core.files.base import ContentFile
 import logging
 import json
 from django.core import serializers
+from django.conf import settings
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +87,21 @@ class Construct(models.Model):
         new_construct.struct_json = json.dumps(json_dic)
         new_construct.save()
         return new_construct
+
+    def history_dump(self, user_id):
+        user = User.objects.get(id = user_id)
+        fname = self.last_save_date.strftime('%Y-%m-%d_%H-%M-%S_%f') +\
+            '_user_' + str(user) + '_construct_' + str(self.id) + '.json'
+        filepath = os.path.join(settings.BASE_DIR, 'history', fname)
+        self.export_to_json(filepath)
+
+    def get_last_history_record(self):
+        pth = os.path.join(settings.BASE_DIR, 'history')
+        records = os.listdir(pth)
+        if len(records) > 0:
+            with open(pth + '/' + records[0], 'r') as rec:
+                return rec.read()
+        return ''
 
     def export_to_json(self, fname):
         construct = self
