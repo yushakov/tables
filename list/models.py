@@ -94,6 +94,12 @@ class Construct(models.Model):
             '_user_' + str(user) + '_construct_' + str(self.id) + '.json'
         filepath = os.path.join(settings.BASE_DIR, 'history', fname)
         self.export_to_json(filepath)
+        record = HistoryRecord(construct=self,
+            user_id   = int(user_id),
+            user_name = user,
+            file_path = filepath)
+        record.save()
+
 
     def get_last_history_record(self):
         pth = os.path.join(settings.BASE_DIR, 'history')
@@ -307,6 +313,18 @@ class Construct(models.Model):
     @property
     def full_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.progress_cost())))
+
+
+class HistoryRecord(models.Model):
+    construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+    user_id = models.IntegerField(default='0')
+    user_name = models.CharField(max_length=200, default='')
+    file_path = models.CharField(max_length=700, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        get_latest_by = 'created_at'
 
 
 class Worker(models.Model):
