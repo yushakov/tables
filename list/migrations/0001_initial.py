@@ -120,21 +120,6 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(through='list.InvoiceTransaction', to='list.transaction'),
         ),
         migrations.CreateModel(
-            name='HistoryRecord',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_id', models.IntegerField(default='0')),
-                ('user_name', models.CharField(default='', max_length=200)),
-                ('file_path', models.CharField(default='', max_length=700)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('construct', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='list.construct')),
-            ],
-            options={
-                'ordering': ['-created_at'],
-                'get_latest_by': 'created_at',
-            },
-        ),
-        migrations.CreateModel(
             name='Choice',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
