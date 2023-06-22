@@ -12,6 +12,7 @@ import json
 from django.core import serializers
 from django.conf import settings
 from django.contrib.auth.models import User
+import difflib
 
 logger = logging.getLogger(__name__)
 
@@ -335,6 +336,33 @@ class HistoryRecord(models.Model):
     class Meta:
         ordering = ['-created_at']
         get_latest_by = 'created_at'
+
+    def get_record(record_id):
+        try:
+            record = HistoryRecord.objects.get(id=record_id)
+            with open(record.file_path, 'r', encoding='utf-8') as file:
+                json_dic = json.loads(file.read())
+                return json.dumps(json_dic, indent=2, ensure_ascii=False)
+            return "Coundn't open the file"
+        except:
+            return f'No record with id: {record_id}'
+
+    def get_diff(record_id1, record_id2):
+        text1 = HistoryRecord.get_record(record_id1)
+        text2 = HistoryRecord.get_record(record_id2)
+        lst1  = text1.split('\n')
+        lst2  = text2.split('\n')
+        diff_lines = [l for l in difflib.unified_diff(lst1, lst2)]
+        new_lines = []
+        for l in diff_lines:
+            if l.startswith('+'):
+                new_lines.append("<p style='color: green'>" + l + "</p>")
+            elif l.startswith('-'):
+                new_lines.append("<p style='color: red'>" + l + "</p>")
+            else:
+                new_lines.append(l + "<br>")
+        out = ''.join([l for l in new_lines])
+        return out
 
 
 class Worker(models.Model):

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Flows: {{ construct_name }}{% endblock %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+
+<h2>History</h2>
+{% comment %}
+id1: {{ id1 }} <br>
+id2: {{ id2 }}
+{% endcomment %}
+<br>
+{% autoescape off %}
+    {{ text|safe }}
+{% endautoescape %}
+
+{% endblock %}

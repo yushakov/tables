@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
-from .models import Construct, Choice, Invoice, Transaction
+from .models import Construct, Choice, Invoice, Transaction, HistoryRecord
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -419,6 +419,15 @@ def submit_invoice(request):
     else:
         form = InvoiceSubmitForm()
     return render(request, 'list/submit_invoice.html', {'form': form})
+
+@login_required
+@permission_required("list.view_construct")
+def history(request):
+    context = {}
+    if request.method == "GET":
+        id1 = int(request.GET['id1'])
+        context['text'] = HistoryRecord.get_diff(id1-1, id1)
+    return render(request, 'list/history.html', context)
 
 def getTotalAmount(transactions):
     if transactions is None: return 0.0
