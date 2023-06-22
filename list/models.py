@@ -100,6 +100,11 @@ class Construct(models.Model):
             file_path = filepath)
         record.save()
 
+    def get_history_records(self, limit=None):
+        records = self.historyrecord_set.all()
+        if limit:
+            return records[:limit]
+        return records
 
     def get_last_history_record(self):
         pth = os.path.join(settings.BASE_DIR, 'history')
@@ -321,6 +326,11 @@ class HistoryRecord(models.Model):
     user_name = models.CharField(max_length=200, default='')
     file_path = models.CharField(max_length=700, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '"' + self.construct.title_text[:10] + '" from ' + \
+               str(self.created_at.strftime('%Y.%m.%d %H:%M:%S')) + ' by "' + \
+               self.user_name + '"'
 
     class Meta:
         ordering = ['-created_at']

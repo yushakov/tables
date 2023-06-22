@@ -85,7 +85,21 @@
 
 <br><br>
 <div id='project_last_save_date'>
-<b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
+{% if not history|length %}
+        <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
+{% endif %}
+</div>
+<div>
+    <ul>
+        {% for rec in history %}
+            <li>
+                {{ rec.created_at }} by {{ rec.user_name }}
+                {% if forloop.first %}
+                &mdash; <b>last modification record</b>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
 </div>
 <br>
 <form id='choices_form' action="{% url 'list:detail' construct.id %}" method='POST'>
@@ -204,9 +218,4 @@
 <div style='display:none' id='active_row'>-1</div>
 <div style='display:none' id='modified'>no</div>
 <script>updateHeaders();</script>
-{% comment %}
-<div>
-    {{ history }}
-</div>
-{% endcomment %}
 {% endblock %}

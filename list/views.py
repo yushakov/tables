@@ -277,7 +277,7 @@ def detail(request, construct_id):
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
-    history = construct.get_last_history_record()
+    history = construct.get_history_records(7)
     context = {'construct': construct,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
