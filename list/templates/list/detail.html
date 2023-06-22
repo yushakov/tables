@@ -93,7 +93,12 @@
     <ul>
         {% for rec in history %}
             <li>
-                {{ rec.created_at }} by {{ rec.user_name }}
+                {% if not forloop.last %}
+                <a href="{% url 'list:history' %}?id1={{ rec.id }}">
+                    {{ rec.created_at }} by {{ rec.user_name }}</a>
+                {% else %}
+                    {{ rec.created_at }} by {{ rec.user_name }}
+                {% endif %}
                 {% if forloop.first %}
                 &mdash; <b>last modification record</b>
                 {% endif %}
