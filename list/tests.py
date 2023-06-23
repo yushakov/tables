@@ -18,6 +18,8 @@ from list.models import Construct, \
                         HistoryRecord
 import os
 
+def make_test_choice(construct):
+    pass
 
 def make_test_construct():
     construct_name = 'Some test Construct'
@@ -125,6 +127,25 @@ class HistoryTests(TestCase):
         id1, id2 = recs[1].id, recs[0].id
         diff = HistoryRecord.get_diff(id1, id2)
         self.assertIs(diff.find('Adding some notes') >= 0, True)
+        os.remove(fname1)
+        os.remove(fname2)
+
+    def test_history_records_no_diff_output_for_struct_json(self):
+        construct = make_test_construct()
+        fname1 = construct.history_dump(self.user.id)
+        choices = construct.choice_set.all()
+        choice = choices[0]
+        choice.constructive_notes = 'Adding some notes'
+        choice.save()
+        construct.struct_json = construct.struct_json.replace("line_1", "line_11")
+        construct.save()
+        fname2 = construct.history_dump(self.user.id)
+        recs = HistoryRecord.objects.all()
+        self.assertEqual(len(recs), 2)
+        id1, id2 = recs[1].id, recs[0].id
+        diff = HistoryRecord.get_diff(id1, id2)
+        self.assertIs(diff.find('Adding some notes') >= 0, True)
+        self.assertIs(diff.find('struct_json') < 0, True)
         os.remove(fname1)
         os.remove(fname2)
 
