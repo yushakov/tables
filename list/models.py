@@ -355,12 +355,13 @@ class HistoryRecord(models.Model):
         diff_lines = [l for l in difflib.unified_diff(lst1, lst2)]
         new_lines = []
         for l in diff_lines:
+            if l.find('"struct_json":') >= 0: continue
             if l.startswith('+'):
-                new_lines.append("<p style='color: green'>" + l + "</p>")
+                new_lines.append("<p style='color: green'>" + l + "</p>\n")
             elif l.startswith('-'):
-                new_lines.append("<p style='color: red'>" + l + "</p>")
+                new_lines.append("<p style='color: red'>" + l + "</p>\n")
             else:
-                new_lines.append(l + "<br>")
+                new_lines.append(l + "<br>\n")
         out = ''.join([l for l in new_lines])
         return out
 
