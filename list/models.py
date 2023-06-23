@@ -100,6 +100,7 @@ class Construct(models.Model):
             user_name = user,
             file_path = filepath)
         record.save()
+        return filepath
 
     def get_history_records(self, limit=None):
         records = self.historyrecord_set.all()

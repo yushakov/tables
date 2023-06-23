@@ -10,8 +10,124 @@ from list.views import check_integrity,   \
                        update_choice,     \
                        process_post,      \
                        checkTimeStamp
-from list.models import Construct, Choice, Invoice, Transaction, InvoiceTransaction
+from list.models import Construct, \
+                        Choice, \
+                        Invoice, \
+                        Transaction, \
+                        InvoiceTransaction, \
+                        HistoryRecord
 import os
+
+
+def make_test_construct():
+    construct_name = 'Some test Construct'
+    construct = Construct(title_text=construct_name)
+    construct.save()
+    choice = Choice(construct=construct,
+         name_txt              = 'Choice 1',
+         notes_txt             = '-',
+         constructive_notes    = 'just do it',
+         client_notes          = 'yes, lets go',
+         quantity_num          = 1,
+         price_num             = '10.0',
+         progress_percent_num  = 35.0,
+         units_of_measure_text = 'nr',
+         workers               = 'John',
+         plan_start_date       = '1984-04-15',
+         plan_days_num         = 5.0)
+    choice.save()
+    dic = {"line_1": {"type": "Header2", "id": "Some header"}}
+    dic["line_2"] = {"type": "Choice", "id": str(choice.id)}
+    choice = Choice(construct=construct,
+         name_txt              = 'Choice 2',
+         notes_txt             = '-',
+         constructive_notes    = 'be yourself',
+         client_notes          = 'show me',
+         quantity_num          = 2,
+         price_num             = '20.0',
+         progress_percent_num  = 25.0,
+         units_of_measure_text = 'nr',
+         workers               = 'Paul',
+         plan_start_date       = '1984-04-15',
+         plan_days_num         = 7.0)
+    choice.save()
+    dic["line_3"] = {"type": "Choice", "id": str(choice.id)}
+    choice = Choice(construct=construct,
+         name_txt              = 'Choice 3',
+         notes_txt             = '',
+         quantity_num          = 2,
+         price_num             = '20.0',
+         progress_percent_num  = 25.0,
+         units_of_measure_text = 'nr',
+         workers               = 'Paul',
+         plan_start_date       = '1984-04-15',
+         plan_days_num         = 7.0)
+    choice.save()
+    dic["line_3"] = {"type": "Choice", "id": str(choice.id)}
+    construct.struct_json = json.dumps(dic)
+    construct.save()
+    invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+    ta = Transaction.add(construct, 100.0, direction='in')
+    ta.invoice_set.add(invoice)
+    ta.save()
+    inv_tra = ta.invoicetransaction_set.all()
+    for intra in inv_tra:
+        intra.construct = construct
+        intra.save()
+    return construct
+
+
+class HistoryTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
+        self.simple_user = User(username='simple', password='secret', email='simple@domain.com')
+        self.simple_user.save()
+        self.client_user = User.objects.create_user(username='client',
+                password='secret',
+                email='client@domain.com')
+        permission = Permission.objects.get(codename='view_construct')
+        self.client_user.user_permissions.add(permission)
+
+    def test_history_dump(self):
+        construct = Construct(title_text='Original Construct')
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        ta = Transaction.add(construct, 100.0, direction='in')
+        invoice.transactions.add(ta)
+        invoice.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        fname = construct.history_dump(self.user.id)
+        self.assertIs(os.access(fname, os.F_OK), True)
+        os.remove(fname)
+        recs = HistoryRecord.objects.all()
+        self.assertEqual(len(recs), 1)
+
+    def test_history_records_diff(self):
+        construct = make_test_construct()
+        fname1 = construct.history_dump(self.user.id)
+        choices = construct.choice_set.all()
+        choice = choices[0]
+        choice.constructive_notes = 'Adding some notes'
+        choice.save()
+        fname2 = construct.history_dump(self.user.id)
+        recs = HistoryRecord.objects.all()
+        self.assertEqual(len(recs), 2)
+        id1, id2 = recs[1].id, recs[0].id
+        diff = HistoryRecord.get_diff(id1, id2)
+        self.assertIs(diff.find('Adding some notes') >= 0, True)
+        os.remove(fname1)
+        os.remove(fname2)
+
 
 class ModelTests(TestCase):
     def test_invoice_shallow_copy(self):
