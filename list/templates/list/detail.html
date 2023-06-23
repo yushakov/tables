@@ -91,14 +91,10 @@
 </div>
 <div>
     <ul>
-        {% for rec in history %}
+        {% for recs in history %}
             <li>
-                {% if not forloop.last %}
-                <a href="{% url 'list:history' %}?id1={{ rec.id }}">
-                    {{ rec.created_at }} by {{ rec.user_name }}</a>
-                {% else %}
-                    {{ rec.created_at }} by {{ rec.user_name }}
-                {% endif %}
+                <a href="{% url 'list:history' %}?id1={{ recs.rec1.id }}&id2={{ recs.rec2.id }}">
+                    {{ recs.rec2.created_at }} by {{ recs.rec2.user_name }}</a>
                 {% if forloop.first %}
                 &mdash; <b>last modification record</b>
                 {% endif %}

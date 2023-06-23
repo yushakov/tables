@@ -262,6 +262,14 @@ def process_post(request, construct, client=False):
             save_update(data, construct, client)
 
 
+def get_history_records(construct, limit=8):
+    records = construct.get_history_records(limit)
+    history = []
+    if len(records) > 1:
+        history = [{'rec1':records[i+1], 'rec2':records[i]} for i in range(len(records)-1)]
+    return history
+
+
 @login_required
 @permission_required("list.view_construct")
 def detail(request, construct_id):
@@ -277,7 +285,7 @@ def detail(request, construct_id):
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
-    history = construct.get_history_records(7)
+    history = get_history_records(construct)
     context = {'construct': construct,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
@@ -425,8 +433,10 @@ def submit_invoice(request):
 def history(request):
     context = {}
     if request.method == "GET":
-        id1 = int(request.GET['id1'])
-        context['text'] = HistoryRecord.get_diff(id1-1, id1)
+        if 'id1' in request.GET and 'id2' in request.GET:
+            id1 = int(request.GET['id1'])
+            id2 = int(request.GET['id2'])
+            context['text'] = HistoryRecord.get_diff(id1, id2)
     return render(request, 'list/history.html', context)
 
 def getTotalAmount(transactions):
