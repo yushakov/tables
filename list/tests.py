@@ -21,8 +21,7 @@ import os
 def make_test_choice(construct):
     pass
 
-def make_test_construct():
-    construct_name = 'Some test Construct'
+def make_test_construct(construct_name = 'Some test Construct'):
     construct = Construct(title_text=construct_name)
     construct.save()
     choice = Choice(construct=construct,
@@ -129,6 +128,37 @@ class HistoryTests(TestCase):
         self.assertIs(diff.find('Adding some notes') >= 0, True)
         os.remove(fname1)
         os.remove(fname2)
+
+    def test_history_records_do_not_mix(self):
+        construct1 = make_test_construct('Construct 1')
+        construct2 = make_test_construct('Construct 2')
+        fname1 = construct1.history_dump(self.user.id)
+        fname2 = construct2.history_dump(self.user.id)
+        choices = construct1.choice_set.all()
+        choice11 = choices[0]
+        choice11.name_txt = 'Name1'
+        choice11.save()
+        choices = construct2.choice_set.all()
+        choice22 = choices[0]
+        choice22.name_txt = 'Name22'
+        choice22.save()
+        fname3 = construct1.history_dump(self.user.id)
+        fname4 = construct2.history_dump(self.user.id)
+        records1 = construct1.get_history_records()
+        records2 = construct2.get_history_records()
+        tpl1 = tuple(sorted([rec.id for rec in records1]))
+        tpl2 = tuple(sorted([rec.id for rec in records2]))
+        self.assertEqual(tpl1, (1,3))
+        self.assertEqual(tpl2, (2,4))
+        diff1 = HistoryRecord.get_diff(1, 3)
+        diff2 = HistoryRecord.get_diff(2, 4)
+        self.assertIs(diff1.find('Name1') >= 0, True)
+        self.assertIs(diff2.find('Name22') >= 0, True)
+        os.remove(fname1)
+        os.remove(fname2)
+        os.remove(fname3)
+        os.remove(fname4)
+
 
     def test_history_records_no_diff_output_for_struct_json(self):
         construct = make_test_construct()
