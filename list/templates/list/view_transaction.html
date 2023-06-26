@@ -53,7 +53,7 @@
     {% endif %}
     <tr>
         <td><b>Details:</b></td>
-        <td>{{ transaction.details_txt }}</td>
+        <td style='max-width: 400px'>{{ transaction.details_txt|linebreaks }}</td>
     </tr>
 </table>
 {% if transaction.photo %}

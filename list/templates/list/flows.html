@@ -16,6 +16,8 @@
 </script>
 <h2>{{ construct_name }}</h2>
 <a href="{% url 'list:detail' construct_id %}">go to the project</a>
+&nbsp; &nbsp; &nbsp;
+<a href="{% url 'list:submit_transaction' %}?construct={{ construct_id }}">add a transaction</a>
 
 {% if incoming_transactions %}
 <h3 id='incoming-transactions'>Incoming transactions: &#163; {{ income|floatformat:2 }}</h3>
