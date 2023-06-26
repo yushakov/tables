@@ -85,7 +85,22 @@
 
 <br><br>
 <div id='project_last_save_date'>
-<b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
+{% if not history|length %}
+        <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
+{% endif %}
+</div>
+<div>
+    <ul>
+        {% for recs in history %}
+            <li>
+                <a href="{% url 'list:history' %}?id1={{ recs.rec1.id }}&id2={{ recs.rec2.id }}">
+                    {{ recs.rec2.created_at }} by {{ recs.rec2.user_name }}</a>
+                {% if forloop.first %}
+                &mdash; <b>last modification record</b>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
 </div>
 <br>
 <form id='choices_form' action="{% url 'list:detail' construct.id %}" method='POST'>

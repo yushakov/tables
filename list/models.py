@@ -1,3 +1,4 @@
+import os
 from django.contrib import admin
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
@@ -9,6 +10,9 @@ from django.core.files.base import ContentFile
 import logging
 import json
 from django.core import serializers
+from django.conf import settings
+from django.contrib.auth.models import User
+import difflib
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +48,23 @@ class Construct(models.Model):
     def __str__(self):
         return self.title_text
 
+    def shallow_copy(self):
+        return Construct(
+                title_text = self.title_text,
+                listed_date = self.listed_date,
+                last_save_date = self.last_save_date,
+                address_text = self.address_text,
+                email_text = self.email_text,
+                phone_text = self.phone_text,
+                owner_name_text = self.owner_name_text,
+                assigned_to = self.assigned_to,
+                overall_progress_percent_num = self.overall_progress_percent_num,
+                vat_percent_num = self.vat_percent_num,
+                company_profit_percent_num = self.company_profit_percent_num,
+                owner_profit_coeff = self.owner_profit_coeff,
+                paid_num = self.paid_num,
+                struct_json = self.struct_json)
+
     def save(self, *args, **kwargs):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
         self.last_save_date = timezone.now() + delta_to_make_construct_a_bit_younger
@@ -68,6 +89,33 @@ class Construct(models.Model):
         new_construct.save()
         return new_construct
 
+    def history_dump(self, user_id):
+        user = User.objects.get(id = user_id)
+        fname = self.last_save_date.strftime('%Y-%m-%d_%H-%M-%S_%f') +\
+            '_user_' + str(user) + '_construct_' + str(self.id) + '.json'
+        filepath = os.path.join(settings.BASE_DIR, 'history', fname)
+        self.export_to_json(filepath)
+        record = HistoryRecord(construct=self,
+            user_id   = int(user_id),
+            user_name = user,
+            file_path = filepath)
+        record.save()
+        return filepath
+
+    def get_history_records(self, limit=None):
+        records = self.historyrecord_set.all()
+        if limit:
+            return records[:limit]
+        return records
+
+    def get_last_history_record(self):
+        pth = os.path.join(settings.BASE_DIR, 'history')
+        records = os.listdir(pth)
+        if len(records) > 0:
+            with open(pth + '/' + records[0], 'r') as rec:
+                return rec.read()
+        return ''
+
     def export_to_json(self, fname):
         construct = self
         choices = Choice.objects.filter(construct__id=construct.id)
@@ -84,6 +132,55 @@ class Construct(models.Model):
             for obj in serializers.deserialize("json", data_file):
                 print(obj.object)
                 obj.save()
+
+    def safe_import_from_json(fname):
+        with open(fname, 'r') as data_file:
+            construct = None
+            invoices = {}
+            transactions = {}
+            choices = {}
+            invtra_objects = []
+            for obj in serializers.deserialize("json", data_file):
+                if type(obj.object) == Construct:
+                    new_title = 'Imported: ' + obj.object.title_text
+                    print('Construct: ', new_title)
+                    construct = obj.object.shallow_copy()
+                    construct.title_text = new_title
+                    construct.save()
+                elif type(obj.object) == Choice:
+                    print('Choice: ', obj.object.name_txt)
+                    choice = obj.object.shallow_copy(construct)
+                    choice.save()
+                    choices[int(obj.object.id)] = choice.id
+                elif type(obj.object) == Invoice:
+                    print('Invoice', obj.object.id)
+                    invoice = obj.object.shallow_copy(construct)
+                    invoice.save()
+                    invoices[int(obj.object.id)] = invoice
+                elif type(obj.object) == Transaction:
+                    print('Transaction: ', obj.object.id)
+                    transaction = obj.object.shallow_copy(construct)
+                    transaction.save()
+                    transactions[int(obj.object.id)] = transaction
+                elif type(obj.object) == InvoiceTransaction:
+                    print('InvoiceTransaction: ', obj.object.id)
+                    invtra_objects.append(obj.object)
+                else:
+                    print('Unknown Type: ', type(obj.object))
+            # process sruct_json
+            struct_dic = json.loads(construct.struct_json)
+            for line in struct_dic.keys():
+                if struct_dic[line]['type'] == 'Choice':
+                    struct_dic[line]['id'] = str(choices[int(struct_dic[line]['id'])])
+            construct.struct_json = json.dumps(struct_dic)
+            construct.save()
+            # process InvoiceTransaction connections
+            for invtra in invtra_objects:
+                invoice = invoices[invtra.invoice_id]
+                transac = transactions[invtra.transaction_id]
+                invoice.transactions.add(transac)
+                invoice.save()
+
 
     @admin.display(description='Progress')
     def overall_progress(self):
@@ -225,6 +322,51 @@ class Construct(models.Model):
         return round(self.withVat(self.withCompanyProfit(self.progress_cost())))
 
 
+class HistoryRecord(models.Model):
+    construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+    user_id = models.IntegerField(default='0')
+    user_name = models.CharField(max_length=200, default='')
+    file_path = models.CharField(max_length=700, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '"' + self.construct.title_text[:10] + '" from ' + \
+               str(self.created_at.strftime('%Y.%m.%d %H:%M:%S')) + ' by "' + \
+               self.user_name + '"'
+
+    class Meta:
+        ordering = ['-created_at']
+        get_latest_by = 'created_at'
+
+    def get_record(record_id):
+        try:
+            record = HistoryRecord.objects.get(id=record_id)
+            with open(record.file_path, 'r', encoding='utf-8') as file:
+                json_dic = json.loads(file.read())
+                return json.dumps(json_dic, indent=2, ensure_ascii=False)
+            return "Coundn't open the file"
+        except:
+            return f'No record with id: {record_id}'
+
+    def get_diff(record_id1, record_id2):
+        text1 = HistoryRecord.get_record(record_id1)
+        text2 = HistoryRecord.get_record(record_id2)
+        lst1  = text1.split('\n')
+        lst2  = text2.split('\n')
+        diff_lines = [l for l in difflib.unified_diff(lst1, lst2)]
+        new_lines = []
+        for l in diff_lines:
+            if l.find('"struct_json":') >= 0: continue
+            if l.startswith('+'):
+                new_lines.append("<p style='color: green'>" + l + "</p>\n")
+            elif l.startswith('-'):
+                new_lines.append("<p style='color: red'>" + l + "</p>\n")
+            else:
+                new_lines.append(l + "<br>\n")
+        out = ''.join([l for l in new_lines])
+        return out
+
+
 class Worker(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
@@ -260,6 +402,22 @@ class Choice(models.Model):
     plan_days_num = models.FloatField()
     actual_start_date = models.DateField(default=timezone.now)
     actual_end_date = models.DateField(default=timezone.now)
+
+    def shallow_copy(self, construct):
+        return Choice(construct=construct,
+                workers = self.workers,
+                name_txt = self.name_txt,
+                notes_txt = self.notes_txt,
+                constructive_notes = self.constructive_notes,
+                client_notes = self.client_notes,
+                quantity_num = self.quantity_num,
+                units_of_measure_text = self.units_of_measure_text,
+                price_num = self.price_num,
+                progress_percent_num = self.progress_percent_num,
+                plan_start_date = self.plan_start_date,
+                plan_days_num = self.plan_days_num,
+                actual_start_date = self.actual_start_date,
+                actual_end_date = self.actual_end_date)
 
     def copy(self, construct):
         new_choice = Choice(construct=construct,
@@ -347,6 +505,18 @@ class Transaction(models.Model):
         ordering = ['-created_at']
         get_latest_by = 'created_at'
 
+    def shallow_copy(self, construct):
+        return Transaction(construct=construct,
+                from_txt         = self.from_txt,
+                to_txt           = self.to_txt,
+                amount           = self.amount,
+                transaction_type = self.transaction_type,
+                date             = self.date,
+                receipt_number   = self.receipt_number,
+                details_txt      = self.details_txt,
+                photo            = self.photo,
+                created_at       = self.created_at)
+
     def __str__(self):
         return f'Tra:{self.receipt_number}, From: {self.from_txt}, ' + \
                f'Date: {self.date}, £ {self.amount}'
@@ -424,6 +594,19 @@ class Invoice(models.Model):
         ordering = ['-created_at']
         get_latest_by = 'created_at'
 
+    def shallow_copy(self, construct):
+        return Invoice(construct=construct,
+                number       = self.number,
+                amount       = self.amount,
+                invoice_type = self.invoice_type,
+                status       = self.status,
+                issue_date   = self.issue_date,
+                due_date     = self.due_date,
+                seller       = self.seller,
+                #transactions = ..., ### don't copy Many-to-Many in shallow_copy() ###
+                photo        = self.photo,
+                created_at   = self.created_at,
+                details_txt  = self.details_txt)
 
     def __str__(self):
         return f"Inv:{self.number};({self.construct.title_text[:10]}...) from: {self.seller}; " + \

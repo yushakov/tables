@@ -14,6 +14,7 @@ app_name = 'list'
 urlpatterns = [
     #path('', views.IndexView.as_view(), name='index'),
     path('', views.index, name='index'),
+    path('history/', views.history, name='history'),
     path('<int:construct_id>/', views.detail, name='detail'),
     path('<int:construct_id>/client/', views.client, name='client'),
     path('<int:construct_id>/gantt/', views.gantt, name='gantt'),

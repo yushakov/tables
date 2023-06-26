@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
-from .models import Construct, Choice, Invoice, Transaction
+from .models import Construct, Choice, Invoice, Transaction, HistoryRecord
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -262,12 +262,21 @@ def process_post(request, construct, client=False):
             save_update(data, construct, client)
 
 
+def get_history_records(construct, limit=8):
+    records = construct.get_history_records(limit)
+    history = []
+    if len(records) > 1:
+        history = [{'rec1':records[i+1], 'rec2':records[i]} for i in range(len(records)-1)]
+    return history
+
+
 @login_required
 @permission_required("list.view_construct")
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
         process_post(request, construct)
+        construct.history_dump(request.user.id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
@@ -276,12 +285,14 @@ def detail(request, construct_id):
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    history = get_history_records(construct)
     context = {'construct': construct,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
-               'construct_paid': construct.income()}
+               'construct_paid': construct.income(),
+               'history': history}
     return render(request, 'list/detail.html', context)
 
 
@@ -416,6 +427,17 @@ def submit_invoice(request):
     else:
         form = InvoiceSubmitForm()
     return render(request, 'list/submit_invoice.html', {'form': form})
+
+@login_required
+@permission_required("list.view_construct")
+def history(request):
+    context = {}
+    if request.method == "GET":
+        if 'id1' in request.GET and 'id2' in request.GET:
+            id1 = int(request.GET['id1'])
+            id2 = int(request.GET['id2'])
+            context['text'] = HistoryRecord.get_diff(id1, id2)
+    return render(request, 'list/history.html', context)
 
 def getTotalAmount(transactions):
     if transactions is None: return 0.0
