@@ -412,7 +412,8 @@ def submit_transaction(request):
             obj = Transaction.objects.latest()
             return redirect(obj)
     else:
-        form = TransactionSubmitForm()
+        initial_data = {'construct': request.GET.get('construct', '-1')}
+        form = TransactionSubmitForm(initial = initial_data)
     return render(request, 'list/submit_transaction.html', {'form': form})
 
 @login_required
