@@ -58,6 +58,10 @@
         </td>
     </tr>
     {% endif %}
+    <tr>
+        <td><b>Details:</b></td>
+        <td style='max-width: 400px'>{{ invoice.details_txt|linebreaks }}</td>
+    </tr>
 </table>
 {% if invoice.photo %}
     <br />

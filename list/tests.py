@@ -78,6 +78,7 @@ def make_test_construct(construct_name = 'Some test Construct'):
     return construct
 
 
+
 class HistoryTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
@@ -768,6 +769,28 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/client/")
         self.assertEqual(response.status_code, 302)
+
+    def test_view_invoice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = make_test_construct('Test construct')
+        invs = Invoice.objects.all()
+        inv = invs[0]
+        inv.details_txt = 'Description on this invoice'
+        inv.save()
+        response = c.get("/list/invoice/" + str(inv.id) + "/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_transaction(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = make_test_construct('Test construct')
+        tas = Transaction.objects.all()
+        ta = tas[0]
+        ta.details_txt = 'Description on this transaction'
+        ta.save()
+        response = c.get("/list/transaction/" + str(ta.id) + "/")
+        self.assertEqual(response.status_code, 200)
 
     def test_call_client_page_client(self):
         c = Client()
