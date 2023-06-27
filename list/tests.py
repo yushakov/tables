@@ -132,6 +132,22 @@ class HistoryTests(TestCase):
         os.remove(fname1)
         os.remove(fname2)
 
+    def test_client_history_records_diff(self):
+        construct = make_test_construct()
+        fname1 = construct.history_dump(self.client_user.id)
+        choices = construct.choice_set.all()
+        choice = choices[0]
+        choice.client_notes = 'Adding some notes'
+        choice.save()
+        fname2 = construct.history_dump(self.client_user.id)
+        recs = HistoryRecord.objects.all()
+        self.assertEqual(len(recs), 2)
+        id1, id2 = recs[1].id, recs[0].id
+        diff = HistoryRecord.get_diff(id1, id2)
+        self.assertIs(diff.find('Adding some notes') >= 0, True)
+        os.remove(fname1)
+        os.remove(fname2)
+
     def test_history_records_do_not_mix(self):
         construct1 = make_test_construct('Construct 1')
         construct2 = make_test_construct('Construct 2')
