@@ -499,7 +499,8 @@ class ModelTests(TestCase):
              plan_start_date       = '1984-04-15',
              plan_days_num         = 7.0)
         choice.save()
-        construct.export_to_json('/dev/stdout')
+        test_file = '.test_file_json'
+        construct.export_to_json(test_file)
 
     def test_overall_progress_percent(self):
         construct = Construct()
