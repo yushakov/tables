@@ -1,4 +1,6 @@
 from django.test import TestCase, Client
+from django.utils import timezone
+from datetime import datetime, timedelta
 from django.contrib.auth.models import User, Permission
 import numpy as np
 import datetime as dt
@@ -64,7 +66,7 @@ def make_test_construct(construct_name = 'Some test Construct'):
          plan_start_date       = '1984-04-15',
          plan_days_num         = 7.0)
     choice.save()
-    dic["line_3"] = {"type": "Choice", "id": str(choice.id)}
+    dic["line_4"] = {"type": "Choice", "id": str(choice.id)}
     construct.struct_json = json.dumps(dic)
     construct.save()
     invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
@@ -699,6 +701,21 @@ class ViewTests(TestCase):
                 email='client@domain.com')
         permission = Permission.objects.get(codename='view_construct')
         self.client_user.user_permissions.add(permission)
+
+    def test_session_extension_on_detail_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        session = c.session
+        session['key'] = 'value'
+        one_hour = 60 * 60
+        session.set_expiry(one_hour)
+        session.save()
+        response = c.get("/list/" + str(cons.id) + '/')
+        session = c.session
+        updated_date = session.get_expiry_date()
+        self.assertEqual(response.status_code, 200)
+        self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
 
     def test_login_page_list(self):
         c = Client()
