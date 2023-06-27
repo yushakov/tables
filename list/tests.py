@@ -717,6 +717,21 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
 
+    def test_session_extension_on_client_page(self):
+        c = Client()
+        c.login(username="client", password="secret")
+        cons = make_test_construct('Test construct for the client session')
+        session = c.session
+        session['key'] = 'value'
+        one_hour = 60 * 60
+        session.set_expiry(one_hour)
+        session.save()
+        response = c.get("/list/" + str(cons.id) + '/client/')
+        session = c.session
+        updated_date = session.get_expiry_date()
+        self.assertEqual(response.status_code, 200)
+        self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
+
     def test_login_page_list(self):
         c = Client()
         response = c.get('/list/')
