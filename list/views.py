@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
 import logging
 from django.contrib.auth.decorators import login_required, permission_required
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -271,6 +272,12 @@ def get_history_records(construct, limit=8):
     return history
 
 
+def extend_session(request):
+    one_day_seconds = 60 * 60 * 24
+    if request.session.get_expiry_date() < (timezone.now() + timedelta(days=1)):
+        request.session.set_expiry(one_day_seconds)
+
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
@@ -279,6 +286,7 @@ def detail(request, construct_id):
     if request.method == 'POST':
         process_post(request, construct)
         construct.history_dump(request.user.id)
+    extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
@@ -304,6 +312,8 @@ def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
         process_post(request, construct, client=True)
+        construct.history_dump(request.user.id)
+    extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
