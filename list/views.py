@@ -23,6 +23,7 @@ class IndexView(generic.ListView):
 
 @login_required
 @permission_required("list.view_construct")
+@permission_required("list.change_construct")
 def index(request):
     constructs = Construct.objects.order_by('-listed_date')
     price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
@@ -272,6 +273,7 @@ def get_history_records(construct, limit=8):
 
 @login_required
 @permission_required("list.view_construct")
+@permission_required("list.change_construct")
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
@@ -352,6 +354,7 @@ def getMarking(choice_list):
 
 @login_required
 @permission_required("list.view_construct")
+@permission_required("list.change_construct")
 def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
@@ -431,6 +434,7 @@ def submit_invoice(request):
 
 @login_required
 @permission_required("list.view_construct")
+@permission_required("list.change_construct")
 def history(request):
     context = {}
     if request.method == "GET":
@@ -450,6 +454,8 @@ def getTotalAmount(transactions):
 
 @login_required
 @permission_required("list.view_construct")
+@permission_required("list.change_construct")
+@permission_required("list.add_construct")
 def flows(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING)
