@@ -197,7 +197,7 @@ function unsetError(field) {
 }
 
 function badNumber(element, message, min=null, max=null) {
-	const numberInpRe = /^\d+(,\d+)*(\.\d+)?$/;
+	const numberInpRe = /^-?\d+(,\d+)*(\.\d+)?$/;
     if(!numberInpRe.test(element.value.trim()) ||
        (min != null && element.value.trim() < min) ||
        (max != null && element.value.trim() > max)) {
@@ -212,7 +212,7 @@ function badNumber(element, message, min=null, max=null) {
 function validateInput(id) {
 	var table = document.getElementById("choices");
 	var active_row = table.rows[id];
-	const numberInpRe = /^\d+(\.\d+)?$/;
+	const numberInpRe = /^-?\d+(\.\d+)?$/;
 	if(active_row.className == "Choice"){
 		var name     = document.getElementById("inpName");
 		var price    = document.getElementById("inpPrice");
