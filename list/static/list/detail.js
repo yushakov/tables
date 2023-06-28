@@ -18,14 +18,13 @@ const g_JsonNames = ['action', 'name', 'price', 'quantity', 'units',
 const g_header_del_col_span = 5;
 const gLocale = "en-US";
 
-
-window.onbeforeunload = function() {
+window.addEventListener('beforeunload', function (e) {
     var modified_text = document.getElementById('modified').innerText;
     if(modified_text == 'yes') {
-        return false;
+        e.preventDefault(); // If you prevent default behavior in Mozilla Firefox
+        e.returnValue = ''; // Chrome requires returnValue to be set
     }
-    return true;
-}
+});
 
 function showNotesForm(ths) {
     var parent = ths.parentNode.parentNode.parentNode;
@@ -96,10 +95,8 @@ function updateRows() {
 }
 
 function setForm() {
-    //return;
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
-        event.preventDefault();
         saveChoices();
         form.submit();
     });
@@ -249,9 +246,9 @@ function validateInput(id) {
 function encodeHTML(s) {
     return s.replace(/&/g, '&amp;')
 	        .replace(/</g, '&lt;')
+	        .replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#x27')
-			.replace(/'/g, '&#x2F');
+			.replace(/'/g, '&#x27;');
 }
 
 function modify(ths) {
