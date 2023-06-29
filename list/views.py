@@ -468,14 +468,16 @@ def getTotalAmount(transactions):
 @permission_required("list.add_construct")
 def flows(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING)
-    outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING)
+    incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING).order_by('date')
+    outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING).order_by('date')
     salary_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING,
-            details_txt__icontains='salary')
-    incoming_invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING)
-    incoming_unpaid_invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING, status=Invoice.UNPAID)
-    outgoing_invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING)
-    outgoing_unpaid_invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING, status=Invoice.UNPAID)
+            details_txt__icontains='salary').order_by('date')
+    incoming_invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING).order_by('issue_date')
+    incoming_unpaid_invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING,
+            status=Invoice.UNPAID).order_by('issue_date')
+    outgoing_invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING).order_by('issue_date')
+    outgoing_unpaid_invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING,
+            status=Invoice.UNPAID).order_by('issue_date')
     context = {'incoming_transactions': incoming_transactions,
             'income': getTotalAmount(incoming_transactions),
             'outgoing_transactions': outgoing_transactions,
