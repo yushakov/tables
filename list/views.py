@@ -495,3 +495,33 @@ def flows(request, construct_id):
             'construct_id': construct.id,
             'construct_name': construct.title_text}
     return render(request, 'list/flows.html', context)
+
+
+@login_required
+@permission_required("list.view_construct")
+@permission_required("list.change_construct")
+@permission_required("list.add_construct")
+def transactions(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    context = {'construct_id': construct.id, 'construct_name': construct.title_text}
+    transactions = []
+    direction = 'all'
+    if request.method == "GET":
+        direction = request.GET.get('direction', 'all')
+        context['direction'] = direction
+        if   direction == 'in':
+            transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING).order_by('date')
+        elif direction == 'out':
+            transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING).order_by('date')
+        elif direction == 'salary':
+            transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING,
+                details_txt__icontains='salary').order_by('date')
+        elif direction == 'expenses':
+            transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING) \
+                .exclude(details_txt__icontains='salary').order_by('date')
+        else:
+            transactions = construct.transaction_set.all()
+    total = round(sum([tra.amount for tra in transactions]))
+    context['transactions'] = transactions
+    context['total'] = total
+    return render(request, 'list/all_transactions.html', context)

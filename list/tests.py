@@ -779,6 +779,30 @@ class ViewTests(TestCase):
         self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, 302)
 
+    def test_login_page_transactions(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        response = c.get('/list/' + str(cons.id) +'/transactions/')
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_transactions_page_accessed(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get('/list/' + str(cons.id) +'/transactions/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_transactions_page_no_access(self):
+        c = Client()
+        c.login(username="simple", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get('/list/' + str(cons.id) +'/transactions/')
+        self.assertEqual(response.status_code, 302)
+
     def test_login_page_gantt(self):
         c = Client()
         cons = Construct()
