@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}All transactions for: {{ construct_name }}{% endblock %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<h2>Transactions for: {{ construct_name }}</h2>
+<a href="{% url 'list:detail' construct_id %}">go to the project</a>&nbsp;&nbsp;&nbsp;
+<a href="{% url 'list:transactions' construct_id %}">all</a>&nbsp;&nbsp;
+<a href="{% url 'list:transactions' construct_id %}?direction=in">incoming</a>&nbsp;&nbsp;
+<a href="{% url 'list:transactions' construct_id %}?direction=out">outgoing</a>&nbsp;&nbsp;
+<a href="{% url 'list:transactions' construct_id %}?direction=salary">salary</a>&nbsp;&nbsp;
+<a href="{% url 'list:transactions' construct_id %}?direction=expenses">expenses</a>&nbsp;&nbsp;
+<br>
+<br>
+<b>Direction:</b> {{ direction|upper }}<br><br>
+{% if direction != 'all' %}
+    <b>Total:</b> &#163; {{ total }}<br><br>
+{% endif %}
+<table id='construct_list'><tbody>
+    {% for tra in transactions %}
+        <tr>
+            <td>
+                <a href="{% url 'admin:list_transaction_change' tra.id%}">
+                {{ tra.id }}
+                </a>
+            </td>
+            <td>
+                {{ tra.date }}
+            </td>
+            <td>
+                {{ tra.amount }}
+            </td>
+            <td>
+                {{ tra.to_txt }}
+            </td>
+        </tr>
+    {% endfor %}
+</tbody></table>
+{% endblock %}
