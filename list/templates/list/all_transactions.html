@@ -10,6 +10,8 @@
 <a href="{% url 'list:transactions' construct_id %}?direction=out">outgoing</a>&nbsp;&nbsp;
 <a href="{% url 'list:transactions' construct_id %}?direction=salary">salary</a>&nbsp;&nbsp;
 <a href="{% url 'list:transactions' construct_id %}?direction=expenses">expenses</a>&nbsp;&nbsp;
+&nbsp; &nbsp; &nbsp;
+<a href="{% url 'list:submit_transaction' %}?construct={{ construct_id }}">add a transaction</a>
 <br>
 <br>
 <b>Direction:</b> {{ direction|upper }}<br><br>
