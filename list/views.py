@@ -296,7 +296,9 @@ def detail(request, construct_id):
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
     history = get_history_records(construct)
+    session_expiration = request.session.get_expiry_date()
     context = {'construct': construct,
+            'session_expiration': f"{session_expiration.strftime('%H:%M, %d.%m.%Y')}",
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
