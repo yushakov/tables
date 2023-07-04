@@ -303,7 +303,7 @@ def detail(request, construct_id):
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
-               'construct_paid': construct.income(),
+               'construct_paid': round(construct.income()),
                'history': history}
     return render(request, 'list/detail.html', context)
 
