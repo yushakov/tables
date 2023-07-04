@@ -10,7 +10,12 @@
 <body>
     <main>
         {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="right-align" id='logout-link'>LOGOUT</a>&nbsp;&nbsp
+            <p class="right-align">
+                {% if session_expiration %}
+                    Session expires on: {{ session_expiration }}&nbsp;&nbsp;
+                {% endif %}
+                <a href="{% url 'logout' %}" id='logout-link'>LOGOUT</a>&nbsp;&nbsp
+            </p>
             <style>
                 .right-align {
                     float: right;
