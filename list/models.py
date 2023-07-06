@@ -14,7 +14,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 import difflib
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
 coeff_valid = [MinValueValidator(0.0), MaxValueValidator(1.0)] 

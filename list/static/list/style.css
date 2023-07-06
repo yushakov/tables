@@ -65,7 +65,11 @@ td.td_header_2 {
 
 th.name_cell {
     padding-left: 5px;
-    width: 300px;
+    max-width: 300px;
+}
+
+td.name_cell {
+    max-width: 300px;
 }
 
 th.assign_cell  {
