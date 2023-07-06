@@ -40,9 +40,9 @@ def ip_addresses():
                 ip_list.append(addrs[x][0]['addr'])
     return ip_list
 
-ALLOWED_HOSTS = ip_addresses()
-ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
-ALLOWED_HOSTS.append('projects.yushakov.com')
+#ALLOWED_HOSTS = ip_addresses()
+#ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
+ALLOWED_HOSTS = ['projects.yushakov.com']
 
 
 # Application definition
