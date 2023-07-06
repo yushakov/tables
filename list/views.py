@@ -12,7 +12,7 @@ import logging
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils import timezone
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 
 class IndexView(generic.ListView):
     template_name = 'list/index.html'
@@ -170,7 +170,7 @@ def save_update(data, construct, client=False):
         add_to_structure(structure, data[key], choice_id, client)
     if client_try_to_change_structure: return
     string_structure = json.dumps(structure)
-    logger.info('Project structure:\n', string_structure)
+    logger.info('Project structure: %s\n', string_structure)
     construct.struct_json = string_structure
     construct.save()
 
@@ -259,7 +259,7 @@ def checkTimeStamp(data, construct):
 def process_post(request, construct, client=False):
     if request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
-        logger.debug(datetime.now(), 'POST data in detail():\n', data)
+        logger.debug('POST data in detail():\n %s', request.POST["json_value"])
         if checkTimeStamp(data, construct):
             save_update(data, construct, client)
 
