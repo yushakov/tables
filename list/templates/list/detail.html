@@ -102,6 +102,12 @@
         {% endfor %}
     </ul>
 </div>
+<div>
+    <a href='#' onclick='return hideShow100(this)'>Hide completed</a>
+</div>
+
+
+
 <br>
 <form id='choices_form' action="{% url 'list:detail' construct.id %}" method='POST'>
 {% csrf_token %}
@@ -135,7 +141,7 @@
             <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
         </td>
     {% if items.type == 'Choice' %}
-        <td>{{ items.choice.name_txt }}</td>
+        <td class='name_cell'>{{ items.choice.name_txt }}</td>
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>

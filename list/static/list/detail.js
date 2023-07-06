@@ -103,6 +103,30 @@ function setForm() {
     updateRows();
 }
 
+function hideShow100(ths) {
+	if(!freezeActiveRow()) return false;
+    var table = document.getElementById("choices");
+    var rows  = Array.from(table.rows);
+    if(ths.innerText.includes('Hide')) {
+        rows.forEach(function(row) {
+            var progress_cells = row.getElementsByClassName("choice_progress_percent");
+            if(progress_cells.length == 0) return;
+            var progress = Number(progress_cells[0].innerText.replace(/%/,"").trim());
+            if(progress == 100) row.style.display = 'none';
+        })
+        ths.innerText = 'Show completed';
+    } else {
+        rows.forEach(function(row) {
+            var progress_cells = row.getElementsByClassName("choice_progress_percent");
+            if(progress_cells.length == 0) return;
+            var progress = Number(progress_cells[0].innerText.replace(/%/,"").trim());
+            if(progress == 100) row.style.display = 'table-row';
+        })
+        ths.innerText = 'Hide completed';
+    }
+    return false;
+}
+
 function showPrettyRaw(x) {
     var table = document.getElementById("choices");
     var rows  = Array.from(table.rows);
