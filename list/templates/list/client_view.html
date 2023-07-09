@@ -7,6 +7,12 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 
 <h1>{{ construct.title_text }}</h1>
+<br>
+{% if 'list.change_construct' in perms %}
+    &larr; <a href="{% url 'list:detail' construct.id %}">back to the full view</a>
+    <br>
+    <br>
+{% endif %}
 
 <table id='choices_head'>
 <tbody>
