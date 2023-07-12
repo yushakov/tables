@@ -519,6 +519,7 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f'Tra:{self.receipt_number}, From: {self.from_txt}, ' + \
+               f'To: {self.to_txt}, ' + \
                f'Date: {self.date}, £ {self.amount}'
 
     def get_absolute_url(self):
@@ -561,8 +562,8 @@ class Transaction(models.Model):
         return transaction
 
     def save(self, *args, **kwargs):
-        logger.debug("Transaction.save()")
-        logger.debug(self.photo)
+        logger.info(f"Transaction.save(): {self}")
+        logger.info(self.photo)
         super(Transaction, self).save(*args, **kwargs)
 
 
@@ -659,6 +660,7 @@ class Invoice(models.Model):
             for ta in self.transactions.all():
                 if f"{ta.transaction_type}" != f"{self.invoice_type}":
                     raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
+        logger.info(f'Invoice.save(): {self}')
         super(Invoice, self).save(*args, **kwargs)
 
 

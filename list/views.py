@@ -418,6 +418,7 @@ def view_transaction(request, transaction_id):
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
 def submit_transaction(request):
+    logger.info(f'submit_transaction() by {request.user.username}')
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
         logger.debug("views.py, submit_transaction()")
@@ -434,6 +435,7 @@ def submit_transaction(request):
 @login_required
 @permission_required("list.add_invoice")
 def submit_invoice(request):
+    logger.info(f'submit_invoice() by {request.user.username}')
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST)
         if form.is_valid():
