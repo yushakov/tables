@@ -37,17 +37,39 @@ function setDayDivHeight(height) {
     }
 }
 
+function getNextMonth(currentMonth) {
+    const months = [
+        "January", "February", "March",
+        "April", "May", "June",
+        "July", "August", "September",
+        "October", "November", "December"
+    ];
+    const monthIndex = months.indexOf(currentMonth);
+    if (monthIndex < 0 || monthIndex > 11) {
+        throw new Error("Invalid month name");
+    }
+    return months[(monthIndex + 1) % 12];
+}
+
 function formChart() {
     const start_day_cell = document.getElementById("common_start");
     start_day_cell.colSpan = gAllDays;
     const ganttHeader = document.getElementById("gantt-header");
     var labels = document.getElementById("day_labels").innerText;
     labels = labels.split(',');
+    var month_name = start_day_cell.innerText;
     for (let i = 0; i < gAllDays; i++) {
         const dl = document.createElement("th");
         dl.innerHTML = `<div class="day_div"></div><b>${labels[i]}</b>`;
         dl.style.width = `30px`;
-        if(Number(labels[i]) == 1) dl.style.background = 'lightgrey';
+        if(Number(labels[i]) == 1) {
+            dl.style.background = 'lightgrey';
+            const month = document.createElement("div");
+            month.classList.add("month");
+            month_name = getNextMonth(month_name);
+            month.innerText = month_name;
+            dl.appendChild(month);
+        }
         dl.classList.add("day_cell");
         ganttHeader.appendChild(dl);
     }
