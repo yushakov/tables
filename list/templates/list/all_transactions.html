@@ -30,6 +30,9 @@
                 {{ tra.date }}
             </td>
             <td>
+                {{ tra.receipt_number }}
+            </td>
+            <td>
                 {{ tra.amount }}
             </td>
             <td>
@@ -37,6 +40,9 @@
             </td>
             <td>
                 to: {{ tra.to_txt }}
+            </td>
+            <td>
+                {{ tra.details_txt|truncatechars:25 }}
             </td>
         </tr>
     {% endfor %}
