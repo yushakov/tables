@@ -442,6 +442,14 @@ class Choice(models.Model):
             out_name = out_name[:maxNameLen] + "..."
         return f'{self.id}: ' + out_name + f' ({self.construct})'
 
+    @admin.display(description="Name", ordering="name_txt")
+    def get_name(self):
+        return f"{self.name_txt}"
+
+    @admin.display(description="Progress, %", ordering="progress_percent_num")
+    def get_progress(self):
+        return f"{self.progress_percent_num}"
+
     def save(self, *args, **kwargs):
         if self.pk:  # pk will be None for a new instance
             existing_instance = Choice.objects.get(pk=self.pk)
@@ -540,6 +548,10 @@ class Transaction(models.Model):
     @admin.display(description="Number")
     def number_link(self):
         return format_html("<a href='/list/transaction/{}'>{}</a>", self.id, self.receipt_number)
+
+    @admin.display(description="Type")
+    def get_type(self):
+        return f"{self.transaction_type}"
 
     def add(construct, amount, date=None, direction=None, number='000000', details='-'):
         transaction = Transaction()
