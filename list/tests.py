@@ -1360,7 +1360,6 @@ class ViewTests(TestCase):
 
 
     def test_process_post(self):
-        print("\n>>> test_process_post() <<<")
         construct = Construct(title_text="Construct name")
         construct.save()
         time_later = int(dt.datetime.now().timestamp()) + 10
@@ -1396,6 +1395,111 @@ class ViewTests(TestCase):
         request = Request()
         process_post(request, construct)
         structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 3)
+
+
+    def test_process_post_delete_choice_frontend(self):
+        ''' Check if we can delete a choice from the detail.html'''
+        pass
+
+
+    def test_process_post_delete_choice_backend(self):
+        ''' Check if we can delete a choice behind the scene
+        and not ruin the construct structure.'''
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        choices[0].delete()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+
+
+    def test_process_post_add_choice_backend(self):
+        ''' Check if we can add a choice behind the scene
+        and not ruin the construct structure.'''
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '-',
+             constructive_notes    = 'just do it',
+             client_notes          = 'yes, lets go',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
         self.assertIs(len(struc_dict), 3)
