@@ -175,6 +175,48 @@ def save_update(data, construct, client=False):
     construct.save()
 
 
+def __add_choice_to_structure(structure, choice):
+    lines = [int(k.split('_')[1]) for k in structure.keys()]
+    lines.sort()
+    max_num = lines[-1] + 1
+    structure[f'line_{max_num}'] = {'type':'Choice', 'id':str(choice.id)}
+
+
+def _add_missing_choices(structure, choices):
+    structure_ids = [int(structure[k]['id']) for k in structure.keys() if structure[k]['type'].startswith('Choice')]
+    structure_ids.sort()
+    choice_ids = [(ch.id, ch) for ch in choices]
+    choice_ids.sort(key=lambda x: x[0])
+    for ch_id, ch in choice_ids:
+        if ch_id in structure_ids: continue
+        __add_choice_to_structure(structure, ch)
+
+
+def _remove_nonexisting_choices(structure, choices):
+    keys_to_remove = []
+    choice_ids = [int(ch.id) for ch in choices]
+    for k in structure.keys():
+        if not structure[k]['type'].startswith('Choice'): continue
+        ch_id = int(structure[k]['id'])
+        if ch_id not in choice_ids:
+            keys_to_remove.append(k)
+    for k in keys_to_remove:
+        structure.pop(k)
+
+
+def _order_structure_lines(structure):
+    new_struct = {}
+    for i, k in enumerate(structure.keys()):
+        new_struct[f'line_{i+1}'] = structure[k]
+    return new_struct
+
+
+def fix_structure(structure, choices):
+    _add_missing_choices(structure, choices)
+    _remove_nonexisting_choices(structure, choices)
+    return _order_structure_lines(structure)
+
+
 def check_integrity(structure_str, choices):
     choice_ids = [ch.id for ch in choices]
     struc = {}

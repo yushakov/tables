@@ -11,7 +11,8 @@ from list.views import check_integrity,   \
                        create_choice,     \
                        update_choice,     \
                        process_post,      \
-                       checkTimeStamp
+                       checkTimeStamp,    \
+                       fix_structure
 from list.models import Construct, \
                         Choice, \
                         Invoice, \
@@ -79,6 +80,112 @@ def make_test_construct(construct_name = 'Some test Construct'):
         intra.save()
     return construct
 
+
+class MyFixChoice:
+    def __init__(self):
+        self.id = None
+    def __str__(self):
+        return f'{self.id}'
+    def __repr__(self):
+        return f'{self.id}'
+
+class StructureFixTests(TestCase):
+    def test_fix_structure_missing_choices(self):
+        choices = []
+        for i in range(1,6):
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for i in range(1,4):
+            stru[f'line_{i}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def test_fix_structure_nonexistent_choices(self):
+        choices = []
+        for i in range(1,4):
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for i in range(1,6):
+            stru[f'line_{i}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def test_fix_structure_mix(self):
+        choices = []
+        for i in [1, 2, 3, 4, 5, 6, 7]:
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for i in [1, 8, 3, 4,    6, 7, 9]:
+            stru[f'line_{i}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def _lines_in_order(self, structure):
+        lines = [int(k.split('_')[1]) for k in structure.keys()]
+        for i in range(1, len(lines)+1):
+            if i == lines[i-1]: continue
+            return False
+        return True
+
+    def test_fix_structure_mix_ordered_lines(self):
+        choices = []
+        for i in [1, 2, 3, 4, 5, 6, 7]:
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for l, i in [(1,1), (2,8), (3,3), (4,4),    (5,6), (6,7), (7,9)]:
+            stru[f'line_{l}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertIs(self._lines_in_order(stru), True)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def test_fix_structure_big_mix_ordered_lines(self):
+        choices = []
+        np.random.seed(1)
+        ids1 = list(set(list(np.random.choice(list(range(200)), 30))))
+        ids2 = list(set(list(np.random.choice(list(range(200)), 30))))
+        for i in ids1:
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for l, i in enumerate(ids2):
+            stru[f'line_{l+1}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertIs(self._lines_in_order(stru), True)
+        self.assertEqual(len(choices), len(stru.keys()))
 
 
 class HistoryTests(TestCase):
