@@ -175,6 +175,48 @@ def save_update(data, construct, client=False):
     construct.save()
 
 
+def __add_choice_to_structure(structure, choice):
+    lines = [int(k.split('_')[1]) for k in structure.keys()]
+    lines.sort()
+    max_num = lines[-1] + 1
+    structure[f'line_{max_num}'] = {'type':'Choice', 'id':str(choice.id)}
+
+
+def _add_missing_choices(structure, choices):
+    structure_ids = [int(structure[k]['id']) for k in structure.keys() if structure[k]['type'].startswith('Choice')]
+    structure_ids.sort()
+    choice_ids = [(ch.id, ch) for ch in choices]
+    choice_ids.sort(key=lambda x: x[0])
+    for ch_id, ch in choice_ids:
+        if ch_id in structure_ids: continue
+        __add_choice_to_structure(structure, ch)
+
+
+def _remove_nonexisting_choices(structure, choices):
+    keys_to_remove = []
+    choice_ids = [int(ch.id) for ch in choices]
+    for k in structure.keys():
+        if not structure[k]['type'].startswith('Choice'): continue
+        ch_id = int(structure[k]['id'])
+        if ch_id not in choice_ids:
+            keys_to_remove.append(k)
+    for k in keys_to_remove:
+        structure.pop(k)
+
+
+def _order_structure_lines(structure):
+    new_struct = {}
+    for i, k in enumerate(structure.keys()):
+        new_struct[f'line_{i+1}'] = structure[k]
+    return new_struct
+
+
+def fix_structure(structure, choices):
+    _add_missing_choices(structure, choices)
+    _remove_nonexisting_choices(structure, choices)
+    return _order_structure_lines(structure)
+
+
 def check_integrity(structure_str, choices):
     choice_ids = [ch.id for ch in choices]
     struc = {}
@@ -188,22 +230,10 @@ def check_integrity(structure_str, choices):
     ids_in_struct.sort()
     if choice_ids == ids_in_struct:
         return struc
-    else:
-        logger.critical(f'ERROR: Integrity mismatch')
-        logger.error(f'Choices: {choice_ids}')
-        logger.error(f'Structure: {ids_in_struct}')
-        voc = {str(ch.id): ch.name_txt[:30] for ch in choices}
-        for ch in choices:
-            print(f'{ch.id}: {ch.name_txt[:30]}')
-        for k in struc.keys():
-            if struc[k]["type"].startswith("Choice"):
-                if struc[k]["id"] in voc.keys():
-                    print(f'{k}: {struc[k]["id"]} "{voc[struc[k]["id"]]}"')
-                else:
-                    print(f'There is no {struc[k]["id"]} in choices IDs')
-            else:
-                print(f'{k}: {struc[k]}')
-    return dict()
+    logger.critical(f'ERROR: Integrity mismatch')
+    logger.critical(f'Choices: {choice_ids}')
+    logger.critical(f'Structure: {ids_in_struct}')
+    return fix_structure(struc, choices)
 
 
 def getStructChoiceDict(construct):
@@ -418,6 +448,7 @@ def view_transaction(request, transaction_id):
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
 def submit_transaction(request):
+    logger.info(f'submit_transaction() by {request.user.username}')
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
         logger.debug("views.py, submit_transaction()")
@@ -434,6 +465,7 @@ def submit_transaction(request):
 @login_required
 @permission_required("list.add_invoice")
 def submit_invoice(request):
+    logger.info(f'submit_invoice() by {request.user.username}')
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST)
         if form.is_valid():

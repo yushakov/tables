@@ -11,7 +11,8 @@ from list.views import check_integrity,   \
                        create_choice,     \
                        update_choice,     \
                        process_post,      \
-                       checkTimeStamp
+                       checkTimeStamp,    \
+                       fix_structure
 from list.models import Construct, \
                         Choice, \
                         Invoice, \
@@ -79,6 +80,112 @@ def make_test_construct(construct_name = 'Some test Construct'):
         intra.save()
     return construct
 
+
+class MyFixChoice:
+    def __init__(self):
+        self.id = None
+    def __str__(self):
+        return f'{self.id}'
+    def __repr__(self):
+        return f'{self.id}'
+
+class StructureFixTests(TestCase):
+    def test_fix_structure_missing_choices(self):
+        choices = []
+        for i in range(1,6):
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for i in range(1,4):
+            stru[f'line_{i}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def test_fix_structure_nonexistent_choices(self):
+        choices = []
+        for i in range(1,4):
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for i in range(1,6):
+            stru[f'line_{i}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def test_fix_structure_mix(self):
+        choices = []
+        for i in [1, 2, 3, 4, 5, 6, 7]:
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for i in [1, 8, 3, 4,    6, 7, 9]:
+            stru[f'line_{i}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def _lines_in_order(self, structure):
+        lines = [int(k.split('_')[1]) for k in structure.keys()]
+        for i in range(1, len(lines)+1):
+            if i == lines[i-1]: continue
+            return False
+        return True
+
+    def test_fix_structure_mix_ordered_lines(self):
+        choices = []
+        for i in [1, 2, 3, 4, 5, 6, 7]:
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for l, i in [(1,1), (2,8), (3,3), (4,4),    (5,6), (6,7), (7,9)]:
+            stru[f'line_{l}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertIs(self._lines_in_order(stru), True)
+        self.assertEqual(len(choices), len(stru.keys()))
+
+    def test_fix_structure_big_mix_ordered_lines(self):
+        choices = []
+        np.random.seed(1)
+        ids1 = list(set(list(np.random.choice(list(range(200)), 30))))
+        ids2 = list(set(list(np.random.choice(list(range(200)), 30))))
+        for i in ids1:
+            ch = MyFixChoice()
+            ch.id = i
+            choices.append(ch)
+        stru = {}
+        for l, i in enumerate(ids2):
+            stru[f'line_{l+1}'] = {'type':'Choice', 'id':str(i)}
+        stru = fix_structure(stru, choices)
+        stru_ids = [int(stru[k]['id']) for k in stru.keys() if stru[k]['type'].startswith('Choice')]
+        choi_ids = [ch.id for ch in choices]
+        stru_ids.sort()
+        choi_ids.sort()
+        self.assertEqual(stru_ids, choi_ids)
+        self.assertIs(self._lines_in_order(stru), True)
+        self.assertEqual(len(choices), len(stru.keys()))
 
 
 class HistoryTests(TestCase):
@@ -200,6 +307,13 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_add_as_on_page(self):
+        construct = Construct(title_text='Original Construct')
+        construct.save()
+        Transaction.add_as_on_page(construct, 'Me', 'Him', 3.33, 'OUT', '2023-07-15', '2307151230', 'some details')
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 1)
+
     def test_invoice_shallow_copy(self):
         construct = Construct(title_text='Original Construct')
         construct.save()
@@ -1025,6 +1139,35 @@ class ViewTests(TestCase):
         inv_tra = cons.invoicetransaction_set.all()
         self.assertEqual(len(inv_tra), 2)
 
+    def test_submit_invoice_form(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, 302)
+        
+    def test_login_submit_invoice_form(self):
+        c = Client()
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+        self.assertEqual(response.status_code, 302)
+        
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")
         construct1 = Construct()
@@ -1303,11 +1446,12 @@ class ViewTests(TestCase):
             def __init__(self, ID):
                 self.id = ID
                 self.name_txt = str(ID) + "_name"
-        print('test_check_integrity_wrong_structure')
         np.random.seed(0)
-        choices = [LocalChoice(int(new_id)) for new_id in np.random.rand(10) * 100]
-        struc_dic = check_integrity('{"line1":{"type":"Header2", "id":"House"}, "line2":{"type":"Choice", "id":"37"}}', choices)
-        self.assertIs(len(struc_dic) == 0, True)
+        ids = list(set((np.random.rand(10) * 100).astype(int)))
+        choices = [LocalChoice(new_id) for new_id in ids]
+        struc_dic = check_integrity('{"line_1":{"type":"Header2", "id":"House"}, "line_2":{"type":"Choice", "id":"37"}}', choices)
+        # 37 is not in choices, so it will be gone
+        self.assertEqual(len(struc_dic), len(ids)+1)
 
 
     def test_check_integrity_right_structure(self):
@@ -1319,19 +1463,18 @@ class ViewTests(TestCase):
         choices = [LocalChoice(int(new_id)) for new_id in [10, 15, 23, 44]]
         struc_dic = check_integrity(
             '''{
-            "line1":{"type":"Header2", "id":"House"},
-            "line2":{"type":"Choice", "id":"10"},
-            "line3":{"type":"Choice", "id":"15"},
-            "line4":{"type":"Header2", "id":"Shed"},
-            "line5":{"type":"Choice", "id":"23"},
-            "line6":{"type":"Choice", "id":"44"}
+            "line_1":{"type":"Header2", "id":"House"},
+            "line_2":{"type":"Choice", "id":"10"},
+            "line_3":{"type":"Choice", "id":"15"},
+            "line_4":{"type":"Header2", "id":"Shed"},
+            "line_5":{"type":"Choice", "id":"23"},
+            "line_6":{"type":"Choice", "id":"44"}
             }''', choices)
         print('check_integrity_right_sturcture\n', struc_dic)
         self.assertIs(len(struc_dic) == 6, True)
 
 
     def test_process_post(self):
-        print("\n>>> test_process_post() <<<")
         construct = Construct(title_text="Construct name")
         construct.save()
         time_later = int(dt.datetime.now().timestamp()) + 10
@@ -1370,6 +1513,112 @@ class ViewTests(TestCase):
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
         self.assertIs(len(struc_dict), 3)
+
+
+    def test_process_post_delete_choice_frontend(self):
+        ''' Check if we can delete a choice from the detail.html'''
+        pass
+
+
+    def test_process_post_delete_choice_backend(self):
+        ''' Check if we can delete a choice behind the scene
+        and not ruin the construct structure.'''
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        choices[0].delete()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+
+
+    def test_process_post_add_choice_backend(self):
+        ''' Check if we can add a choice behind the scene
+        and not ruin the construct structure.'''
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '-',
+             constructive_notes    = 'just do it',
+             client_notes          = 'yes, lets go',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        print(struc_dict)
+        self.assertIs(len(struc_dict), 4)
 
 
     def test_process_post_with_notes(self):
@@ -1770,10 +2019,12 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 0)
 
 
-    def test_check_integrity_wrong_resend_post_tmp_fail(self):
+    def test_check_integrity_wrong_resend_post(self):
         '''
             Passes timestamp check, but structure is wrong.
             This one should not break the construct's structure.
+            We decide to fix the structure in such a way that
+            new (strange) choices are just added to the construct.
         '''
         print("\n>>> test_check_integrity_wrong_resend_post() <<<")
         construct = Construct(title_text="Construct name")
@@ -1818,7 +2069,7 @@ class ViewTests(TestCase):
         structure_str = construct.struct_json
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
-        self.assertIs(len(struc_dict), 3)
+        self.assertIs(len(struc_dict), 5)
 
 
     def test_check_integrity_wrong_structure_2(self):
@@ -1826,17 +2077,15 @@ class ViewTests(TestCase):
             def __init__(self, ID):
                 self.id = ID
                 self.name_txt = str(ID) + "_name"
-        print('test_check_integrity_right_structure_2')
         np.random.seed(0)
         choices = [LocalChoice(int(new_id)) for new_id in [10, 15, 23, 24, 25, 26, 44]]
         struc_dic = check_integrity(
             '''{
-            "line1":{"type":"Header2", "id":"House"},
-            "line2":{"type":"Choice", "id":"10"},
-            "line3":{"type":"Choice", "id":"15"},
-            "line4":{"type":"Header2", "id":"Shed"},
-            "line5":{"type":"Choice", "id":"23"},
-            "line6":{"type":"Choice", "id":"44"}
+            "line_1":{"type":"Header2", "id":"House"},
+            "line_2":{"type":"Choice", "id":"10"},
+            "line_3":{"type":"Choice", "id":"15"},
+            "line_4":{"type":"Header2", "id":"Shed"},
+            "line_5":{"type":"Choice", "id":"23"},
+            "line_6":{"type":"Choice", "id":"47"}
             }''', choices)
-        print('check_integrity_right_sturcture\n', struc_dic)
-        self.assertIs(len(struc_dic) == 0, True)
+        self.assertEqual(len(struc_dic), 9)

@@ -14,7 +14,9 @@
 </div>
 <br><br>
 <div id='task_list' style='display:none'>
-{{ marking }}
+    {% autoescape off %}
+        {{ marking }}
+    {% endautoescape %}
 </div>
 <div id='total_days' style='display:none'>
 {{ total }}
@@ -22,7 +24,6 @@
 <div id='day_labels' style='display:none'>
 {{ labels }}
 </div>
-<div style="overflow-x: auto">
 <table id='gantt_table'>
     <thead>
         <tr>
@@ -33,23 +34,18 @@
             <th class="name_cell">Task name</th>
             <th style="width: 110px">Total price</th>
             <th class="assign_cell">Assigned to</th>
-            <!--th>Date start</th>
-            <th>Planned days</th-->
         </tr>
     </thead>
     <tbody id="gantt-chart">
     {% for items in ch_list %}
         {% if items.type == 'Choice' %}
             <tr id='tr_{{ items.choice.id }}' class='{{ items.type }}'>
-                <td align='left' class='task_name'>{{ items.choice.name_txt }}</td>
+                <td align='left' class='task_name'>{{ items.choice.name_txt|truncatechars:30 }}</td>
                 <td align='right'>&#163;{{ items.choice_total_price }}</td>
                 <td align='center'>{{ items.choice.workers }}</td>
-                <!--td>{{ items.choice.plan_start_date }}</td>
-                <td align='center'>{{ items.choice.plan_days_num }}</td-->
             </tr>
         {% endif %}
     {% endfor %}
     </tbody>
 </table>
-</div>
 {% endblock %}

@@ -8,7 +8,7 @@
 &nbsp;
 <a href="{% url 'admin:list_transaction_change' transaction.id %}">modify this one</a>
 &nbsp;
-<a href="{% url 'admin:list_transaction_changelist' %}">see all transactions</a>
+<a href="{% url 'list:transactions' transaction.construct.id %}">project's transactions</a>
 <br />
 <br />
 <table id='construct_list'>

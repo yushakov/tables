@@ -7,6 +7,12 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 
 <h1>{{ construct.title_text }}</h1>
+<br>
+{% if 'list.change_construct' in perms %}
+    &larr; <a href="{% url 'list:detail' construct.id %}">back to the full view</a>
+    <br>
+    <br>
+{% endif %}
 
 <table id='choices_head'>
 <tbody>
@@ -104,7 +110,7 @@
     {% endif %}
         <td align='right'>{{ forloop.counter }}</td>
     {% if items.type == 'Choice' %}
-        <td>{{ items.choice.name_txt }}</td>
+        <td class='name_cell'>{{ items.choice.name_txt }}</td>
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
