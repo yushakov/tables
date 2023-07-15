@@ -553,6 +553,17 @@ class Transaction(models.Model):
     def get_type(self):
         return f"{self.transaction_type}"
 
+    def add_as_on_page(construct, _from, _to, amount, inout, date, number, details):
+        tra = Transaction(construct = construct,
+                from_txt = _from,
+                to_txt = _to,
+                amount = amount,
+                transaction_type = inout,
+                date = date,
+                receipt_number = number,
+                details_txt = details)
+        tra.save()
+
     def add(construct, amount, date=None, direction=None, number='000000', details='-'):
         transaction = Transaction()
         transaction.construct = construct
