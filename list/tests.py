@@ -307,6 +307,13 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_add_as_on_page(self):
+        construct = Construct(title_text='Original Construct')
+        construct.save()
+        Transaction.add_as_on_page(construct, 'Me', 'Him', 3.33, 'OUT', '2023-07-15', '2307151230', 'some details')
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 1)
+
     def test_invoice_shallow_copy(self):
         construct = Construct(title_text='Original Construct')
         construct.save()
@@ -1439,11 +1446,12 @@ class ViewTests(TestCase):
             def __init__(self, ID):
                 self.id = ID
                 self.name_txt = str(ID) + "_name"
-        print('test_check_integrity_wrong_structure')
         np.random.seed(0)
-        choices = [LocalChoice(int(new_id)) for new_id in np.random.rand(10) * 100]
-        struc_dic = check_integrity('{"line1":{"type":"Header2", "id":"House"}, "line2":{"type":"Choice", "id":"37"}}', choices)
-        self.assertIs(len(struc_dic) == 0, True)
+        ids = list(set((np.random.rand(10) * 100).astype(int)))
+        choices = [LocalChoice(new_id) for new_id in ids]
+        struc_dic = check_integrity('{"line_1":{"type":"Header2", "id":"House"}, "line_2":{"type":"Choice", "id":"37"}}', choices)
+        # 37 is not in choices, so it will be gone
+        self.assertEqual(len(struc_dic), len(ids)+1)
 
 
     def test_check_integrity_right_structure(self):
@@ -1455,12 +1463,12 @@ class ViewTests(TestCase):
         choices = [LocalChoice(int(new_id)) for new_id in [10, 15, 23, 44]]
         struc_dic = check_integrity(
             '''{
-            "line1":{"type":"Header2", "id":"House"},
-            "line2":{"type":"Choice", "id":"10"},
-            "line3":{"type":"Choice", "id":"15"},
-            "line4":{"type":"Header2", "id":"Shed"},
-            "line5":{"type":"Choice", "id":"23"},
-            "line6":{"type":"Choice", "id":"44"}
+            "line_1":{"type":"Header2", "id":"House"},
+            "line_2":{"type":"Choice", "id":"10"},
+            "line_3":{"type":"Choice", "id":"15"},
+            "line_4":{"type":"Header2", "id":"Shed"},
+            "line_5":{"type":"Choice", "id":"23"},
+            "line_6":{"type":"Choice", "id":"44"}
             }''', choices)
         print('check_integrity_right_sturcture\n', struc_dic)
         self.assertIs(len(struc_dic) == 6, True)
@@ -1609,7 +1617,8 @@ class ViewTests(TestCase):
         choice.save()
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
-        self.assertIs(len(struc_dict), 3)
+        print(struc_dict)
+        self.assertIs(len(struc_dict), 4)
 
 
     def test_process_post_with_notes(self):
@@ -2010,10 +2019,12 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 0)
 
 
-    def test_check_integrity_wrong_resend_post_tmp_fail(self):
+    def test_check_integrity_wrong_resend_post(self):
         '''
             Passes timestamp check, but structure is wrong.
             This one should not break the construct's structure.
+            We decide to fix the structure in such a way that
+            new (strange) choices are just added to the construct.
         '''
         print("\n>>> test_check_integrity_wrong_resend_post() <<<")
         construct = Construct(title_text="Construct name")
@@ -2058,7 +2069,7 @@ class ViewTests(TestCase):
         structure_str = construct.struct_json
         choices = construct.choice_set.all()
         struc_dict = check_integrity(structure_str, choices)
-        self.assertIs(len(struc_dict), 3)
+        self.assertIs(len(struc_dict), 5)
 
 
     def test_check_integrity_wrong_structure_2(self):
@@ -2066,17 +2077,15 @@ class ViewTests(TestCase):
             def __init__(self, ID):
                 self.id = ID
                 self.name_txt = str(ID) + "_name"
-        print('test_check_integrity_right_structure_2')
         np.random.seed(0)
         choices = [LocalChoice(int(new_id)) for new_id in [10, 15, 23, 24, 25, 26, 44]]
         struc_dic = check_integrity(
             '''{
-            "line1":{"type":"Header2", "id":"House"},
-            "line2":{"type":"Choice", "id":"10"},
-            "line3":{"type":"Choice", "id":"15"},
-            "line4":{"type":"Header2", "id":"Shed"},
-            "line5":{"type":"Choice", "id":"23"},
-            "line6":{"type":"Choice", "id":"44"}
+            "line_1":{"type":"Header2", "id":"House"},
+            "line_2":{"type":"Choice", "id":"10"},
+            "line_3":{"type":"Choice", "id":"15"},
+            "line_4":{"type":"Header2", "id":"Shed"},
+            "line_5":{"type":"Choice", "id":"23"},
+            "line_6":{"type":"Choice", "id":"47"}
             }''', choices)
-        print('check_integrity_right_sturcture\n', struc_dic)
-        self.assertIs(len(struc_dic) == 0, True)
+        self.assertEqual(len(struc_dic), 9)

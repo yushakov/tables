@@ -230,22 +230,10 @@ def check_integrity(structure_str, choices):
     ids_in_struct.sort()
     if choice_ids == ids_in_struct:
         return struc
-    else:
-        logger.critical(f'ERROR: Integrity mismatch')
-        logger.error(f'Choices: {choice_ids}')
-        logger.error(f'Structure: {ids_in_struct}')
-        voc = {str(ch.id): ch.name_txt[:30] for ch in choices}
-        for ch in choices:
-            print(f'{ch.id}: {ch.name_txt[:30]}')
-        for k in struc.keys():
-            if struc[k]["type"].startswith("Choice"):
-                if struc[k]["id"] in voc.keys():
-                    print(f'{k}: {struc[k]["id"]} "{voc[struc[k]["id"]]}"')
-                else:
-                    print(f'There is no {struc[k]["id"]} in choices IDs')
-            else:
-                print(f'{k}: {struc[k]}')
-    return dict()
+    logger.critical(f'ERROR: Integrity mismatch')
+    logger.critical(f'Choices: {choice_ids}')
+    logger.critical(f'Structure: {ids_in_struct}')
+    return fix_structure(struc, choices)
 
 
 def getStructChoiceDict(construct):
