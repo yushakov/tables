@@ -485,6 +485,15 @@ def get_id(model_class):
     return str(uuid.uuid3(uuid.NAMESPACE_OID, str(max_id+1))).replace('-','').upper()[:OutLen]
 
 
+def getConstructAndMaxId(construct_id, model_class):
+    if construct_id <= 0: return '0-0-0'
+    objects = model_class.objects.filter(construct__id=construct_id)
+    max_id, obj_count = 0, 0
+    if len(objects) > 0:
+        max_id, obj_count = max([obj.id for obj in objects]), len(objects)
+    return f'{construct_id}-{obj_count+1}-{max_id+1}'
+
+
 def empty_image():
     return ContentFile(b"<img>", name="default.jpg")
 

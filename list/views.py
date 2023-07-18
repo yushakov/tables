@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
-from .models import Construct, Choice, Invoice, Transaction, HistoryRecord
+from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -458,10 +458,13 @@ def submit_transaction(request):
             obj = Transaction.objects.latest()
             return redirect(obj)
     else:
-        initial_data = {'construct': request.GET.get('construct', '-1'),
+        construct_id = int(request.GET.get('construct', '-1'))
+        initial_data = {'construct': construct_id,
                         'invoices': [request.GET.get('invoice', -1)],
                         'amount': request.GET.get('amount',''),
-                        'transaction_type': request.GET.get('type','')}
+                        'transaction_type': request.GET.get('type',''),
+                        'receipt_number': getConstructAndMaxId(construct_id, Transaction)
+                       }
         form = TransactionSubmitForm(initial = initial_data)
     return render(request, 'list/submit_transaction.html', {'form': form})
 

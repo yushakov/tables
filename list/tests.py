@@ -18,7 +18,8 @@ from list.models import Construct, \
                         Invoice, \
                         Transaction, \
                         InvoiceTransaction, \
-                        HistoryRecord
+                        HistoryRecord, \
+                        getConstructAndMaxId
 import os
 
 def make_test_choice(construct):
@@ -79,6 +80,33 @@ def make_test_construct(construct_name = 'Some test Construct'):
         intra.construct = construct
         intra.save()
     return construct
+
+
+class FunctionTests(TestCase):
+    def test_getConstructAndMaxId_negative(self):
+        _id = getConstructAndMaxId(-1, Invoice)
+        self.assertEqual(_id, '0-0-0')
+
+    def test_getConstructAndMaxId_null(self):
+        _id = getConstructAndMaxId(0, Invoice)
+        self.assertEqual(_id, '0-0-0')
+
+    def test_getConstructAndMaxId_no_invoices_yet(self):
+        construct = Construct()
+        construct.save()
+        _id = getConstructAndMaxId(construct.id, Invoice)
+        self.assertEqual(_id, '1-1-1')
+
+    def test_getConstructAndMaxId_no_transactions_yet(self):
+        construct = Construct()
+        construct.save()
+        _id = getConstructAndMaxId(construct.id, Transaction)
+        self.assertEqual(_id, '1-1-1')
+
+    def test_getConstructAndMaxId(self):
+        construct = make_test_construct()
+        _id = getConstructAndMaxId(construct.id, Invoice)
+        self.assertEqual(_id, '1-2-2')
 
 
 class MyFixChoice:
