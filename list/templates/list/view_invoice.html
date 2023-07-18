@@ -29,6 +29,10 @@
         <td>&#163; {{ invoice.amount }}</td>
     </tr>
     <tr>
+        <td><b>In/Out:</b></td>
+        <td>{{ invoice.invoice_type }}</td>
+    </tr>
+    <tr>
         <td><b>Issue Date:</b></td>
         <td>{{ invoice.issue_date }}</td>
     </tr>
@@ -54,7 +58,7 @@
     <tr>
         <td></td>
         <td>
-            <a href="{% url 'list:submit_transaction' %}">pay</a>
+            <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
         </td>
     </tr>
     {% endif %}

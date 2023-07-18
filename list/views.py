@@ -458,7 +458,10 @@ def submit_transaction(request):
             obj = Transaction.objects.latest()
             return redirect(obj)
     else:
-        initial_data = {'construct': request.GET.get('construct', '-1')}
+        initial_data = {'construct': request.GET.get('construct', '-1'),
+                        'invoices': [request.GET.get('invoice', -1)],
+                        'amount': request.GET.get('amount',''),
+                        'transaction_type': request.GET.get('type','')}
         form = TransactionSubmitForm(initial = initial_data)
     return render(request, 'list/submit_transaction.html', {'form': form})
 
