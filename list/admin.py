@@ -31,7 +31,7 @@ class ConstructAdmin(admin.ModelAdmin):
         return form
 
 class ChoiceAdmin(admin.ModelAdmin):
-    list_display = ["get_name", "get_progress"]
+    list_display = ["get_name", "construct", "get_progress"]
     list_filter  = ["construct"]
     search_fields = ["name_txt__contains"]
     fields = ["construct", "workers", "name_txt",
