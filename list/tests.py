@@ -1033,6 +1033,14 @@ class ViewTests(TestCase):
         response = c.get("/list/transaction/submit/")
         self.assertEqual(response.status_code, 200)
 
+    def test_open_transaction_submit_form_populated(self):
+        construct = Construct()
+        construct.save()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/submit/?construct=1&amount=100&invoice=29&type=IN")
+        self.assertEqual(response.status_code, 200)
+
     def test_login_transaction_submit_form(self):
         c = Client()
         response = c.get("/list/transaction/submit/")
