@@ -461,7 +461,7 @@ def submit_transaction(request):
         construct_id = int(request.GET.get('construct', '-1'))
         initial_data = {'construct': construct_id,
                         'invoices': [request.GET.get('invoice', -1)],
-                        'amount': request.GET.get('amount',''),
+                        'amount': request.GET.get('amount','').replace(',',''),
                         'transaction_type': request.GET.get('type',''),
                         'receipt_number': getConstructAndMaxId(construct_id, Transaction)
                        }
