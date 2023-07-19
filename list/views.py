@@ -26,6 +26,7 @@ class IndexView(generic.ListView):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def index(request):
+    logger.info(f'USER ACCESS: index() by {request.user.username}')
     constructs = Construct.objects.order_by('-listed_date')
     price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
     for construct in constructs:
@@ -312,6 +313,7 @@ def extend_session(request):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def detail(request, construct_id):
+    logger.info(f'USER ACCESS: detail() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
         process_post(request, construct)
@@ -341,6 +343,7 @@ def detail(request, construct_id):
 @login_required
 @permission_required("list.view_construct")
 def client(request, construct_id):
+    logger.info(f'USER ACCESS: client() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
     if request.method == 'POST':
         process_post(request, construct, client=True)
@@ -367,6 +370,7 @@ def client(request, construct_id):
 @permission_required("list.add_construct")
 @permission_required("list.change_construct")
 def clone_construct(request, construct_id):
+    logger.info(f'USER ACCESS: clone_construct() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
     new_name = 'Copy ' + str(datetime.now()) + ' ' + str(construct.title_text)
     new_construct = construct.copy(new_name)
@@ -398,6 +402,7 @@ def getMarking(choice_list):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def gantt(request, construct_id):
+    logger.info(f'USER ACCESS: gantt() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
@@ -424,6 +429,7 @@ def getTransactions(invoice):
 @login_required
 @permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
+    logger.info(f'USER ACCESS: view_invoice() by {request.user.username}')
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     tra_list = getTransactions(invoice)
     context = {'invoice': invoice, 'transactions': tra_list}
@@ -437,6 +443,7 @@ def getInvoices(transaction):
 @login_required
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
+    logger.info(f'USER ACCESS: view_transaction() by {request.user.username}')
     transaction = get_object_or_404(Transaction, pk=transaction_id)
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
@@ -448,7 +455,7 @@ def view_transaction(request, transaction_id):
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
 def submit_transaction(request):
-    logger.info(f'submit_transaction() by {request.user.username}')
+    logger.info(f'USER ACCESS: submit_transaction() by {request.user.username}')
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
         logger.debug("views.py, submit_transaction()")
@@ -471,7 +478,7 @@ def submit_transaction(request):
 @login_required
 @permission_required("list.add_invoice")
 def submit_invoice(request):
-    logger.info(f'submit_invoice() by {request.user.username}')
+    logger.info(f'USER ACCESS: submit_invoice() by {request.user.username}')
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST)
         if form.is_valid():
@@ -486,6 +493,7 @@ def submit_invoice(request):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def history(request):
+    logger.info(f'USER ACCESS: history() by {request.user.username}')
     context = {}
     if request.method == "GET":
         if 'id1' in request.GET and 'id2' in request.GET:
@@ -507,6 +515,7 @@ def getTotalAmount(transactions):
 @permission_required("list.change_construct")
 @permission_required("list.add_construct")
 def flows(request, construct_id):
+    logger.info(f'USER ACCESS: flows() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING).order_by('date')
     outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING).order_by('date')
@@ -542,6 +551,7 @@ def flows(request, construct_id):
 @permission_required("list.change_construct")
 @permission_required("list.add_construct")
 def transactions(request, construct_id):
+    logger.info(f'USER ACCESS: transactions() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
     context = {'construct_id': construct.id, 'construct_name': construct.title_text}
     transactions = []
