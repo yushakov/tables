@@ -359,6 +359,7 @@ function freezeActiveRow() {
 				var planDays = document.getElementById("inpPlanDays").value;
 				var progress = document.getElementById("inpProgress").value;
 				active_row.cells[g_name_cell_idx].innerHTML = encodeHTML(name);
+				active_row.cells[g_name_cell_idx].classList.add("name_cell");
 				active_row.cells[g_price_cell_idx].innerHTML = '&#163; ' + price_num.toLocaleString(gLocale);
 				active_row.cells[g_price_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_qty_cell_idx ].innerHTML = encodeHTML(qty);
@@ -386,6 +387,7 @@ function freezeActiveRow() {
 				active_row.cells[g_name_cell_idx].innerHTML = ""
 				  + encodeHTML(name) + "";
                 active_row.cells[g_name_cell_idx].classList.add("td_header_2");
+                active_row.cells[g_name_cell_idx].classList.add("name_cell");
                 active_row.cells[g_name_cell_idx].colSpan = g_header_del_col_span;
 				active_row.cells[g_price_cell_idx].innerHTML = "";
                 active_row.cells[del_cell_idx].classList.add("td_header_2");
