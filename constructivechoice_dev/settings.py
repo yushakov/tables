@@ -29,7 +29,7 @@ LOGIN_REDIRECT_URL = "/list/"
 SECRET_KEY = 'django-insecure-b*d-mwk5r#muzz9m6**!pgde!w$)htj=lyrei*sv+($)uc#&6m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 def ip_addresses():
     ip_list = []
