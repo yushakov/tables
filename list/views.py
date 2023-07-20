@@ -313,8 +313,8 @@ def extend_session(request):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def detail(request, construct_id):
-    logger.info(f'USER ACCESS: detail() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: detail({construct.title_text}) by {request.user.username}')
     if request.method == 'POST':
         process_post(request, construct)
         construct.history_dump(request.user.id)
