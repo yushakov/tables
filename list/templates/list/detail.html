@@ -2,6 +2,7 @@
 {% block title %}{{ construct.title_text }}{% endblock %}
 {% block content %}
 {% load static %}
+{% load app_filters %}
 <script src="{% static 'list/detail.js' %}">
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
@@ -143,7 +144,9 @@
             <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
         </td>
     {% if items.type == 'Choice' %}
-        <td class='name_cell'>{{ items.choice.name_txt }}</td>
+        {% autoescape off %}
+        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        {% endautoescape %}
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
