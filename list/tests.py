@@ -22,8 +22,18 @@ from list.models import Construct, \
                         getConstructAndMaxId
 import os
 
-def make_test_choice(construct):
-    pass
+def make_test_choice(construct, name='Some new choice'):
+    choice = Choice(construct=construct,
+         name_txt              = name,
+         notes_txt             = '',
+         quantity_num          = 2,
+         price_num             = '20.0',
+         progress_percent_num  = 25.0,
+         units_of_measure_text = 'nr',
+         workers               = 'Paul',
+         plan_start_date       = '1984-04-15',
+         plan_days_num         = 7.0)
+    return choice
 
 def make_test_construct(construct_name = 'Some test Construct'):
     construct = Construct(title_text=construct_name)
@@ -905,6 +915,17 @@ class ViewTests(TestCase):
         self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, 302)
 
+    def test_detail_page_markup(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct()
+        cons.save()
+        choice = make_test_choice(cons, name='Choice with a **bolddd** name')
+        choice.save()
+        response = c.get('/list/' + str(cons.id) +'/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(str(response.content).find("<b>bolddd</b>") > 0, True)
+
     def test_login_page_client_view(self):
         c = Client()
         cons = Construct()
@@ -1529,6 +1550,47 @@ class ViewTests(TestCase):
     "id": "",
     "class": "Choice",
     "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify"
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 3)
+
+
+    def test_process_post_markup(self):
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror **bold**", "price": "£ 1", "quantity": "1", "units": "nr",
       "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
       "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
     }
