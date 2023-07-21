@@ -12,58 +12,52 @@
 <h2>Submit a Transaction</h2>
 <form action="" method="post">
     {% csrf_token %}
-    <table id='construct_list'>
-        <tr>
-            <td><b>{{ form.from_txt.label_tag }}</b></td>
-            <td>{{ form.from_txt }}</td>
-        </tr>
-        <tr>
-            <td><b>{{ form.to_txt.label_tag }}</b></td>
-            <td>{{ form.to_txt }}</td>
-        </tr>
-        <tr>
-            <td><b>{{ form.amount.label_tag }}</b></td>
-            <td>{{ form.amount }}</td>
-        </tr>
-        <tr>
-            <td><b>{{ form.transaction_type.label_tag }}</b></td>
-            <td>{{ form.transaction_type }}</td>
-        </tr>
-        <tr>
-            <td>
-                &nbsp;&nbsp;<a href='#' onclick="add_tag(this)">#salary</a><br><br>
-                &nbsp;&nbsp;<a href='#' onclick="add_tag(this)">#deposit</a>
-            </td>
-            <td>
-                <a href='#' onclick="add_tag(this)">#main</a><br><br>
-                <a href='#' onclick="add_tag(this)">#side</a>
-            </td>
-        </tr>
-        <tr>
-            <td><b>{{ form.construct.label_tag }}</b></td>
-            <td>{{ form.construct }}</td>
-        </tr>
-        <tr>
-            <td><b>{{ form.date.label_tag }}</b></td>
-            <td>{{ form.date }}</td>
-        </tr>
-        <tr>
-            <td><b>{{ form.receipt_number.label_tag }}</b></td>
-            <td>{{ form.receipt_number }}</td>
-        </tr>
-        <tr>
-            <td><b>{{ form.invoices.label_tag }}</b></td>
-            <td>{{ form.invoices }}</td>
-        </tr>
-        <tr>
-            <td id='details'><b>{{ form.details_txt.label_tag }}</b></td>
-            <td>{{ form.details_txt }}</td>
-        </tr>
-        <tr>
-            <td><b>{{ form.photo.label_tag }}</b></td>
-            <td>{{ form.photo }}</td>
-        </tr>
-    </table>
+    <p>
+        <b>{{ form.from_txt.label_tag }}</b>
+        {{ form.from_txt }}
+    </p>
+    <p>
+        <b>{{ form.to_txt.label_tag }}</b>
+        {{ form.to_txt }}
+    </p>
+    <p>
+        <b>{{ form.amount.label_tag }}</b>
+        {{ form.amount }}
+    </p>
+    <p>
+        <b>{{ form.transaction_type.label_tag }}</b>
+        {{ form.transaction_type }}
+    </p>
+    <p>
+        <a href='#' onclick="add_tag(this)">#salary</a>&nbsp;&nbsp;&nbsp;
+        <a href='#' onclick="add_tag(this)">#deposit</a>&nbsp;&nbsp;&nbsp;
+        <a href='#' onclick="add_tag(this)">#main</a>&nbsp;&nbsp;&nbsp;
+        <a href='#' onclick="add_tag(this)">#side</a>&nbsp;&nbsp;&nbsp;
+    </p>
+    <p>
+        <b>{{ form.construct.label_tag }}</b>
+        {{ form.construct }}
+    </p>
+    <p>
+        <b>{{ form.date.label_tag }}</b>
+        {{ form.date }}
+    </p>
+    <p>
+        <b>{{ form.receipt_number.label_tag }}</b>
+        {{ form.receipt_number }}
+    </p>
+    <p>
+        <b>{{ form.invoices.label_tag }}</b>
+        {{ form.invoices }}
+    </p>
+    <p>
+        <b>{{ form.details_txt.label_tag }}</b>
+        {{ form.details_txt }}
+    </p>
+    <p>
+        <b>{{ form.photo.label_tag }}</b>
+        {{ form.photo }}
+    </p>
     <input type="submit" value="Submit">
 </form>
 {% endblock %}
