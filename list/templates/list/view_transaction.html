@@ -11,51 +11,49 @@
 <a href="{% url 'list:transactions' transaction.construct.id %}">project's transactions</a>
 <br />
 <br />
-<table id='construct_list'>
-    <tr>
-        <td><b>Project:</b></td>
-        <td>
-		<a href="{% url 'list:detail' transaction.construct.id %}">
-		{{ transaction.construct.title_text }}
-		</a>
-	</td>
-    </tr>
-    <tr>
-        <td><b>Number:</b></td>
-        <td>{{ transaction.receipt_number }}</td>
-    </tr>
-    <tr>
-        <td><b>From:</b></td>
-        <td>{{ transaction.from_txt }}</td>
-    </tr>
-    <tr>
-        <td><b>To:</b></td>
-        <td>{{ transaction.to_txt }}</td>
-    </tr>
-    <tr>
-        <td><b>Amount:</b></td>
-        <td>&#163; {{ transaction.amount }}</td>
-    </tr>
-    <tr>
-        <td><b>Date:</b></td>
-        <td>{{ transaction.date }}</td>
-    </tr>
-    {% if invoices.len > 0 %}
-    <tr>
-        <td><b>Pays For:</b></td>
-        <td>
-            {% for inv in invoices.list %}
-                <a href="{% url 'list:view_invoice' inv.id %}">{{ inv.number }}</a>:
-                &#163; {{ inv.amount }}. From: {{ inv.seller }}.<br />
-            {% endfor %}
-        </td>
-    </tr>
-    {% endif %}
-    <tr>
-        <td><b>Details:</b></td>
-        <td style='max-width: 400px'>{{ transaction.details_txt|linebreaks }}</td>
-    </tr>
-</table>
+<p>
+    <label for='id_project'><b>Project:</b></label>
+    <span id='id_project'>
+        <a href="{% url 'list:detail' transaction.construct.id %}">
+        {{ transaction.construct.title_text }}
+        </a>
+    </span>
+</p>
+<p>
+    <label for='id_number'><b>Number:</b></label>
+    <span id='id_number'>{{ transaction.receipt_number }}</span>
+</p>
+<p>
+    <label for='id_from'><b>From:</b></label>
+    <span id='id_from'>{{ transaction.from_txt }}</span>
+</p>
+<p>
+    <label for='id_to'><b>To:</b></label>
+    <span id='id_to'>{{ transaction.to_txt }}</span>
+</p>
+<p>
+    <label for='id_amount'><b>Amount:</b></label>
+    <span id='id_amount'>&#163; {{ transaction.amount }}</span>
+</p>
+<p>
+    <label for='id_date'><b>Date:</b></label>
+    <span id='id_date'>{{ transaction.date }}</span>
+</p>
+{% if invoices.len > 0 %}
+<p>
+    <label for='id_invoice'><b>Pays For:</b></label>
+    <span id='id_invoice'>
+        {% for inv in invoices.list %}
+            <a href="{% url 'list:view_invoice' inv.id %}">{{ inv.number }}</a>:
+            &#163; {{ inv.amount }}. From: {{ inv.seller }}.<br />
+        {% endfor %}
+    </span>
+</p>
+{% endif %}
+<p>
+    <label for='id_details'><b>Details:</b></label>
+    <span id='id_details' style='max-width: 400px'>{{ transaction.details_txt|linebreaks }}</span>
+</p>
 {% if transaction.photo %}
     <br />
     <a href="{{ transaction.photo.url }}">
