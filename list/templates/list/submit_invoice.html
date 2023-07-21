@@ -6,7 +6,42 @@
 <h2>Submit an Invoice</h2>
 <form action="" method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    <p>
+        <b>{{ form.construct.label_tag }}</b>
+        {{ form.construct }}
+    </p>
+    <p>
+        <b>{{ form.seller.label_tag }}</b>
+        {{ form.seller }}
+    </p>
+    <p>
+        <b>{{ form.amount.label_tag }}</b>
+        {{ form.amount }}
+    </p>
+    <p>
+        <b>{{ form.number.label_tag }}</b>
+        {{ form.number }}
+    </p>
+    <p>
+        <b>{{ form.status.label_tag }}</b>
+        {{ form.status }}
+    </p>
+    <p>
+        <b>{{ form.issue_date.label_tag }}</b>
+        {{ form.issue_date }}
+    </p>
+    <p>
+        <b>{{ form.due_date.label_tag }}</b>
+        {{ form.due_date }}
+    </p>
+    <p>
+        <b>{{ form.details_txt.label_tag }}</b>
+        {{ form.details_txt }}
+    </p>
+    <p>
+        <b>{{ form.photo.label_tag }}</b>
+        {{ form.photo }}
+    </p>
     <input type="submit" value="Submit">
 </form>
 {% endblock %}
