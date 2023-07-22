@@ -34,6 +34,7 @@ def index(request):
     context = {'active_construct_list': constructs,
                'price': price,
                'price_vat': price * (1. + construct.vat_percent_num * 0.01),
+               'noscale': True
               }
     return render(request, 'list/index.html', context)
     
@@ -336,6 +337,7 @@ def detail(request, construct_id):
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'construct_paid': round(construct.income()),
+               'noscale': True,
                'history': history}
     return render(request, 'list/detail.html', context)
 
