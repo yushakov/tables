@@ -26,6 +26,8 @@
     <td class='hide_for_pretty'><a href="{% url 'admin:list_construct_change' construct.id %}">Modify<br>basics</a></td>
     <td class='hide_for_pretty'><a href="{% url 'list:clone' construct.id %}">Clone this<br>project</a></td>
     <td class='hide_for_pretty'><a href="{% url 'list:client' construct.id %}">Client view</a></td>
+    <td class='hide_for_pretty'><a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&worker">
+            Worker Invoice Submission</a></td>
 </tr>
 <tr>
     <td><b>Email:</b></td>
