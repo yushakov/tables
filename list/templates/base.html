@@ -4,6 +4,9 @@
     {% load static %}
     <link rel="shortcut icon" type="image/ico" href="{% static 'images/favicon.ico' %}" >
     <meta charset="utf-8">
+    {% if not noscale %}
+        <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    {% endif %}
     <title>{% block title %}Constructive Choice Project Management{% endblock %}</title>
     {% block extra-head %}{% endblock %}
 </head>

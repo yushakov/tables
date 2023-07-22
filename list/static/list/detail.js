@@ -275,6 +275,14 @@ function encodeHTML(s) {
 			.replace(/'/g, '&#x27;');
 }
 
+function markup(str) {
+    return str.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+}
+
+function unMarkup(str) {
+    return str.replace(/<b>(.*?)<\/b>/g, "\*\*$1\*\*");
+}
+
 function modify(ths) {
     document.getElementById('modified').innerText = 'yes';
     console.log(ths.innerText);
@@ -306,14 +314,14 @@ function modifyRow(ths) {
     }
     active_row.cells[del_cell_idx].innerHTML =
         "<a href='#' onclick='freezeActiveRow(); return false;'>FREEZE</a>";
-    var name     = active_row.cells[g_name_cell_idx     ].innerText;
+    var name     = active_row.cells[g_name_cell_idx     ].innerHTML;
     var price    = active_row.cells[g_price_cell_idx    ].innerText.replace('£', '').trim();
     var qty      = active_row.cells[g_qty_cell_idx      ].innerText;
     var units    = active_row.cells[g_units_cell_idx    ].innerText;
     var asgnTo   = active_row.cells[g_asgn_to_cell_idx  ].innerText;
     var dayStart = active_row.cells[g_day_start_cell_idx].innerText;
     active_row.cells[g_name_cell_idx     ].innerHTML
-	    = "<textarea id='inpName' rows='5' cols='40'>" + name + "</textarea>";
+	    = "<textarea id='inpName' rows='5' cols='40'>" + unMarkup(name) + "</textarea>";
     if(active_row.classList.contains("Choice")) {
         var planDays = active_row.cells[g_plan_days_cell_idx].innerText;
         //var progress = active_row.cells[g_notes_cell_idx].innerText.replace('%','').trim();
@@ -358,7 +366,8 @@ function freezeActiveRow() {
 				var dayStart = document.getElementById("inpDayStart").value;
 				var planDays = document.getElementById("inpPlanDays").value;
 				var progress = document.getElementById("inpProgress").value;
-				active_row.cells[g_name_cell_idx].innerHTML = encodeHTML(name);
+				active_row.cells[g_name_cell_idx].innerHTML = markup(encodeHTML(name));
+				active_row.cells[g_name_cell_idx].classList.add("name_cell");
 				active_row.cells[g_price_cell_idx].innerHTML = '&#163; ' + price_num.toLocaleString(gLocale);
 				active_row.cells[g_price_cell_idx].style.textAlign = 'right';
 				active_row.cells[g_qty_cell_idx ].innerHTML = encodeHTML(qty);
@@ -386,6 +395,7 @@ function freezeActiveRow() {
 				active_row.cells[g_name_cell_idx].innerHTML = ""
 				  + encodeHTML(name) + "";
                 active_row.cells[g_name_cell_idx].classList.add("td_header_2");
+                active_row.cells[g_name_cell_idx].classList.add("name_cell");
                 active_row.cells[g_name_cell_idx].colSpan = g_header_del_col_span;
 				active_row.cells[g_price_cell_idx].innerHTML = "";
                 active_row.cells[del_cell_idx].classList.add("td_header_2");
@@ -657,6 +667,9 @@ function getDictEntry(index, cell) {
                     'client_notes': String(client_notes[0].value)};
         }
         return {'constructive_notes': "", 'client_notes': ""};
+    }
+    else if(cell.classList.contains('name_cell') && !cell.classList.contains('td_header_2')) {
+        return String(unMarkup(cell.innerHTML));
     }
     return String(cell.innerText);
 }

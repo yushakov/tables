@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Submit an Invoice{% endblock %}
+{% block title %}View Invoice{% endblock %}
 {% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
@@ -7,66 +7,61 @@
 <a href="{% url 'admin:list_invoice_changelist' %}">see all invoices</a>
 <br />
 <br />
-<table id='construct_list'>
-    <tr>
-        <td><b>Project:</b></td>
-        <td>
-            <a href="{% url 'list:detail' invoice.construct.id %}">
-            {{ invoice.construct.title_text }}
-            </a>
-        </td>
-    </tr>
-    <tr>
-        <td><b>Number:</b></td>
-        <td>{{ invoice.number }}</td>
-    </tr>
-    <tr>
-        <td><b>Seller:</b></td>
-        <td>{{ invoice.seller }}</td>
-    </tr>
-    <tr>
-        <td><b>Amount:</b></td>
-        <td>&#163; {{ invoice.amount }}</td>
-    </tr>
-    <tr>
-        <td><b>In/Out:</b></td>
-        <td>{{ invoice.invoice_type }}</td>
-    </tr>
-    <tr>
-        <td><b>Issue Date:</b></td>
-        <td>{{ invoice.issue_date }}</td>
-    </tr>
-    <tr>
-        <td><b>Due Date:</b></td>
-        <td>{{ invoice.due_date }}</td>
-    </tr>
-    <tr>
-        <td><b>Status:</b></td>
-        <td>{{ invoice.status }}</td>
-    </tr>
+<p>
+    
+<label for='id_project'><b>Project:</b></label>
+    <a href="{% url 'list:detail' invoice.construct.id %}" id='id_project'>
+    {{ invoice.construct.title_text }}
+    </a>
+</p>
+<p>
+    <label for='id_number'><b>Number:</b></label>
+    <span id='id_number'>{{ invoice.number }}</span>
+</p>
+<p>
+    <label for='id_seller'><b>Seller:</b></label>
+    <span id='id_seller'>{{ invoice.seller }}</span>
+</p>
+<p>
+    <label for='id_amount'><b>Amount:</b></label>
+    <span id='id_amount'>&#163; {{ invoice.amount }}</span>
+</p>
+<p>
+    <label for='id_inout'><b>In/Out:</b></label>
+    <span id='id_inout'>{{ invoice.invoice_type }}</span>
+</p>
+<p>
+    <label for='id_issue'><b>Issue Date:</b></label>
+    <span id='id_issue'>{{ invoice.issue_date }}</span>
+</p>
+<p>
+    <label for='id_due'><b>Due Date:</b></label>
+    <span id='id_due'>{{ invoice.due_date }}</span>
+</p>
+<p>
+    <label for='id_status'><b>Status:</b></label>
+    <span id='id_status'>{{ invoice.status }}</span>
+</p>
+<p>
     {% if invoice.status == 'Paid' %}
-    <tr>
-        <td><b>Paid By:</b></td>
-        <td>
+        <label for='id_paid_by'><b>Paid By:</b></label>
+        <span id='id_paid_by'>
             {% for tra in transactions %}
                 <a href="{% url 'list:view_transaction' tra.id %}">{{ tra.number }}</a>:
                 &#163; {{ tra.amount }}. From: {{ tra.from }}.<br />
             {% endfor %}
-        </td>
-    </tr>
+        </span>
     {% else %}
-    <tr>
-        <td></td>
-        <td>
+        <label for='id_link_to_pay'><b>Link to pay:</b></label>
+        <span id='id_link_to_pay'>
             <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
-        </td>
-    </tr>
+        </span>
     {% endif %}
-    <tr>
-        <td><b>Details:</b></td>
-        <td style='max-width: 400px'>{{ invoice.details_txt|linebreaks }}</td>
-    </tr>
-</table>
+</p>
+<p>
+    <label for='id_details'><b>Details:</b></label>
+    <div id='id_details' style='max-width: 400px'>{{ invoice.details_txt|linebreaks }}</div>
+</p>
 {% if invoice.photo %}
     <br />
     <a href="{{ invoice.photo.url }}">

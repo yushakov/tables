@@ -2,6 +2,7 @@
 {% block title %}{{ construct.title_text }}{% endblock %}
 {% block content %}
 {% load static %}
+{% load app_filters %}
 <script src="{% static 'list/detail.js' %}">
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
@@ -25,6 +26,8 @@
     <td class='hide_for_pretty'><a href="{% url 'admin:list_construct_change' construct.id %}">Modify<br>basics</a></td>
     <td class='hide_for_pretty'><a href="{% url 'list:clone' construct.id %}">Clone this<br>project</a></td>
     <td class='hide_for_pretty'><a href="{% url 'list:client' construct.id %}">Client view</a></td>
+    <td class='hide_for_pretty'><a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&worker">
+            Worker Invoice Submission</a></td>
 </tr>
 <tr>
     <td><b>Email:</b></td>
@@ -143,7 +146,9 @@
             <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
         </td>
     {% if items.type == 'Choice' %}
-        <td class='name_cell'>{{ items.choice.name_txt }}</td>
+        {% autoescape off %}
+        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        {% endautoescape %}
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
@@ -188,7 +193,7 @@
         </td>
         <td class='del_modif_cell'>
     {% else %}
-        <td class='td_header_2' colspan='5'>{{ items.choice.name_txt }}</td>
+        <td class='td_header_2 name_cell' colspan='5'>{{ items.choice.name_txt }}</td>
         <td></td>
         <td></td>
         <td></td>

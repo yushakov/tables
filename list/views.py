@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 import logging
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils import timezone
+from django import forms
 
 logger = logging.getLogger('django')
 
@@ -34,6 +35,7 @@ def index(request):
     context = {'active_construct_list': constructs,
                'price': price,
                'price_vat': price * (1. + construct.vat_percent_num * 0.01),
+               'noscale': True
               }
     return render(request, 'list/index.html', context)
     
@@ -313,8 +315,8 @@ def extend_session(request):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def detail(request, construct_id):
-    logger.info(f'USER ACCESS: detail() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: detail({construct.title_text}) by {request.user.username}')
     if request.method == 'POST':
         process_post(request, construct)
         construct.history_dump(request.user.id)
@@ -336,6 +338,7 @@ def detail(request, construct_id):
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'construct_paid': round(construct.income()),
+               'noscale': True,
                'history': history}
     return render(request, 'list/detail.html', context)
 
@@ -486,7 +489,17 @@ def submit_invoice(request):
             obj = Invoice.objects.latest()
             return redirect(obj)
     else:
-        form = InvoiceSubmitForm()
+        construct_id = int(request.GET.get('construct', '-1'))
+        initial_data = {'construct': construct_id,
+                        'seller': request.user.username,
+                        'invoice_type': request.GET.get('type', 'OUT'),
+                       }
+        form = InvoiceSubmitForm(initial=initial_data)
+        if 'worker' in request.GET:
+            form.fields['invoice_type'].widget = forms.HiddenInput()
+            form.fields['invoice_type'].initial = 'OUT'
+            form.fields['status'].widget = forms.HiddenInput()
+            form.fields['status'].initial = 'Unpaid'
     return render(request, 'list/submit_invoice.html', {'form': form})
 
 @login_required
