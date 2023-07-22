@@ -29,7 +29,7 @@ LOGIN_REDIRECT_URL = "/list/"
 SECRET_KEY = 'django-insecure-b*d-mwk5r#muzz9m6**!pgde!w$)htj=lyrei*sv+($)uc#&6m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 def ip_addresses():
     ip_list = []
@@ -41,8 +41,7 @@ def ip_addresses():
     return ip_list
 
 #ALLOWED_HOSTS = ip_addresses()
-#ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
-ALLOWED_HOSTS = ['projects.yushakov.com']
+ALLOWED_HOSTS = ['projects.constructivechoice.co.uk']
 
 
 # Application definition
