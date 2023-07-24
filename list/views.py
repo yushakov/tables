@@ -462,7 +462,7 @@ def submit_transaction(request):
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
         logger.debug("views.py, submit_transaction()")
-        logger.debug(request.POST['photo'])
+        logger.debug(request.POST.get('photo','no_photo'))
         if form.is_valid():
             form.save()
             obj = Transaction.objects.latest()
