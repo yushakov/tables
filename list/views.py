@@ -431,6 +431,22 @@ def getTransactions(invoice):
 
 @login_required
 @permission_required("list.view_invoice")
+def print_invoice(request, invoice_id):
+    logger.info(f'USER ACCESS: print_invoice() by {request.user.username}')
+    invoice = get_object_or_404(Invoice, pk=invoice_id)
+    amount = float(invoice.amount)
+    vat_prc = float(invoice.construct.vat_percent_num)
+    vat_from_total = amount * 0.01 * vat_prc
+    total_and_vat = round(amount + vat_from_total)
+    context = {'invoice': invoice,
+               'no_logout_link': True,
+               'vat_from_total': vat_from_total,
+               'total_and_vat': total_and_vat}
+    return render(request, 'list/print_invoice.html', context)
+
+
+@login_required
+@permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
     logger.info(f'USER ACCESS: view_invoice() by {request.user.username}')
     invoice = get_object_or_404(Invoice, pk=invoice_id)

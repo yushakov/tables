@@ -1,0 +1,99 @@
+td#logo {
+    /*width: 500px;*/
+}
+
+td#seller_info {
+    padding-bottom: 10px;
+}
+
+td#invoice {
+    font-size: xx-large;
+    vertical-align: bottom;
+    text-align: center;
+    color: #73271f;
+}
+
+td#invoice_info {
+    vertical-align: top;
+}
+
+div#invoice-info-table {
+    float: right;
+}
+
+td#date {
+    text-align: right;
+}
+
+td#invoice_id {
+    text-align: right;
+}
+
+td#bill_to_line {
+    font-size: x-large;
+    text-align: left;
+    color: white;
+    background-color: #73271f;
+    padding: 3px;
+}
+
+td#bill-to-content {
+    padding-bottom: 15px;
+}
+
+td#quantity {
+    width: 200px;
+}
+
+td#description {
+    width: 300px;
+}
+
+td#unit-price {
+    width: 100px;
+}
+
+td#amount {
+    width: 150px;
+}
+
+td.brown-line  {
+    color: white;
+    background-color: #73271f;
+    padding: 3px;
+}
+
+div#notice {
+    width: 300px;
+    padding: 10px;
+    background-color: #f9eec7;
+}
+
+.thank-you {
+    font-weight: bold;
+}
+
+td#vat-total {
+    vertical-align: top;
+}
+
+table#vat-total-table {
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+.vat-total-fields {
+    border-style: solid;
+    border-color: #c7a091;
+    padding: 2px;
+}
+
+.vat-total-label {
+    width: 100px;
+    font-weight: bold;
+    color: #594646;
+}
+
+.vat-total-value {
+    width: 150px;
+}

@@ -17,7 +17,9 @@
                 {% if session_expiration %}
                     Session expires on: {{ session_expiration }}&nbsp;&nbsp;
                 {% endif %}
-                <a href="{% url 'logout' %}" id='logout-link'>LOGOUT</a>&nbsp;&nbsp
+                {% if not no_logout_link %}
+                    <a href="{% url 'logout' %}" id='logout-link'>LOGOUT</a>&nbsp;&nbsp
+                {% endif %}
             </p>
             <style>
                 .right-align {
