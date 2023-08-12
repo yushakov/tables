@@ -519,6 +519,37 @@ def submit_invoice(request):
     return render(request, 'list/submit_invoice.html', {'form': form})
 
 @login_required
+@permission_required("list.change_invoice")
+def modify_invoice(request, invoice_id):
+    logger.info(f'USER ACCESS: modify_invoice({invoice_id}) by {request.user.username}')
+    invoice = get_object_or_404(Invoice, pk=invoice_id)
+    if request.method == 'POST':
+        form = InvoiceSubmitForm(request.POST, instance=invoice)
+        if form.is_valid():
+            form.save()
+            obj = Invoice.objects.get(pk=invoice_id)
+            return redirect(obj)
+    else:
+        #initial_data = {'construct': invoice.construct.id,
+        #                'seller': invoice.seller,
+        #                'amount': invoice.amount,
+        #                'number': invoice.number,
+        #                'invoice_type': invoice.invoice_type,
+        #                'status': invoice.status,
+        #                'issue_date': invoice.issue_date,
+        #                'due_date': invoice.due_date,
+        #                'photo': invoice.photo,
+        #                'details_txt': invoice.details_txt,
+        #               }
+        #form = InvoiceSubmitForm(initial=initial_data)
+        form = InvoiceSubmitForm(instance=invoice)
+        form.fields['photo'].widget = forms.HiddenInput()
+        form.fields['number'].widget = forms.HiddenInput()
+        form.fields['status'].widget = forms.HiddenInput()
+        form.fields['invoice_type'].widget = forms.HiddenInput()
+    return render(request, 'list/modify_invoice.html', {'form': form})
+
+@login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def history(request):

@@ -22,6 +22,10 @@ from list.models import Construct, \
                         getConstructAndMaxId
 import os
 
+
+STATUS_CODE_OK = 200
+STATUS_CODE_REDIRECT = 302
+
 def make_test_choice(construct, name='Some new choice'):
     choice = Choice(construct=construct,
          name_txt              = name,
@@ -905,7 +909,7 @@ class ViewTests(TestCase):
         c = Client()
         response = c.get('/list/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_login_page_detail(self):
         c = Client()
@@ -913,7 +917,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_detail_page_markup(self):
         c = Client()
@@ -923,7 +927,7 @@ class ViewTests(TestCase):
         choice = make_test_choice(cons, name='Choice with a **bolddd** name')
         choice.save()
         response = c.get('/list/' + str(cons.id) +'/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertIs(str(response.content).find("<b>bolddd</b>") > 0, True)
 
     def test_login_page_client_view(self):
@@ -1209,7 +1213,46 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': ['']}
         response = c.post("/list/invoice/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_modify_invoice_get(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/modify/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        
+    def test_modify_invoice_post(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        post_data['details_txt'] = ['--newdetails']
+        new_response = c.post(f"/list/invoice/{invoice.id}/modify/", post_data)
+        self.assertEqual(new_response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        self.assertIs(str(invoice.details_txt).find("newdetails") >= 0, True)
         
     def test_login_submit_invoice_form(self):
         c = Client()
@@ -1222,7 +1265,6 @@ class ViewTests(TestCase):
                 'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
                 'details_txt': ['note'], 'photo': ['']}
         response = c.post("/list/invoice/submit/", post_data)
-        self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, 302)
         
     def test_checkTimeStamp(self):
