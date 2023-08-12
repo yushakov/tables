@@ -346,8 +346,8 @@ def detail(request, construct_id):
 @login_required
 @permission_required("list.view_construct")
 def client(request, construct_id):
-    logger.info(f'USER ACCESS: client() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: client({construct.title_text}) by {request.user.username}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
         construct.history_dump(request.user.id)
@@ -373,8 +373,8 @@ def client(request, construct_id):
 @permission_required("list.add_construct")
 @permission_required("list.change_construct")
 def clone_construct(request, construct_id):
-    logger.info(f'USER ACCESS: clone_construct() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: clone_construct({construct.title_text}) by {request.user.username}')
     new_name = 'Copy ' + str(datetime.now()) + ' ' + str(construct.title_text)
     new_construct = construct.copy(new_name)
     context = {'next_page': 'list:index',
@@ -405,8 +405,8 @@ def getMarking(choice_list):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def gantt(request, construct_id):
-    logger.info(f'USER ACCESS: gantt() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: gantt({construct.title_text}) by {request.user.username}')
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     common_start, marking, total, labels = getMarking(ch_list)
@@ -429,17 +429,36 @@ def getTransactions(invoice):
     return out
 
 
+def get_printed_invoice_lines(details):
+    lines = details.split('\n')
+    out = []
+    for line_num, line in enumerate(lines):
+        fields = [f.strip() for f in line.split(',')]
+        item = {'quantity': 1, 'description': 'job name',
+                'unit_price': 1, 'amount': 1, 'class': 'even-line'}
+        if len(fields) >= 1: item['quantity'] = fields[0]
+        if len(fields) >= 2: item['description'] = fields[1]
+        if len(fields) >= 3: item['unit_price'] = fields[2]
+        if len(fields) >= 4: item['amount'] = fields[3]
+        if line_num % 2 == 1:
+            item['class'] = 'odd-line'
+        out.append(item)
+    return out
+
+
 @login_required
 @permission_required("list.view_invoice")
 def print_invoice(request, invoice_id):
-    logger.info(f'USER ACCESS: print_invoice() by {request.user.username}')
     invoice = get_object_or_404(Invoice, pk=invoice_id)
+    logger.info(f'USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
     amount = float(invoice.amount)
     vat_prc = float(invoice.construct.vat_percent_num)
     vat_from_total = amount * 0.01 * vat_prc
     total_and_vat = round(amount + vat_from_total)
+    lines = get_printed_invoice_lines(invoice.details_txt)
     context = {'invoice': invoice,
                'no_logout_link': True,
+               'lines': lines,
                'vat_from_total': vat_from_total,
                'total_and_vat': total_and_vat}
     return render(request, 'list/print_invoice.html', context)
@@ -448,8 +467,8 @@ def print_invoice(request, invoice_id):
 @login_required
 @permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
-    logger.info(f'USER ACCESS: view_invoice() by {request.user.username}')
     invoice = get_object_or_404(Invoice, pk=invoice_id)
+    logger.info(f'USER ACCESS: view_invoice({invoice.id}) by {request.user.username}')
     tra_list = getTransactions(invoice)
     context = {'invoice': invoice, 'transactions': tra_list}
     return render(request, 'list/view_invoice.html', context)
@@ -462,8 +481,8 @@ def getInvoices(transaction):
 @login_required
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
-    logger.info(f'USER ACCESS: view_transaction() by {request.user.username}')
     transaction = get_object_or_404(Transaction, pk=transaction_id)
+    logger.info(f'USER ACCESS: view_transaction(transaction.id) by {request.user.username}')
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
     context = {'transaction': transaction, 'invoices': invoices}
@@ -521,8 +540,8 @@ def submit_invoice(request):
 @login_required
 @permission_required("list.change_invoice")
 def modify_invoice(request, invoice_id):
-    logger.info(f'USER ACCESS: modify_invoice({invoice_id}) by {request.user.username}')
     invoice = get_object_or_404(Invoice, pk=invoice_id)
+    logger.info(f'USER ACCESS: modify_invoice({invoice.id}) by {request.user.username}')
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST, instance=invoice)
         if form.is_valid():
@@ -575,8 +594,8 @@ def getTotalAmount(transactions):
 @permission_required("list.change_construct")
 @permission_required("list.add_construct")
 def flows(request, construct_id):
-    logger.info(f'USER ACCESS: flows() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: flows({construct.title_text}) by {request.user.username}')
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING).order_by('date')
     outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING).order_by('date')
     salary_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING,
@@ -611,8 +630,8 @@ def flows(request, construct_id):
 @permission_required("list.change_construct")
 @permission_required("list.add_construct")
 def transactions(request, construct_id):
-    logger.info(f'USER ACCESS: transactions() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: transactions({construct.title_text}) by {request.user.username}')
     context = {'construct_id': construct.id, 'construct_name': construct.title_text}
     transactions = []
     direction = 'all'

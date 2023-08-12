@@ -12,7 +12,8 @@ from list.views import check_integrity,   \
                        update_choice,     \
                        process_post,      \
                        checkTimeStamp,    \
-                       fix_structure
+                       fix_structure,     \
+                       get_printed_invoice_lines
 from list.models import Construct, \
                         Choice, \
                         Invoice, \
@@ -1232,7 +1233,62 @@ class ViewTests(TestCase):
         invoice = Invoice.objects.latest()
         response = c.get(f"/list/invoice/{invoice.id}/modify/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_get_printed_invoice_lines(self):
+        details = '1, a, b, c'
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a, b, '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a, b '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a,  '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a  '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1,   '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1   '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
         
+    def test_get_printed_invoice_lines_2(self):
+        details = '1, a, b, c\n 2, b, c'
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 2)
+        self.assertEqual(len(out[0]), 5)
+        self.assertEqual(len(out[1]), 5)
+
+    def test_print_invoice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1, desr, 20, 20 \n 2, descr2, 30, 60'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/print/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_modify_invoice_post(self):
         c = Client()
         c.login(username="yuran", password="secret")
