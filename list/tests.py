@@ -912,6 +912,12 @@ class ViewTests(TestCase):
         self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
+    def test_empty_list(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_login_page_detail(self):
         c = Client()
         cons = Construct()
@@ -1713,6 +1719,7 @@ class ViewTests(TestCase):
 
     def test_process_post_delete_choice_frontend(self):
         ''' Check if we can delete a choice from the detail.html'''
+        # TODO
         pass
 
 

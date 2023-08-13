@@ -34,7 +34,6 @@ def index(request):
         price += sum([choice.price_num * choice.quantity_num for choice in construct.choice_set.all()])
     context = {'active_construct_list': constructs,
                'price': price,
-               'price_vat': price * (1. + construct.vat_percent_num * 0.01),
                'noscale': True
               }
     return render(request, 'list/index.html', context)
