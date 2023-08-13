@@ -520,9 +520,9 @@ class ModelTests(TestCase):
         construct.delete()
         cons = Construct.objects.all()
         self.assertEqual(len(cons), 0)
-        Construct.import_from_json(fname)
+        Construct.safe_import_from_json(fname)
         cons = Construct.objects.all()
-        self.assertEqual(cons[0].title_text, construct_name)
+        self.assertEqual(cons[0].title_text, "Imported: " + construct_name)
         os.remove(fname)
         invtra = InvoiceTransaction.objects.all()
         self.assertEqual(len(invtra), 1)
@@ -621,9 +621,9 @@ class ModelTests(TestCase):
         construct.delete()
         cons = Construct.objects.all()
         self.assertEqual(len(cons), 0)
-        Construct.import_from_json(fname)
+        Construct.safe_import_from_json(fname)
         cons = Construct.objects.all()
-        self.assertEqual(cons[0].title_text, construct_name)
+        self.assertEqual(cons[0].title_text, "Imported: " + construct_name)
         os.remove(fname)
 
     def test_construct_export_to_json(self):

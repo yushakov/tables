@@ -127,12 +127,6 @@ class Construct(models.Model):
         with open(fname, 'w') as outfile:
             outfile.write(data)
 
-    def import_from_json(fname):
-        with open(fname, 'r') as data_file:
-            for obj in serializers.deserialize("json", data_file):
-                print(obj.object)
-                obj.save()
-
     def safe_import_from_json(fname):
         with open(fname, 'r') as data_file:
             construct = None
@@ -180,7 +174,6 @@ class Construct(models.Model):
                 transac = transactions[invtra.transaction_id]
                 invoice.transactions.add(transac)
                 invoice.save()
-
 
     @admin.display(description='Progress')
     def overall_progress(self):
