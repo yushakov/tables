@@ -428,13 +428,14 @@ def getTransactions(invoice):
     return out
 
 
-def get_printed_invoice_lines(details):
+def get_printed_invoice_lines(details, amount=0):
     lines = details.split('\n')
     out = []
     for line_num, line in enumerate(lines):
         fields = [f.strip() for f in line.split(',')]
-        item = {'quantity': 1, 'description': 'job name',
-                'unit_price': 1, 'amount': 1, 'class': 'even-line'}
+        time_now = datetime.now().strftime('%d.%m.%Y')
+        item = {'quantity': 1, 'description': f'Work done by {time_now}.',
+                'unit_price': amount, 'amount': amount, 'class': 'even-line'}
         if len(fields) >= 1: item['quantity'] = fields[0]
         if len(fields) >= 2: item['description'] = fields[1]
         if len(fields) >= 3: item['unit_price'] = fields[2]
@@ -454,7 +455,7 @@ def print_invoice(request, invoice_id):
     vat_prc = float(invoice.construct.vat_percent_num)
     vat_from_total = amount * 0.01 * vat_prc
     total_and_vat = round(amount + vat_from_total)
-    lines = get_printed_invoice_lines(invoice.details_txt)
+    lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
     context = {'invoice': invoice,
                'no_logout_link': True,
                'lines': lines,
