@@ -21,6 +21,18 @@ coeff_valid = [MinValueValidator(0.0), MaxValueValidator(1.0)]
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
 
 
+def total_model_stat():
+    import list.models as lm
+    out = {}
+    for attr in dir(lm):
+        obj = getattr(lm, attr)
+        if type(obj) != type(lm.Construct): continue
+        obj_count = len(obj.objects.all())
+        print(attr, ': ', obj_count)
+        out[attr] = obj_count
+    return out
+
+
 class Client(models.Model):
     name = models.CharField(max_length=100)
     contact_info = models.TextField()
@@ -126,6 +138,33 @@ class Construct(models.Model):
                    use_natural_foreign_keys=True, use_natural_primary_keys=True)
         with open(fname, 'w') as outfile:
             outfile.write(data)
+
+    def get_stat(self):
+        """
+        To check which classes are linked with the Construct:
+            grep -E "(^class|ForeignKey\(Construct)" list/models.py
+        As of now (August 13, 2023):
+            class HistoryRecord(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class Worker(models.Model):
+            class Choice(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class Project(models.Model):
+            class Transaction(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class Invoice(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class InvoiceTransaction(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE, null=True, blank=True)
+        """
+        out = {}
+        out['HistoryRecord'] = len(self.historyrecord_set.all())
+        out['Choice'] = len(self.choice_set.all())
+        out['Transaction'] = len(self.transaction_set.all())
+        out['Invoice'] = len(self.invoice_set.all())
+        out['InvoiceTransaction'] = len(self.invoicetransaction_set.all())
+        return out
+
 
     def safe_import_from_json(fname):
         with open(fname, 'r') as data_file:
