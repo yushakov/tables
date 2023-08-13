@@ -134,7 +134,10 @@ class Construct(models.Model):
         transactions = Transaction.objects.filter(construct__id=construct.id)
         invoices = Invoice.objects.filter(construct__id=construct.id)
         invoice_transactions = InvoiceTransaction.objects.filter(construct__id=construct.id)
-        data = serializers.serialize('json', [self, *choices, *transactions, *invoices, *invoice_transactions],
+        history_records = self.historyrecord_set.all()
+        data = serializers.serialize('json', [self, *choices, *transactions,
+                                              *invoices, *invoice_transactions,
+                                              *history_records],
                    use_natural_foreign_keys=True, use_natural_primary_keys=True)
         with open(fname, 'w') as outfile:
             outfile.write(data)
@@ -146,10 +149,8 @@ class Construct(models.Model):
         As of now (August 13, 2023):
             class HistoryRecord(models.Model):
                 construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
-            class Worker(models.Model):
             class Choice(models.Model):
                 construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
-            class Project(models.Model):
             class Transaction(models.Model):
                 construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
             class Invoice(models.Model):
@@ -158,11 +159,26 @@ class Construct(models.Model):
                 construct = models.ForeignKey(Construct, on_delete=models.CASCADE, null=True, blank=True)
         """
         out = {}
+        choices = self.choice_set.all()
+        transactions = self.transaction_set.all()
+        invoices = self.invoice_set.all()
+        invoice_transactions = self.invoicetransaction_set.all()
         out['HistoryRecord'] = len(self.historyrecord_set.all())
-        out['Choice'] = len(self.choice_set.all())
-        out['Transaction'] = len(self.transaction_set.all())
-        out['Invoice'] = len(self.invoice_set.all())
-        out['InvoiceTransaction'] = len(self.invoicetransaction_set.all())
+        out['Choice'] = len(choices)
+        out['Transaction'] = len(transactions)
+        out['Invoice'] = len(invoices)
+        out['InvoiceTransaction'] = len(invoice_transactions)
+
+        def get_total(items, func=lambda x: x.amount):
+            total_amount = 0.0
+            for item in items:
+                total_amount += float(func(item))
+            return round(total_amount)
+
+        out['choices_total'] = get_total(choices, lambda x: x.quantity_num * x.price_num)
+        out['transactions_total'] = get_total(transactions)
+        out['invoices_total'] = get_total(invoices)
+        out['inv_tra_total'] = get_total(invoice_transactions, lambda x: x.invoice.amount)
         return out
 
 
@@ -198,6 +214,10 @@ class Construct(models.Model):
                 elif type(obj.object) == InvoiceTransaction:
                     print('InvoiceTransaction: ', obj.object.id)
                     invtra_objects.append(obj.object)
+                elif type(obj.object) == HistoryRecord:
+                    print('HistoryRecord: ', obj.object.id)
+                    history_record = obj.object.shallow_copy(construct)
+                    history_record.save()
                 else:
                     print('Unknown Type: ', type(obj.object))
             # process sruct_json
@@ -211,8 +231,11 @@ class Construct(models.Model):
             for invtra in invtra_objects:
                 invoice = invoices[invtra.invoice_id]
                 transac = transactions[invtra.transaction_id]
-                invoice.transactions.add(transac)
-                invoice.save()
+                invoice_transaction = InvoiceTransaction(construct=construct,
+                                                         invoice=invoice,
+                                                         transaction=transac)
+                invoice_transaction.save()
+            return construct
 
     @admin.display(description='Progress')
     def overall_progress(self):
@@ -369,6 +392,13 @@ class HistoryRecord(models.Model):
     class Meta:
         ordering = ['-created_at']
         get_latest_by = 'created_at'
+
+    def shallow_copy(self, construct):
+        return HistoryRecord(construct=construct,
+                             user_id=self.user_id,
+                             user_name=self.user_name,
+                             file_path=self.file_path,
+                             created_at=self.created_at)
 
     def get_record(record_id):
         try:

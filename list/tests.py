@@ -350,6 +350,17 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_construct_get_stat(self):
+        construct = make_test_construct()
+        construct.save()
+        stat = construct.get_stat()
+        fname='test_construct_get_stat.json'
+        construct.export_to_json(fname)
+        new_construct = Construct.safe_import_from_json(fname)
+        new_stat = new_construct.get_stat()
+        self.assertEqual(stat, new_stat)
+        os.remove(fname)
+
     def test_add_as_on_page(self):
         construct = Construct(title_text='Original Construct')
         construct.save()
