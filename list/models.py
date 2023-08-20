@@ -33,6 +33,21 @@ def total_model_stat():
     return out
 
 
+def dump_all_constructs(folder):
+    constructs = Construct.objects.all()
+    for i, construct in enumerate(constructs):
+        if not os.access(folder, os.F_OK):
+            raise ValueError(f"folder {folder} is not accessible.")
+        fname = folder + f"/construct_{i}.json"
+        print(i, ':', construct.title_text, 'to', fname)
+        stat1 = construct.get_stat()
+        construct.export_to_json(fname)
+        new_construct = Construct.safe_import_from_json(fname)
+        stat2 = new_construct.get_stat()
+        assert stat1 == stat2, f"Problem with construct.id = {construct.id} ({construct.title_text})."
+        new_construct.delete()
+
+
 class Client(models.Model):
     name = models.CharField(max_length=100)
     contact_info = models.TextField()

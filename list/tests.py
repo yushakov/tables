@@ -20,7 +20,8 @@ from list.models import Construct, \
                         Transaction, \
                         InvoiceTransaction, \
                         HistoryRecord, \
-                        getConstructAndMaxId
+                        getConstructAndMaxId, \
+                        dump_all_constructs
 import os
 
 
@@ -350,6 +351,20 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_dump_all_constructs(self):
+        construct1 = make_test_construct("First one")
+        construct2 = make_test_construct("Second construct")
+        construct3 = make_test_construct("The third buddy")
+        dirname = 'test_folder_for_tests'
+        if not os.access(dirname, os.F_OK):
+            os.mkdir(dirname)
+        dump_all_constructs(dirname)
+        files = [f for f in os.listdir(dirname)]
+        self.assertEqual(len(files), 3)
+        for f in files:
+            os.remove(dirname + '/' + f)
+        os.rmdir(dirname)
+
     def test_construct_get_stat(self):
         construct = make_test_construct()
         construct.save()
