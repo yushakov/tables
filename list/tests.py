@@ -43,7 +43,7 @@ def make_test_choice(construct, name='Some new choice'):
          plan_days_num         = 7.0)
     return choice
 
-def make_test_construct(construct_name = 'Some test Construct', user_id=1):
+def make_test_construct(construct_name = 'Some test Construct', user_id=-1, history=False):
     construct = Construct(title_text=construct_name)
     construct.save()
     choice = Choice(construct=construct,
@@ -97,8 +97,9 @@ def make_test_construct(construct_name = 'Some test Construct', user_id=1):
     for intra in inv_tra:
         intra.construct = construct
         intra.save()
-    fname = construct.history_dump(user_id)
-    os.remove(fname)
+    if history:
+        fname = construct.history_dump(user_id)
+        os.remove(fname)
     return construct
 
 
@@ -271,6 +272,30 @@ class HistoryTests(TestCase):
         recs = HistoryRecord.objects.all()
         self.assertEqual(len(recs), 1)
 
+    def test_history_dump_unknown_user(self):
+        construct = Construct(title_text='Original Construct')
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        ta = Transaction.add(construct, 100.0, direction='in')
+        invoice.transactions.add(ta)
+        invoice.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        fname = construct.history_dump(-1)
+        self.assertIs(os.access(fname, os.F_OK), True)
+        os.remove(fname)
+        recs = HistoryRecord.objects.all()
+        self.assertEqual(len(recs), 1)
+
     def test_history_records_diff(self):
         construct = make_test_construct()
         fname1 = construct.history_dump(self.user.id)
@@ -322,8 +347,8 @@ class HistoryTests(TestCase):
         records2 = construct2.get_history_records()
         tpl1 = tuple(sorted([rec.id for rec in records1]))
         tpl2 = tuple(sorted([rec.id for rec in records2]))
-        self.assertEqual(tpl1, (1,3))
-        self.assertEqual(tpl2, (2,4))
+        self.assertEqual(tpl1, (1, 3))
+        self.assertEqual(tpl2, (2, 4))
         diff1 = HistoryRecord.get_diff(1, 3)
         diff2 = HistoryRecord.get_diff(2, 4)
         self.assertIs(diff1.find('Name1') >= 0, True)
@@ -356,9 +381,9 @@ class HistoryTests(TestCase):
 
 class ModelTests(TestCase):
     def test_dump_all_constructs(self):
-        construct1 = make_test_construct("First one", self.user.id)
-        construct2 = make_test_construct("Second construct", self.user.id)
-        construct3 = make_test_construct("The third buddy", self.user.id)
+        construct1 = make_test_construct("First one", history=True)
+        construct2 = make_test_construct("Second construct", history=True)
+        construct3 = make_test_construct("The third buddy", history=True)
         dirname = 'test_folder_for_tests'
         if not os.access(dirname, os.F_OK):
             os.mkdir(dirname)

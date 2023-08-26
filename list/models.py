@@ -117,7 +117,10 @@ class Construct(models.Model):
         return new_construct
 
     def history_dump(self, user_id):
-        user = User.objects.get(id = user_id)
+        try:
+            user = User.objects.get(id = user_id)
+        except:
+            user = "unknown_user"
         fname = self.last_save_date.strftime('%Y-%m-%d_%H-%M-%S_%f') +\
             '_user_' + str(user) + '_construct_' + str(self.id) + '.json'
         filepath = os.path.join(settings.BASE_DIR, 'history', fname)
