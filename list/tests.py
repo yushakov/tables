@@ -7,7 +7,9 @@ import datetime as dt
 import json
 from list.views import check_integrity,   \
                        is_yyyy_mm_dd,     \
+                       is_dd_mm_yyyy,     \
                        is_month_day_year, \
+                       format_date,       \
                        create_choice,     \
                        update_choice,     \
                        process_post,      \
@@ -41,7 +43,7 @@ def make_test_choice(construct, name='Some new choice'):
          plan_days_num         = 7.0)
     return choice
 
-def make_test_construct(construct_name = 'Some test Construct'):
+def make_test_construct(construct_name = 'Some test Construct', user_id=1):
     construct = Construct(title_text=construct_name)
     construct.save()
     choice = Choice(construct=construct,
@@ -95,6 +97,8 @@ def make_test_construct(construct_name = 'Some test Construct'):
     for intra in inv_tra:
         intra.construct = construct
         intra.save()
+    fname = construct.history_dump(user_id)
+    os.remove(fname)
     return construct
 
 
@@ -352,9 +356,9 @@ class HistoryTests(TestCase):
 
 class ModelTests(TestCase):
     def test_dump_all_constructs(self):
-        construct1 = make_test_construct("First one")
-        construct2 = make_test_construct("Second construct")
-        construct3 = make_test_construct("The third buddy")
+        construct1 = make_test_construct("First one", self.user.id)
+        construct2 = make_test_construct("Second construct", self.user.id)
+        construct3 = make_test_construct("The third buddy", self.user.id)
         dirname = 'test_folder_for_tests'
         if not os.access(dirname, os.F_OK):
             os.mkdir(dirname)
@@ -1550,50 +1554,97 @@ class ViewTests(TestCase):
         self.assertIs(ret == -1, True)
 
 
+    def test_is_dd_mm_yyyy_1(self):
+        date = "7/7/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_2(self):
+        date = "07/7/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_3(self):
+        date = "7/07/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_4(self):
+        date = "17/7/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_5(self):
+        date = "7/17/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, False)
+
+
+    def test_format_date_1(self):
+        date = "August 26, 2023"
+        format_date(date)
+
+
+    def test_format_date_2(self):
+        date = "2023-08-26"
+        format_date(date)
+
+
+    def test_format_date_3(self):
+        date = "26/08/2023"
+        format_date(date)
+
+
+    def test_format_date_4(self):
+        date = "261/108/22023"
+        try:
+            format_date(date)
+            raise Exception("This should fail!")
+        except:
+            pass
+
+
     def test_is_yyyy_mm_dd_1(self):
-        print('test_is_yyyy_mm_dd_1')
         date = "2021-01-20"
         ret = is_yyyy_mm_dd(date)
         self.assertIs(ret, True)
 
 
     def test_is_yyyy_mm_dd_2(self):
-        print('test_is_yyyy_mm_dd_2')
         date = "21-01-20"
         ret = is_yyyy_mm_dd(date)
         self.assertIs(ret, False)
 
 
     def test_is_yyyy_mm_dd_3(self):
-        print('test_is_yyyy_mm_dd_3')
         date = "January 10, 2021"
         ret = is_yyyy_mm_dd(date)
         self.assertIs(ret, False)
 
 
     def test_is_month_day_year_1(self):
-        print('test_is_month_day_year_1')
         date = "January 10, 2021"
         ret = is_month_day_year(date)
         self.assertIs(ret, True)
 
     
     def test_is_month_day_year_2(self):
-        print('test_is_month_day_year_2')
         date = "Jan 10, 2021"
         ret = is_month_day_year(date)
         self.assertIs(ret, False)
 
     
     def test_is_month_day_year_3(self):
-        print('test_is_month_day_year_3')
         date = "January 10, 21"
         ret = is_month_day_year(date)
         self.assertIs(ret, False)
 
     
     def test_is_month_day_year_4(self):
-        print('test_is_month_day_year_4')
         date = "January     10, 21"
         ret = is_month_day_year(date)
         self.assertIs(ret, False)

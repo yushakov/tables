@@ -45,12 +45,30 @@ def is_yyyy_mm_dd(date_field):
     except ValueError:
         return False
 
+def is_dd_mm_yyyy(date_field):
+    try:
+        datetime.strptime(date_field, "%d/%m/%Y")
+        return True
+    except ValueError:
+        return False
+
 def is_month_day_year(date_field):
     try:
         datetime.strptime(date_field, "%B %d, %Y")
         return True
     except ValueError:
         return False
+
+
+def format_date(date_str):
+    if is_month_day_year(date_str):
+        return datetime.strptime(date_str, "%B %d, %Y").date()
+    elif is_yyyy_mm_dd(date_str):
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    elif is_dd_mm_yyyy(date_str):
+        return datetime.strptime(date_str, "%d/%m/%Y").date()
+    else:
+        raise Exception(f"Unknown date format: {date_str}")
 
 
 def prepare_data(cells):
@@ -523,15 +541,18 @@ def submit_transaction_bunch(request):
     errors = []
     constructs = Construct.objects.all()
     construct_id = int(request.GET.get("construct", -1))
+    field_nums = "1,2,3,4,5,6,7"
     if request.method == 'POST':
         construct_id = int(request.POST.get('construct_id', -1))
-        construct = Construct.objects.get(id=construct_id)
         delimiter_option = request.POST.get('delimiter', "1")
+        field_nums = request.POST.get('field_nums', '1,2,3,4,5,6,7')
         lines = request.POST.get('lines', "")
-        if construct is None:
+        try:
+            construct = Construct.objects.get(id=construct_id)
+        except Exception as e:
             errors.append(f"with getting the construct id = {construct_id}.")
             context = {'constructs': constructs, 'lines': lines,
-                       'errors': errors}
+                    'errors': errors, 'field_nums': field_nums}
             return render(request, 'list/submit_transaction_bunch.html', context)
         lines = [line.strip() for line in lines.split("\n")]
         delimiters = {'1': '\t', '2': ','}
@@ -541,16 +562,21 @@ def submit_transaction_bunch(request):
                 continue
             fields = [f.strip() for f in line.split(delimiter)]
             try:
-                from_txt, to_txt, amount, inout, date, number, details = \
-                    str(fields[0]), str(fields[1]), int(fields[2]), str(fields[3]), \
-                    str(fields[4]), str(fields[5]), str(fields[6])
+                inds = [int(f.strip()) - 1 for f in field_nums.split(',')]
+                from_txt = str(fields[inds[0]])
+                to_txt   = str(fields[inds[1]])
+                amount   = abs(float(fields[inds[2]]))
+                inout    = str(fields[inds[3]])
+                date     = format_date(str(fields[inds[4]]))
+                number   = str(fields[inds[5]])
+                details  = str(fields[inds[6]])
                 Transaction.add_as_on_page(construct, from_txt, to_txt, amount, inout,
                                            date, number, details)
                 lines_added.append(line.strip())
             except Exception as e:
                 lines_to_show += line.strip() + "\n"
                 errors.append(f"with \"{line.strip()}\" ({e})")
-    context = {'constructs': constructs, 'lines': lines_to_show,
+    context = {'constructs': constructs, 'lines': lines_to_show, 'field_nums': field_nums,
             'errors': errors, 'added': lines_added, 'construct_id': construct_id}
     return render(request, 'list/submit_transaction_bunch.html', context)
 
