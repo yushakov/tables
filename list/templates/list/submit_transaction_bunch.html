@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Submit a Bunch of Transactions{% endblock %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<h2>Submit a Bunch of Transactions</h2>
+<form action="{% url 'list:submit_transaction_bunch' %}" method="post">
+    {% csrf_token %}
+    <p>
+    Project:
+    <select id="construct_id" name="construct_id">
+        {% for construct in constructs %}
+            {% if construct.id == construct_id %}
+                <option value="{{ construct.id }}" selected>{{ construct.title_text }}</option>
+            {% else %}
+                <option value="{{ construct.id }}">{{ construct.title_text }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    &nbsp;&nbsp;
+    Delimiter:
+    <select name="delimiter">
+        <option value="1">tab</option>
+        <option value="2">comma</option>
+    </select>
+    </p>
+    <p>
+        Each line to be:<br>
+        <b>from</b> tab <b>to</b> tab <b>amount</b> tab <b>in-out</b> tab <b>date</b> tab <b>number</b> tab <b>details</b><br> 
+        or<br>
+        <b>from</b>, <b>to</b>, <b>amount</b>, <b>in-out</b>, <b>date</b>, <b>number</b>, <b>details</b><br> 
+    </p>
+    <p>
+    {% for line in added %}
+    <b>Added:</b> {{ line }}<br>
+    {% endfor %}
+    </p>
+    <p>
+    {% for error in errors %}
+        <b>Error</b> {{ error }}<br>
+    {% endfor %}
+    </p>
+    <p>
+        {% if lines %}
+        <textarea id="lines" name="lines" rows="20" cols="150">{{ lines }}</textarea>
+        {% else %}
+        <textarea id="lines" name="lines" rows="20" cols="150"></textarea>
+        {% endif %}
+    </p>
+    <input type="submit" value="Submit">
+</form>
+{% endblock %}

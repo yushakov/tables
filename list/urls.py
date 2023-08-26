@@ -28,5 +28,6 @@ urlpatterns = [
     path('transaction/', redirect_to_admin_transactions),
     path('transaction/<int:transaction_id>/', views.view_transaction, name='view_transaction'),
     path('transaction/submit/', views.submit_transaction, name='submit_transaction'),
+    path('transaction/bunch/', views.submit_transaction_bunch, name='submit_transaction_bunch'),
     path('<int:construct_id>/clone/', views.clone_construct, name='clone')
 ]

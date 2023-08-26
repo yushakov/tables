@@ -514,6 +514,47 @@ def submit_transaction(request):
     return render(request, 'list/submit_transaction.html', {'form': form})
 
 @login_required
+@permission_required("list.add_transaction")
+@permission_required("list.change_transaction")
+def submit_transaction_bunch(request):
+    logger.info(f'USER ACCESS: submit_transaction() by {request.user.username}')
+    lines_to_show = ""
+    lines_added = []
+    errors = []
+    constructs = Construct.objects.all()
+    construct_id = int(request.GET.get("construct", -1))
+    if request.method == 'POST':
+        construct_id = int(request.POST.get('construct_id', -1))
+        construct = Construct.objects.get(id=construct_id)
+        delimiter_option = request.POST.get('delimiter', "1")
+        lines = request.POST.get('lines', "")
+        if construct is None:
+            errors.append(f"with getting the construct id = {construct_id}.")
+            context = {'constructs': constructs, 'lines': lines,
+                       'errors': errors}
+            return render(request, 'list/submit_transaction_bunch.html', context)
+        lines = [line.strip() for line in lines.split("\n")]
+        delimiters = {'1': '\t', '2': ','}
+        delimiter = delimiters[delimiter_option]
+        for i, line in enumerate(lines):
+            if len(line.strip()) == 0:
+                continue
+            fields = [f.strip() for f in line.split(delimiter)]
+            try:
+                from_txt, to_txt, amount, inout, date, number, details = \
+                    str(fields[0]), str(fields[1]), int(fields[2]), str(fields[3]), \
+                    str(fields[4]), str(fields[5]), str(fields[6])
+                Transaction.add_as_on_page(construct, from_txt, to_txt, amount, inout,
+                                           date, number, details)
+                lines_added.append(line.strip())
+            except Exception as e:
+                lines_to_show += line.strip() + "\n"
+                errors.append(f"with \"{line.strip()}\" ({e})")
+    context = {'constructs': constructs, 'lines': lines_to_show,
+            'errors': errors, 'added': lines_added, 'construct_id': construct_id}
+    return render(request, 'list/submit_transaction_bunch.html', context)
+
+@login_required
 @permission_required("list.add_invoice")
 def submit_invoice(request):
     logger.info(f'USER ACCESS: submit_invoice() by {request.user.username}')
