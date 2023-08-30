@@ -380,6 +380,47 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_get_struct_signature(self):
+        construct1 = Construct(title_text="Number one")
+        construct2 = Construct(title_text="Number two")
+        construct3 = Construct(title_text="Number three")
+        struct1 = {
+                   'line_1': {'type': 'Header2', 'id': 'First header'},
+                   'line_2': {'type': 'Choice', 'id': '1'},
+                   'line_3': {'type': 'Choice', 'id': '2'},
+                   'line_4': {'type': 'Header2', 'id': 'Second header'},
+                   'line_5': {'type': 'Choice', 'id': '3'},
+                   'line_6': {'type': 'Choice', 'id': '4'},
+                   'line_7': {'type': 'Choice', 'id': '5'},
+                  }
+        construct1.struct_json = json.dumps(struct1)
+        struct2 = {
+                   'line_1': {'type': 'Header2', 'id': 'First header'},
+                   'line_2': {'type': 'Choice', 'id': '6'},
+                   'line_3': {'type': 'Choice', 'id': '7'},
+                   'line_4': {'type': 'Choice', 'id': '8'},
+                   'line_5': {'type': 'Header2', 'id': 'Second header'},
+                   'line_6': {'type': 'Choice', 'id': '9'},
+                   'line_7': {'type': 'Choice', 'id': '10'},
+                   'line_8': {'type': 'Choice', 'id': '11'},
+                  }
+        construct2.struct_json = json.dumps(struct2)
+        struct3 = {
+                   'line_1': {'type': 'Header2', 'id': 'header one'},
+                   'line_2': {'type': 'Choice', 'id': '12'},
+                   'line_3': {'type': 'Choice', 'id': '13'},
+                   'line_4': {'type': 'Header2', 'id': 'header two'},
+                   'line_5': {'type': 'Choice', 'id': '14'},
+                   'line_6': {'type': 'Choice', 'id': '15'},
+                   'line_7': {'type': 'Choice', 'id': '16'},
+                  }
+        construct3.struct_json = json.dumps(struct3)
+        construct1.save()
+        construct2.save()
+        construct3.save()
+        self.assertEqual(construct1.get_struct_signature(), construct3.get_struct_signature())
+        self.assertFalse(construct1.get_struct_signature() == construct2.get_struct_signature())
+
     def test_dump_all_constructs(self):
         construct1 = make_test_construct("First one", history=True)
         construct2 = make_test_construct("Second construct", history=True)

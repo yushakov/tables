@@ -41,10 +41,13 @@ def dump_all_constructs(folder):
         fname = folder + f"/construct_{i}.json"
         print(i, ':', construct.title_text, 'to', fname)
         stat1 = construct.get_stat()
+        struct1 = construct.get_struct_signature()
         construct.export_to_json(fname)
         new_construct = Construct.safe_import_from_json(fname)
         stat2 = new_construct.get_stat()
+        struct2 = new_construct.get_struct_signature()
         assert stat1 == stat2, f"Problem with construct.id = {construct.id} ({construct.title_text})."
+        assert struct1 == struct2, f"Problem with structure of construct {construct.id}: {construct.title_text}"
         new_construct.delete()
 
 
@@ -159,6 +162,19 @@ class Construct(models.Model):
                    use_natural_foreign_keys=True, use_natural_primary_keys=True)
         with open(fname, 'w') as outfile:
             outfile.write(data)
+
+    def get_struct_signature(self):
+        struct = json.loads(self.struct_json)
+        signature = []
+        n = 1
+        for k in struct.keys():
+            if struct[k]['type'].startswith('Header'):
+                signature.append(0)
+                n = 1
+            else:
+                signature.append(n)
+                n = n + 1
+        return signature
 
     def get_stat(self):
         """
