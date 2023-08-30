@@ -35,9 +35,9 @@ def total_model_stat():
 
 def dump_all_constructs(folder):
     constructs = Construct.objects.all()
+    if not os.access(folder, os.F_OK):
+        raise ValueError(f"folder '{folder}' is not accessible.")
     for i, construct in enumerate(constructs):
-        if not os.access(folder, os.F_OK):
-            raise ValueError(f"folder {folder} is not accessible.")
         fname = folder + f"/construct_{i}.json"
         print(i, ':', construct.title_text, 'to', fname)
         stat1 = construct.get_stat()
@@ -49,6 +49,14 @@ def dump_all_constructs(folder):
         assert stat1 == stat2, f"Problem with construct.id = {construct.id} ({construct.title_text})."
         assert struct1 == struct2, f"Problem with structure of construct {construct.id}: {construct.title_text}"
         new_construct.delete()
+
+
+def load_all_constructs(folder):
+    if not os.access(folder, os.F_OK):
+        raise ValueError(f"folder '{folder}' is not accessible.")
+    files = sorted([folder + '/' + f for f in os.listdir(folder) if f.endswith('.json')])
+    for fname in files:
+        Construct.safe_import_from_json(fname)
 
 
 class Client(models.Model):

@@ -23,7 +23,8 @@ from list.models import Construct, \
                         InvoiceTransaction, \
                         HistoryRecord, \
                         getConstructAndMaxId, \
-                        dump_all_constructs
+                        dump_all_constructs, \
+                        load_all_constructs
 import os
 
 
@@ -431,6 +432,27 @@ class ModelTests(TestCase):
         dump_all_constructs(dirname)
         files = [f for f in os.listdir(dirname)]
         self.assertEqual(len(files), 3)
+        for f in files:
+            os.remove(dirname + '/' + f)
+        os.rmdir(dirname)
+
+    def test_dump_and_load_all_constructs(self):
+        construct1 = make_test_construct("First one", history=True)
+        construct2 = make_test_construct("Second construct", history=True)
+        construct3 = make_test_construct("The third buddy", history=True)
+        dirname = 'test_folder_for_tests'
+        if not os.access(dirname, os.F_OK):
+            os.mkdir(dirname)
+        dump_all_constructs(dirname)
+        construct1.delete()
+        construct2.delete()
+        construct3.delete()
+        cons = Construct.objects.all()
+        self.assertEqual(len(cons), 0)
+        load_all_constructs(dirname)
+        cons = Construct.objects.all()
+        self.assertEqual(len(cons), 3)
+        files = [f for f in os.listdir(dirname)]
         for f in files:
             os.remove(dirname + '/' + f)
         os.rmdir(dirname)
