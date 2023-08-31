@@ -11,7 +11,7 @@ import logging
 import json
 from django.core import serializers
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 import difflib
 
 logger = logging.getLogger('django')
@@ -417,6 +417,16 @@ class Construct(models.Model):
     @property
     def full_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.progress_cost())))
+
+
+class User(AbstractUser):
+    accessible_constructs = models.ManyToManyField(Construct, blank=True)
+    business_address = models.TextField(null=True, blank=True)
+    company = models.CharField(max_length=200, null=True, blank=True)
+    additional_info = models.TextField(null=True, blank=True)
+    invoice_footer = models.TextField(null=True, blank=True)
+
+    # struct_json = models.TextField(default='')
 
 
 class HistoryRecord(models.Model):

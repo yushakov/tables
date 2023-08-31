@@ -44,6 +44,7 @@ def ip_addresses():
 #ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
 ALLOWED_HOSTS = ['127.0.0.1']
 
+AUTH_USER_MODEL = "list.User"
 
 # Application definition
 
