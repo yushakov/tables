@@ -474,7 +474,8 @@ def print_invoice(request, invoice_id):
     vat_from_total = amount * 0.01 * vat_prc
     total_and_vat = round(amount + vat_from_total)
     lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
-    context = {'invoice': invoice,
+    context = {'user': request.user,
+               'invoice': invoice,
                'no_logout_link': True,
                'lines': lines,
                'vat_from_total': vat_from_total,
