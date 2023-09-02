@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Print Invoice{% endblock %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/print.css' %}">
+<table>
+    <tbody>
+        <tr>
+            <td id='logo' colspan='3'>
+                <img src="{% static 'images/constructive_choice_logo.png' %}" width="200">
+            </td>
+            <td id='invoice'>
+                INVOICE
+            </td>
+        </tr>
+        <tr>
+            <td id='seller_info' colspan='2'>
+                {% comment %}
+                    'Will get it from his account' 
+                {% endcomment %}
+                Sergej Safoncik<br>
+                Constructive Choice Ltd<br>
+                39 Kildare road, Mapperley<br>
+                Nottingham, NG3 3AF<br>
+                info@constructivechoice.co.uk<br>
+                VAT number: 335714013<br>
+            </td>
+            <td id='invoice_info' colspan='2'>
+                <div id='invoice-info-table'>
+                    <table>
+                        <tr>
+                            <td id='date'><b>Date:</b></td>
+                            <td>{{ invoice.issue_date }}</td>
+                        </tr>
+                        <tr>
+                            <td id='invoice_id'><b>Invoice ID:</b></td>
+                            <td>{{ invoice.number }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td id='bill_to_line' colspan='4'>
+                Bill To:
+            </td>
+        </tr>
+        <tr>
+            <td id='bill-to-content'>
+                {{ invoice.construct.owner_name_text }}<br>
+                {{ invoice.construct.address_text }}<br>
+            </td>
+        </tr>
+        <tr>
+            <td class='brown-line' id='quantity'>Quantity</td>
+            <td class='brown-line' id='description'>Description</td>
+            <td class='brown-line' id='unit-price'>Unit price</td>
+            <td class='brown-line' id='amount'>Amount</td>
+        </tr>
+        <tr>
+            <td class='light-brown' style='text-align: center'>1</td>
+            <td class='light-brown'>Stage 1</td>
+            <td class='light-brown'>£ </td>
+            <td class='light-brown'>£ </td>
+        </tr>
+        <tr>
+            <td class='just-white' style='text-align: center'>1</td>
+            <td class='just-white'>Stage 2</td>
+            <td class='just-white'>£ </td>
+            <td class='just-white'>£ </td>
+        </tr>
+        <tr>
+            <td colspan='3'>Subtotal:</td>
+            <td>£ {{ invoice.amount }}</td>
+        </tr>
+        <tr>
+            <td colspan='2'>
+                <div id='notice'>
+                    <p>
+                        Make all invoices payable to Sergej Safoncik Constructive Choice 20-45-45 53323846
+                    </p>
+                    <p>
+                        If you have any questions concerning this invoice, contact Sergej Safoncik at info@constructivechoice.co.uk
+                    </p>
+                    <p class='thank-you'>
+                        Thank you for your business!
+                    </p>
+                </div>
+            </td>
+            <td colspan='2' id='vat-total'>
+                <table id='vat-total-table'>
+                    <tr>
+                        <td class='vat-total-fields vat-total-label'>VAT, {{ invoice.construct.vat_percent_num }}%:</td>
+                        <td class='vat-total-fields vat-total-value'>£ {{ vat_from_total }}</td>
+                    </tr>
+                    <tr>
+                        <td class='vat-total-fields vat-total-label'>Total including VAT:</td>
+                        <td class='vat-total-fields vat-total-value'>£ {{ total_and_vat }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
