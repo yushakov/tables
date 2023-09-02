@@ -54,6 +54,37 @@ def is_month_day_year(date_field):
         return False
 
 
+def is_abbrev_month_dot_day_year(date_field):
+    try:
+        datetime.strptime(date_field, "%b. %d, %Y")
+        return True
+    except ValueError:
+        return False
+
+
+def is_abbrev_month_day_year(date_field):
+    try:
+        datetime.strptime(date_field, "%b %d, %Y")
+        return True
+    except ValueError:
+        return False
+
+
+def format_date(date_str):
+    if is_month_day_year(date_str):
+        return datetime.strptime(date_str, "%B %d, %Y").date()
+    elif is_abbrev_month_day_year(date_str):
+        return datetime.strptime(date_str, "%b %d, %Y").date()
+    elif is_abbrev_month_dot_day_year(date_str):
+        return datetime.strptime(date_str, "%b. %d, %Y").date()
+    elif is_yyyy_mm_dd(date_str):
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    elif is_dd_mm_yyyy(date_str):
+        return datetime.strptime(date_str, "%d/%m/%Y").date()
+    else:
+        raise Exception(f"Unknown date format: {date_str}")
+
+
 def prepare_data(cells):
     data = dict()
     data['name_txt'] = cells['name']
@@ -63,10 +94,11 @@ def prepare_data(cells):
     data['price_num'] = float(cells['price'].replace('£','').replace(',','').strip())
     data['workers'] = str(cells['assigned_to'])
     data['progress_percent_num'] = float(cells['progress'].replace('%','').strip())
-    if is_month_day_year(cells['day_start']):
-        data['plan_start_date'] = datetime.strptime(cells['day_start'], "%B %d, %Y").date()
-    elif is_yyyy_mm_dd(cells['day_start']):
-        data['plan_start_date'] = datetime.strptime(cells['day_start'], "%Y-%m-%d").date()
+    try:
+        data['plan_start_date'] = format_date(cells['day_start'])
+    except Exception as e:
+        logger.error(f"Start date error for '{cells['name']}': {e}")
+        data['plan_start_date'] = timezone.now().date()
     data['plan_days_num'] = float(cells['days'])
     data['constructive_notes'] = ""
     data['client_notes'] = ""

@@ -8,6 +8,7 @@ import json
 from list.views import check_integrity,   \
                        is_yyyy_mm_dd,     \
                        is_month_day_year, \
+                       format_date,       \
                        create_choice,     \
                        update_choice,     \
                        process_post,      \
@@ -1467,6 +1468,23 @@ class ViewTests(TestCase):
         date = "January     10, 21"
         ret = is_month_day_year(date)
         self.assertIs(ret, False)
+
+
+    def test_format_date(self):
+        construct = make_test_construct()
+        for m in range(1, 13):
+            for d in range(1, 31):
+                for y in [1837, 1900, 1984, 1990, 1991, 2000, 2001, 2018, 2020, 2023, 2025]:
+                    date_str = f"{y}-{m}-{d}"
+                    choice = make_test_choice(construct)
+                    try:
+                        date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    except:
+                        continue
+                    choice.plan_start_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    choice.save()
+                    date_back = choice.plan_start_date_formatted
+                    format_date(date_back)
 
     
     def test_check_integrity_almost_empty_structure(self):
