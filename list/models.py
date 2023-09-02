@@ -517,6 +517,10 @@ class Choice(models.Model):
     actual_start_date = models.DateField(default=timezone.now)
     actual_end_date = models.DateField(default=timezone.now)
 
+    @property
+    def plan_start_date_formatted(self):
+        return self.plan_start_date.strftime("%b %d, %Y")
+
     def shallow_copy(self, construct):
         return Choice(construct=construct,
                 workers = self.workers,
