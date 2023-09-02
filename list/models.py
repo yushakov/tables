@@ -21,6 +21,44 @@ coeff_valid = [MinValueValidator(0.0), MaxValueValidator(1.0)]
 phone_valid = [RegexValidator(regex=r'^[+0-9]*$', message='Only numbers and +')]
 
 
+def total_model_stat():
+    import list.models as lm
+    out = {}
+    for attr in dir(lm):
+        obj = getattr(lm, attr)
+        if type(obj) != type(lm.Construct): continue
+        obj_count = len(obj.objects.all())
+        print(attr, ': ', obj_count)
+        out[attr] = obj_count
+    return out
+
+
+def dump_all_constructs(folder):
+    constructs = Construct.objects.all()
+    if not os.access(folder, os.F_OK):
+        raise ValueError(f"folder '{folder}' is not accessible.")
+    for i, construct in enumerate(constructs):
+        fname = folder + f"/construct_{i}.json"
+        print(i, ':', construct.title_text, 'to', fname)
+        stat1 = construct.get_stat()
+        struct1 = construct.get_struct_signature()
+        construct.export_to_json(fname)
+        new_construct = Construct.safe_import_from_json(fname)
+        stat2 = new_construct.get_stat()
+        struct2 = new_construct.get_struct_signature()
+        assert stat1 == stat2, f"Problem with construct.id = {construct.id} ({construct.title_text})."
+        assert struct1 == struct2, f"Problem with structure of construct {construct.id}: {construct.title_text}"
+        new_construct.delete()
+
+
+def load_all_constructs(folder):
+    if not os.access(folder, os.F_OK):
+        raise ValueError(f"folder '{folder}' is not accessible.")
+    files = sorted([folder + '/' + f for f in os.listdir(folder) if f.endswith('.json')])
+    for fname in files:
+        Construct.safe_import_from_json(fname)
+
+
 class Client(models.Model):
     name = models.CharField(max_length=100)
     contact_info = models.TextField()
@@ -90,7 +128,10 @@ class Construct(models.Model):
         return new_construct
 
     def history_dump(self, user_id):
-        user = User.objects.get(id = user_id)
+        try:
+            user = User.objects.get(id = user_id)
+        except:
+            user = "unknown_user"
         fname = self.last_save_date.strftime('%Y-%m-%d_%H-%M-%S_%f') +\
             '_user_' + str(user) + '_construct_' + str(self.id) + '.json'
         filepath = os.path.join(settings.BASE_DIR, 'history', fname)
@@ -122,16 +163,66 @@ class Construct(models.Model):
         transactions = Transaction.objects.filter(construct__id=construct.id)
         invoices = Invoice.objects.filter(construct__id=construct.id)
         invoice_transactions = InvoiceTransaction.objects.filter(construct__id=construct.id)
-        data = serializers.serialize('json', [self, *choices, *transactions, *invoices, *invoice_transactions],
+        history_records = self.historyrecord_set.all()
+        data = serializers.serialize('json', [self, *choices, *transactions,
+                                              *invoices, *invoice_transactions,
+                                              *history_records],
                    use_natural_foreign_keys=True, use_natural_primary_keys=True)
         with open(fname, 'w') as outfile:
             outfile.write(data)
 
-    def import_from_json(fname):
-        with open(fname, 'r') as data_file:
-            for obj in serializers.deserialize("json", data_file):
-                print(obj.object)
-                obj.save()
+    def get_struct_signature(self):
+        struct = json.loads(self.struct_json)
+        signature = []
+        n = 1
+        for k in struct.keys():
+            if struct[k]['type'].startswith('Header'):
+                signature.append(0)
+                n = 1
+            else:
+                signature.append(n)
+                n = n + 1
+        return signature
+
+    def get_stat(self):
+        """
+        To check which classes are linked with the Construct:
+            grep -E "(^class|ForeignKey\(Construct)" list/models.py
+        As of now (August 13, 2023):
+            class HistoryRecord(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class Choice(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class Transaction(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class Invoice(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+            class InvoiceTransaction(models.Model):
+                construct = models.ForeignKey(Construct, on_delete=models.CASCADE, null=True, blank=True)
+        """
+        out = {}
+        choices = self.choice_set.all()
+        transactions = self.transaction_set.all()
+        invoices = self.invoice_set.all()
+        invoice_transactions = self.invoicetransaction_set.all()
+        out['HistoryRecord'] = len(self.historyrecord_set.all())
+        out['Choice'] = len(choices)
+        out['Transaction'] = len(transactions)
+        out['Invoice'] = len(invoices)
+        out['InvoiceTransaction'] = len(invoice_transactions)
+
+        def get_total(items, func=lambda x: x.amount):
+            total_amount = 0.0
+            for item in items:
+                total_amount += float(func(item))
+            return round(total_amount)
+
+        out['choices_total'] = get_total(choices, lambda x: x.quantity_num * x.price_num)
+        out['transactions_total'] = get_total(transactions)
+        out['invoices_total'] = get_total(invoices)
+        out['inv_tra_total'] = get_total(invoice_transactions, lambda x: x.invoice.amount)
+        return out
+
 
     def safe_import_from_json(fname):
         with open(fname, 'r') as data_file:
@@ -165,6 +256,10 @@ class Construct(models.Model):
                 elif type(obj.object) == InvoiceTransaction:
                     print('InvoiceTransaction: ', obj.object.id)
                     invtra_objects.append(obj.object)
+                elif type(obj.object) == HistoryRecord:
+                    print('HistoryRecord: ', obj.object.id)
+                    history_record = obj.object.shallow_copy(construct)
+                    history_record.save()
                 else:
                     print('Unknown Type: ', type(obj.object))
             # process sruct_json
@@ -178,9 +273,11 @@ class Construct(models.Model):
             for invtra in invtra_objects:
                 invoice = invoices[invtra.invoice_id]
                 transac = transactions[invtra.transaction_id]
-                invoice.transactions.add(transac)
-                invoice.save()
-
+                invoice_transaction = InvoiceTransaction(construct=construct,
+                                                         invoice=invoice,
+                                                         transaction=transac)
+                invoice_transaction.save()
+            return construct
 
     @admin.display(description='Progress')
     def overall_progress(self):
@@ -337,6 +434,13 @@ class HistoryRecord(models.Model):
     class Meta:
         ordering = ['-created_at']
         get_latest_by = 'created_at'
+
+    def shallow_copy(self, construct):
+        return HistoryRecord(construct=construct,
+                             user_id=self.user_id,
+                             user_name=self.user_name,
+                             file_path=self.file_path,
+                             created_at=self.created_at)
 
     def get_record(record_id):
         try:

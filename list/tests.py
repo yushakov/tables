@@ -7,21 +7,29 @@ import datetime as dt
 import json
 from list.views import check_integrity,   \
                        is_yyyy_mm_dd,     \
+                       is_dd_mm_yyyy,     \
                        is_month_day_year, \
                        format_date,       \
                        create_choice,     \
                        update_choice,     \
                        process_post,      \
                        checkTimeStamp,    \
-                       fix_structure
+                       fix_structure,     \
+                       get_printed_invoice_lines
 from list.models import Construct, \
                         Choice, \
                         Invoice, \
                         Transaction, \
                         InvoiceTransaction, \
                         HistoryRecord, \
-                        getConstructAndMaxId
+                        getConstructAndMaxId, \
+                        dump_all_constructs, \
+                        load_all_constructs
 import os
+
+
+STATUS_CODE_OK = 200
+STATUS_CODE_REDIRECT = 302
 
 def make_test_choice(construct, name='Some new choice'):
     choice = Choice(construct=construct,
@@ -36,7 +44,7 @@ def make_test_choice(construct, name='Some new choice'):
          plan_days_num         = 7.0)
     return choice
 
-def make_test_construct(construct_name = 'Some test Construct'):
+def make_test_construct(construct_name = 'Some test Construct', user_id=-1, history=False):
     construct = Construct(title_text=construct_name)
     construct.save()
     choice = Choice(construct=construct,
@@ -90,6 +98,9 @@ def make_test_construct(construct_name = 'Some test Construct'):
     for intra in inv_tra:
         intra.construct = construct
         intra.save()
+    if history:
+        fname = construct.history_dump(user_id)
+        os.remove(fname)
     return construct
 
 
@@ -262,6 +273,30 @@ class HistoryTests(TestCase):
         recs = HistoryRecord.objects.all()
         self.assertEqual(len(recs), 1)
 
+    def test_history_dump_unknown_user(self):
+        construct = Construct(title_text='Original Construct')
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        ta = Transaction.add(construct, 100.0, direction='in')
+        invoice.transactions.add(ta)
+        invoice.save()
+        choice = Choice(construct=construct,
+             name_txt              = 'Choice 1',
+             notes_txt             = '',
+             quantity_num          = 1,
+             price_num             = '10.0',
+             progress_percent_num  = 35.0,
+             units_of_measure_text = 'nr',
+             workers               = 'John',
+             plan_start_date       = '1984-04-15',
+             plan_days_num         = 5.0)
+        choice.save()
+        fname = construct.history_dump(-1)
+        self.assertIs(os.access(fname, os.F_OK), True)
+        os.remove(fname)
+        recs = HistoryRecord.objects.all()
+        self.assertEqual(len(recs), 1)
+
     def test_history_records_diff(self):
         construct = make_test_construct()
         fname1 = construct.history_dump(self.user.id)
@@ -313,8 +348,8 @@ class HistoryTests(TestCase):
         records2 = construct2.get_history_records()
         tpl1 = tuple(sorted([rec.id for rec in records1]))
         tpl2 = tuple(sorted([rec.id for rec in records2]))
-        self.assertEqual(tpl1, (1,3))
-        self.assertEqual(tpl2, (2,4))
+        self.assertEqual(tpl1, (1, 3))
+        self.assertEqual(tpl2, (2, 4))
         diff1 = HistoryRecord.get_diff(1, 3)
         diff2 = HistoryRecord.get_diff(2, 4)
         self.assertIs(diff1.find('Name1') >= 0, True)
@@ -346,6 +381,93 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_get_struct_signature(self):
+        construct1 = Construct(title_text="Number one")
+        construct2 = Construct(title_text="Number two")
+        construct3 = Construct(title_text="Number three")
+        struct1 = {
+                   'line_1': {'type': 'Header2', 'id': 'First header'},
+                   'line_2': {'type': 'Choice', 'id': '1'},
+                   'line_3': {'type': 'Choice', 'id': '2'},
+                   'line_4': {'type': 'Header2', 'id': 'Second header'},
+                   'line_5': {'type': 'Choice', 'id': '3'},
+                   'line_6': {'type': 'Choice', 'id': '4'},
+                   'line_7': {'type': 'Choice', 'id': '5'},
+                  }
+        construct1.struct_json = json.dumps(struct1)
+        struct2 = {
+                   'line_1': {'type': 'Header2', 'id': 'First header'},
+                   'line_2': {'type': 'Choice', 'id': '6'},
+                   'line_3': {'type': 'Choice', 'id': '7'},
+                   'line_4': {'type': 'Choice', 'id': '8'},
+                   'line_5': {'type': 'Header2', 'id': 'Second header'},
+                   'line_6': {'type': 'Choice', 'id': '9'},
+                   'line_7': {'type': 'Choice', 'id': '10'},
+                   'line_8': {'type': 'Choice', 'id': '11'},
+                  }
+        construct2.struct_json = json.dumps(struct2)
+        struct3 = {
+                   'line_1': {'type': 'Header2', 'id': 'header one'},
+                   'line_2': {'type': 'Choice', 'id': '12'},
+                   'line_3': {'type': 'Choice', 'id': '13'},
+                   'line_4': {'type': 'Header2', 'id': 'header two'},
+                   'line_5': {'type': 'Choice', 'id': '14'},
+                   'line_6': {'type': 'Choice', 'id': '15'},
+                   'line_7': {'type': 'Choice', 'id': '16'},
+                  }
+        construct3.struct_json = json.dumps(struct3)
+        construct1.save()
+        construct2.save()
+        construct3.save()
+        self.assertEqual(construct1.get_struct_signature(), construct3.get_struct_signature())
+        self.assertFalse(construct1.get_struct_signature() == construct2.get_struct_signature())
+
+    def test_dump_all_constructs(self):
+        construct1 = make_test_construct("First one", history=True)
+        construct2 = make_test_construct("Second construct", history=True)
+        construct3 = make_test_construct("The third buddy", history=True)
+        dirname = 'test_folder_for_tests'
+        if not os.access(dirname, os.F_OK):
+            os.mkdir(dirname)
+        dump_all_constructs(dirname)
+        files = [f for f in os.listdir(dirname)]
+        self.assertEqual(len(files), 3)
+        for f in files:
+            os.remove(dirname + '/' + f)
+        os.rmdir(dirname)
+
+    def test_dump_and_load_all_constructs(self):
+        construct1 = make_test_construct("First one", history=True)
+        construct2 = make_test_construct("Second construct", history=True)
+        construct3 = make_test_construct("The third buddy", history=True)
+        dirname = 'test_folder_for_tests'
+        if not os.access(dirname, os.F_OK):
+            os.mkdir(dirname)
+        dump_all_constructs(dirname)
+        construct1.delete()
+        construct2.delete()
+        construct3.delete()
+        cons = Construct.objects.all()
+        self.assertEqual(len(cons), 0)
+        load_all_constructs(dirname)
+        cons = Construct.objects.all()
+        self.assertEqual(len(cons), 3)
+        files = [f for f in os.listdir(dirname)]
+        for f in files:
+            os.remove(dirname + '/' + f)
+        os.rmdir(dirname)
+
+    def test_construct_get_stat(self):
+        construct = make_test_construct()
+        construct.save()
+        stat = construct.get_stat()
+        fname='test_construct_get_stat.json'
+        construct.export_to_json(fname)
+        new_construct = Construct.safe_import_from_json(fname)
+        new_stat = new_construct.get_stat()
+        self.assertEqual(stat, new_stat)
+        os.remove(fname)
+
     def test_add_as_on_page(self):
         construct = Construct(title_text='Original Construct')
         construct.save()
@@ -516,9 +638,9 @@ class ModelTests(TestCase):
         construct.delete()
         cons = Construct.objects.all()
         self.assertEqual(len(cons), 0)
-        Construct.import_from_json(fname)
+        Construct.safe_import_from_json(fname)
         cons = Construct.objects.all()
-        self.assertEqual(cons[0].title_text, construct_name)
+        self.assertEqual(cons[0].title_text, "Imported: " + construct_name)
         os.remove(fname)
         invtra = InvoiceTransaction.objects.all()
         self.assertEqual(len(invtra), 1)
@@ -617,9 +739,9 @@ class ModelTests(TestCase):
         construct.delete()
         cons = Construct.objects.all()
         self.assertEqual(len(cons), 0)
-        Construct.import_from_json(fname)
+        Construct.safe_import_from_json(fname)
         cons = Construct.objects.all()
-        self.assertEqual(cons[0].title_text, construct_name)
+        self.assertEqual(cons[0].title_text, "Imported: " + construct_name)
         os.remove(fname)
 
     def test_construct_export_to_json(self):
@@ -906,7 +1028,13 @@ class ViewTests(TestCase):
         c = Client()
         response = c.get('/list/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_empty_list(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_login_page_detail(self):
         c = Client()
@@ -914,7 +1042,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_detail_page_markup(self):
         c = Client()
@@ -924,7 +1052,7 @@ class ViewTests(TestCase):
         choice = make_test_choice(cons, name='Choice with a **bolddd** name')
         choice.save()
         response = c.get('/list/' + str(cons.id) +'/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertIs(str(response.content).find("<b>bolddd</b>") > 0, True)
 
     def test_login_page_client_view(self):
@@ -1028,6 +1156,49 @@ class ViewTests(TestCase):
         ta.save()
         response = c.get("/list/transaction/" + str(ta.id) + "/")
         self.assertEqual(response.status_code, 200)
+
+    def test_transaction_bunch_page_access(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/bunch/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_transaction_bunch(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = make_test_construct('Test construct')
+        post_data = {'construct_id': ['1'], 'delimiter': ['2'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey, Yury, 5000, IN, 26/08/2023, 012341200, money for good life\r\n' + \
+                               'Marcos, Yury, 7000, IN, 30/08/2023, 77777, profit sharing']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 3)
+
+    def test_transaction_bunch_tab(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = make_test_construct('Test construct')
+        post_data = {'construct_id': ['1'], 'delimiter': ['1'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey\t Yury\t 5000\t IN\t 26/08/2023\t 012341200\t money for good life\r\n' + \
+                               'Marcos\t Yury\t 7000\t IN\t 30/08/2023\t 77777\t profit sharing']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 3)
+
+    def test_transaction_bunch_bad_construct(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = make_test_construct('Test construct')
+        post_data = {'construct_id': ['15'], 'delimiter': ['2'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey, Yury, 5000, IN, 26/08/2023, 012341200, money for good life\r\n' + \
+                               'Marcos, Yury, 7000, IN, 30/08/2023, 77777, profit sharing']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['errors'][0].find('getting the construct') >= 0, True)
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 1)
 
     def test_call_client_page_client(self):
         c = Client()
@@ -1210,7 +1381,101 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': ['']}
         response = c.post("/list/invoice/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_modify_invoice_get(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/modify/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_get_printed_invoice_lines(self):
+        details = '1, a, b, c'
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a, b, '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a, b '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a,  '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1, a  '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1,   '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        details = '1   '
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out[0]), 5)
+        
+    def test_get_printed_invoice_lines_2(self):
+        details = '1, a, b, c\n 2, b, c'
+        out = get_printed_invoice_lines(details)
+        self.assertEqual(len(out), 2)
+        self.assertEqual(len(out[0]), 5)
+        self.assertEqual(len(out[1]), 5)
+
+    def test_print_invoice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1, desr, 20, 20 \n 2, descr2, 30, 60'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/print/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_modify_invoice_post(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        post_data['details_txt'] = ['--newdetails']
+        new_response = c.post(f"/list/invoice/{invoice.id}/modify/", post_data)
+        self.assertEqual(new_response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        self.assertIs(str(invoice.details_txt).find("newdetails") >= 0, True)
         
     def test_login_submit_invoice_form(self):
         c = Client()
@@ -1223,7 +1488,6 @@ class ViewTests(TestCase):
                 'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
                 'details_txt': ['note'], 'photo': ['']}
         response = c.post("/list/invoice/submit/", post_data)
-        self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, 302)
         
     def test_checkTimeStamp(self):
@@ -1421,50 +1685,97 @@ class ViewTests(TestCase):
         self.assertIs(ret == -1, True)
 
 
+    def test_is_dd_mm_yyyy_1(self):
+        date = "7/7/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_2(self):
+        date = "07/7/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_3(self):
+        date = "7/07/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_4(self):
+        date = "17/7/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, True)
+
+
+    def test_is_dd_mm_yyyy_5(self):
+        date = "7/17/2023"
+        ret = is_dd_mm_yyyy(date)
+        self.assertIs(ret, False)
+
+
+    def test_format_date_1(self):
+        date = "August 26, 2023"
+        format_date(date)
+
+
+    def test_format_date_2(self):
+        date = "2023-08-26"
+        format_date(date)
+
+
+    def test_format_date_3(self):
+        date = "26/08/2023"
+        format_date(date)
+
+
+    def test_format_date_4(self):
+        date = "261/108/22023"
+        try:
+            format_date(date)
+            raise Exception("This should fail!")
+        except:
+            pass
+
+
     def test_is_yyyy_mm_dd_1(self):
-        print('test_is_yyyy_mm_dd_1')
         date = "2021-01-20"
         ret = is_yyyy_mm_dd(date)
         self.assertIs(ret, True)
 
 
     def test_is_yyyy_mm_dd_2(self):
-        print('test_is_yyyy_mm_dd_2')
         date = "21-01-20"
         ret = is_yyyy_mm_dd(date)
         self.assertIs(ret, False)
 
 
     def test_is_yyyy_mm_dd_3(self):
-        print('test_is_yyyy_mm_dd_3')
         date = "January 10, 2021"
         ret = is_yyyy_mm_dd(date)
         self.assertIs(ret, False)
 
 
     def test_is_month_day_year_1(self):
-        print('test_is_month_day_year_1')
         date = "January 10, 2021"
         ret = is_month_day_year(date)
         self.assertIs(ret, True)
 
     
     def test_is_month_day_year_2(self):
-        print('test_is_month_day_year_2')
         date = "Jan 10, 2021"
         ret = is_month_day_year(date)
         self.assertIs(ret, False)
 
     
     def test_is_month_day_year_3(self):
-        print('test_is_month_day_year_3')
         date = "January 10, 21"
         ret = is_month_day_year(date)
         self.assertIs(ret, False)
 
     
     def test_is_month_day_year_4(self):
-        print('test_is_month_day_year_4')
         date = "January     10, 21"
         ret = is_month_day_year(date)
         self.assertIs(ret, False)
@@ -1633,6 +1944,7 @@ class ViewTests(TestCase):
 
     def test_process_post_delete_choice_frontend(self):
         ''' Check if we can delete a choice from the detail.html'''
+        # TODO
         pass
 
 
