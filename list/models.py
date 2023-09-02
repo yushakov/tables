@@ -4,6 +4,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.utils.html import format_html
 from django.utils import timezone
+from django.utils.text import slugify
 from datetime import timedelta
 import uuid
 from django.core.files.base import ContentFile
@@ -82,9 +83,16 @@ class Construct(models.Model):
     owner_profit_coeff = models.FloatField(validators=coeff_valid, default='0.13')
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
+    slug_name = models.CharField(max_length=500, null=True)
     
     def __str__(self):
         return self.title_text
+
+    def get_slug(self):
+        slug_title = slugify(self.title_text, allow_unicode=True)
+        slug_owner = slugify(self.owner_name_text, allow_unicode=True)
+        slug_date  = slugify(self.listed_date.date())
+        return f"{slug_title}-{slug_owner}-{slug_date}"
 
     def shallow_copy(self):
         return Construct(
@@ -106,6 +114,7 @@ class Construct(models.Model):
     def save(self, *args, **kwargs):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
         self.last_save_date = timezone.now() + delta_to_make_construct_a_bit_younger
+        self.slug_name = self.get_slug()
         super(Construct, self).save(*args, **kwargs)
 
     def copy(self, new_title):
