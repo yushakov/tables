@@ -14,6 +14,7 @@ from django.core import serializers
 from django.conf import settings
 from django.contrib.auth.models import User
 import difflib
+from random import seed, randint
 
 logger = logging.getLogger('django')
 
@@ -92,7 +93,9 @@ class Construct(models.Model):
         slug_title = slugify(self.title_text, allow_unicode=True)
         slug_owner = slugify(self.owner_name_text, allow_unicode=True)
         slug_date  = slugify(self.listed_date.date())
-        return f"{slug_title}-{slug_owner}-{slug_date}"
+        seed(int(self.id))
+        slug_rand  = randint(0, 100000)
+        return f"{slug_title}-{slug_owner}-{slug_date}-{slug_rand}"
 
     def shallow_copy(self):
         return Construct(
@@ -114,8 +117,10 @@ class Construct(models.Model):
     def save(self, *args, **kwargs):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
         self.last_save_date = timezone.now() + delta_to_make_construct_a_bit_younger
+        super(Construct, self).save(*args, **kwargs)
         self.slug_name = self.get_slug()
         super(Construct, self).save(*args, **kwargs)
+
 
     def copy(self, new_title):
         if len(Construct.objects.filter(title_text=new_title.strip())) > 0:

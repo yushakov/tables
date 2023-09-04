@@ -422,6 +422,21 @@ class ModelTests(TestCase):
         self.assertEqual(construct1.get_struct_signature(), construct3.get_struct_signature())
         self.assertFalse(construct1.get_struct_signature() == construct2.get_struct_signature())
 
+    def test_get_slug(self):
+        construct1 = make_test_construct("First one", history=True)
+        construct2 = make_test_construct("Second construct", history=True)
+        construct3 = make_test_construct("Третий конструкт, ё!", history=True)
+        construct1.save()
+        construct2.save()
+        construct3.save()
+        s1 = construct1.get_slug()
+        s2 = construct2.get_slug()
+        s3 = construct3.get_slug()
+        self.assertTrue(len(s1.strip()) > 0)
+        self.assertTrue(len(s2.strip()) > 0)
+        self.assertTrue(len(s3.strip()) > 0)
+
+
     def test_dump_all_constructs(self):
         construct1 = make_test_construct("First one", history=True)
         construct2 = make_test_construct("Second construct", history=True)
@@ -1784,7 +1799,7 @@ class ViewTests(TestCase):
     def test_format_date(self):
         construct = make_test_construct()
         for m in range(1, 13):
-            for d in range(1, 31):
+            for d in [0, 1, 2, 3, 9, 10, 11, 12, 19, 20, 21, 28, 29, 30, 31]:
                 for y in [1837, 1900, 1984, 1990, 1991, 2000, 2001, 2018, 2020, 2023, 2025]:
                     date_str = f"{y}-{m}-{d}"
                     choice = make_test_choice(construct)

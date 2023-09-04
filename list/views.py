@@ -407,6 +407,32 @@ def client(request, construct_id):
     return render(request, 'list/client_view.html', context)
 
 
+def client_slug(request, slug):
+    construct = Construct.objects.filter(slug_name=slug).first()
+    if construct is None:
+        return Http404("Project not found")
+    logger.info(f'USER ACCESS: client({construct.title_text}) by {request.user.username}')
+    if request.method == 'POST':
+        process_post(request, construct, client=True)
+        construct.history_dump(request.user.id)
+    extend_session(request)
+    struc_dict, choice_dict = getStructChoiceDict(construct)
+    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
+    if construct_total_price > 0.0:
+        construct_progress *= 100. / construct_total_price
+    if construct.overall_progress_percent_num != construct_progress:
+        construct.overall_progress_percent_num = construct_progress
+        construct.save()
+    total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    context = {'construct': construct,
+               'ch_list': ch_list,
+               'construct_total': construct_total_price,
+               'total_and_profit': total_and_profit,
+               'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'construct_paid': construct.income()}
+    return render(request, 'list/client_view.html', context)
+
+
 @login_required
 @permission_required("list.add_construct")
 @permission_required("list.change_construct")
