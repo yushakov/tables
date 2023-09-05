@@ -63,6 +63,13 @@ td.brown-line  {
     padding: 3px;
 }
 
+td.even-line {
+}
+
+td.odd-line {
+    background-color: #ffefef;
+}
+
 div#notice {
     width: 300px;
     padding: 10px;

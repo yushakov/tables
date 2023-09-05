@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
@@ -34,7 +34,6 @@ def index(request):
         price += sum([choice.price_num * choice.quantity_num for choice in construct.choice_set.all()])
     context = {'active_construct_list': constructs,
                'price': price,
-               'price_vat': price * (1. + construct.vat_percent_num * 0.01),
                'noscale': True
               }
     return render(request, 'list/index.html', context)
@@ -42,6 +41,13 @@ def index(request):
 def is_yyyy_mm_dd(date_field):
     try:
         datetime.strptime(date_field, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
+
+def is_dd_mm_yyyy(date_field):
+    try:
+        datetime.strptime(date_field, "%d/%m/%Y")
         return True
     except ValueError:
         return False
@@ -378,8 +384,8 @@ def detail(request, construct_id):
 @login_required
 @permission_required("list.view_construct")
 def client(request, construct_id):
-    logger.info(f'USER ACCESS: client() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: client({construct.title_text}) by {request.user.username}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
         construct.history_dump(request.user.id)
@@ -401,12 +407,38 @@ def client(request, construct_id):
     return render(request, 'list/client_view.html', context)
 
 
+def client_slug(request, slug):
+    construct = Construct.objects.filter(slug_name=slug).first()
+    if construct is None:
+        raise Http404("Project not found")
+    logger.info(f'USER ACCESS: client({construct.title_text}) with slug: {slug}')
+    if request.method == 'POST':
+        process_post(request, construct, client=True)
+        construct.history_dump(-1)
+    # extend_session(request)
+    struc_dict, choice_dict = getStructChoiceDict(construct)
+    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
+    if construct_total_price > 0.0:
+        construct_progress *= 100. / construct_total_price
+    if construct.overall_progress_percent_num != construct_progress:
+        construct.overall_progress_percent_num = construct_progress
+        construct.save()
+    total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    context = {'construct': construct,
+               'ch_list': ch_list,
+               'construct_total': construct_total_price,
+               'total_and_profit': total_and_profit,
+               'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'construct_paid': construct.income()}
+    return render(request, 'list/client_view.html', context)
+
+
 @login_required
 @permission_required("list.add_construct")
 @permission_required("list.change_construct")
 def clone_construct(request, construct_id):
-    logger.info(f'USER ACCESS: clone_construct() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: clone_construct({construct.title_text}) by {request.user.username}')
     new_name = 'Copy ' + str(datetime.now()) + ' ' + str(construct.title_text)
     new_construct = construct.copy(new_name)
     context = {'next_page': 'list:index',
@@ -437,8 +469,8 @@ def getMarking(choice_list):
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def gantt(request, construct_id):
-    logger.info(f'USER ACCESS: gantt() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: gantt({construct.title_text}) by {request.user.username}')
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     common_start, marking, total, labels = getMarking(ch_list)
@@ -461,17 +493,37 @@ def getTransactions(invoice):
     return out
 
 
+def get_printed_invoice_lines(details, amount=0):
+    lines = details.split('\n')
+    out = []
+    for line_num, line in enumerate(lines):
+        fields = [f.strip() for f in line.split(',')]
+        time_now = datetime.now().strftime('%d.%m.%Y')
+        item = {'quantity': 1, 'description': f'Work done by {time_now}.',
+                'unit_price': amount, 'amount': amount, 'class': 'even-line'}
+        if len(fields) >= 1: item['quantity'] = fields[0]
+        if len(fields) >= 2: item['description'] = fields[1]
+        if len(fields) >= 3: item['unit_price'] = fields[2]
+        if len(fields) >= 4: item['amount'] = fields[3]
+        if line_num % 2 == 1:
+            item['class'] = 'odd-line'
+        out.append(item)
+    return out
+
+
 @login_required
 @permission_required("list.view_invoice")
 def print_invoice(request, invoice_id):
-    logger.info(f'USER ACCESS: print_invoice() by {request.user.username}')
     invoice = get_object_or_404(Invoice, pk=invoice_id)
+    logger.info(f'USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
     amount = float(invoice.amount)
     vat_prc = float(invoice.construct.vat_percent_num)
     vat_from_total = amount * 0.01 * vat_prc
     total_and_vat = round(amount + vat_from_total)
+    lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
     context = {'invoice': invoice,
                'no_logout_link': True,
+               'lines': lines,
                'vat_from_total': vat_from_total,
                'total_and_vat': total_and_vat}
     return render(request, 'list/print_invoice.html', context)
@@ -480,8 +532,8 @@ def print_invoice(request, invoice_id):
 @login_required
 @permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
-    logger.info(f'USER ACCESS: view_invoice() by {request.user.username}')
     invoice = get_object_or_404(Invoice, pk=invoice_id)
+    logger.info(f'USER ACCESS: view_invoice({invoice.id}) by {request.user.username}')
     tra_list = getTransactions(invoice)
     context = {'invoice': invoice, 'transactions': tra_list}
     return render(request, 'list/view_invoice.html', context)
@@ -494,8 +546,8 @@ def getInvoices(transaction):
 @login_required
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
-    logger.info(f'USER ACCESS: view_transaction() by {request.user.username}')
     transaction = get_object_or_404(Transaction, pk=transaction_id)
+    logger.info(f'USER ACCESS: view_transaction(transaction.id) by {request.user.username}')
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
     context = {'transaction': transaction, 'invoices': invoices}
@@ -527,6 +579,55 @@ def submit_transaction(request):
     return render(request, 'list/submit_transaction.html', {'form': form})
 
 @login_required
+@permission_required("list.add_transaction")
+@permission_required("list.change_transaction")
+def submit_transaction_bunch(request):
+    logger.info(f'USER ACCESS: submit_transaction() by {request.user.username}')
+    lines_to_show = ""
+    lines_added = []
+    errors = []
+    constructs = Construct.objects.all()
+    construct_id = int(request.GET.get("construct", -1))
+    field_nums = "1,2,3,4,5,6,7"
+    if request.method == 'POST':
+        construct_id = int(request.POST.get('construct_id', -1))
+        delimiter_option = request.POST.get('delimiter', "1")
+        field_nums = request.POST.get('field_nums', '1,2,3,4,5,6,7')
+        lines = request.POST.get('lines', "")
+        try:
+            construct = Construct.objects.get(id=construct_id)
+        except Exception as e:
+            errors.append(f"with getting the construct id = {construct_id}.")
+            context = {'constructs': constructs, 'lines': lines,
+                    'errors': errors, 'field_nums': field_nums}
+            return render(request, 'list/submit_transaction_bunch.html', context)
+        lines = [line.strip() for line in lines.split("\n")]
+        delimiters = {'1': '\t', '2': ','}
+        delimiter = delimiters[delimiter_option]
+        for i, line in enumerate(lines):
+            if len(line.strip()) == 0:
+                continue
+            fields = [f.strip() for f in line.split(delimiter)]
+            try:
+                inds = [int(f.strip()) - 1 for f in field_nums.split(',')]
+                from_txt = str(fields[inds[0]])
+                to_txt   = str(fields[inds[1]])
+                amount   = abs(float(fields[inds[2]]))
+                inout    = str(fields[inds[3]])
+                date     = format_date(str(fields[inds[4]]))
+                number   = str(fields[inds[5]])
+                details  = str(fields[inds[6]])
+                Transaction.add_as_on_page(construct, from_txt, to_txt, amount, inout,
+                                           date, number, details)
+                lines_added.append(line.strip())
+            except Exception as e:
+                lines_to_show += line.strip() + "\n"
+                errors.append(f"with \"{line.strip()}\" ({e})")
+    context = {'constructs': constructs, 'lines': lines_to_show, 'field_nums': field_nums,
+            'errors': errors, 'added': lines_added, 'construct_id': construct_id}
+    return render(request, 'list/submit_transaction_bunch.html', context)
+
+@login_required
 @permission_required("list.add_invoice")
 def submit_invoice(request):
     logger.info(f'USER ACCESS: submit_invoice() by {request.user.username}')
@@ -549,6 +650,37 @@ def submit_invoice(request):
             form.fields['status'].widget = forms.HiddenInput()
             form.fields['status'].initial = 'Unpaid'
     return render(request, 'list/submit_invoice.html', {'form': form})
+
+@login_required
+@permission_required("list.change_invoice")
+def modify_invoice(request, invoice_id):
+    invoice = get_object_or_404(Invoice, pk=invoice_id)
+    logger.info(f'USER ACCESS: modify_invoice({invoice.id}) by {request.user.username}')
+    if request.method == 'POST':
+        form = InvoiceSubmitForm(request.POST, instance=invoice)
+        if form.is_valid():
+            form.save()
+            obj = Invoice.objects.get(pk=invoice_id)
+            return redirect(obj)
+    else:
+        #initial_data = {'construct': invoice.construct.id,
+        #                'seller': invoice.seller,
+        #                'amount': invoice.amount,
+        #                'number': invoice.number,
+        #                'invoice_type': invoice.invoice_type,
+        #                'status': invoice.status,
+        #                'issue_date': invoice.issue_date,
+        #                'due_date': invoice.due_date,
+        #                'photo': invoice.photo,
+        #                'details_txt': invoice.details_txt,
+        #               }
+        #form = InvoiceSubmitForm(initial=initial_data)
+        form = InvoiceSubmitForm(instance=invoice)
+        form.fields['photo'].widget = forms.HiddenInput()
+        form.fields['number'].widget = forms.HiddenInput()
+        form.fields['status'].widget = forms.HiddenInput()
+        form.fields['invoice_type'].widget = forms.HiddenInput()
+    return render(request, 'list/modify_invoice.html', {'form': form})
 
 @login_required
 @permission_required("list.view_construct")
@@ -576,8 +708,8 @@ def getTotalAmount(transactions):
 @permission_required("list.change_construct")
 @permission_required("list.add_construct")
 def flows(request, construct_id):
-    logger.info(f'USER ACCESS: flows() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: flows({construct.title_text}) by {request.user.username}')
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING).order_by('date')
     outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING).order_by('date')
     salary_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING,
@@ -612,8 +744,8 @@ def flows(request, construct_id):
 @permission_required("list.change_construct")
 @permission_required("list.add_construct")
 def transactions(request, construct_id):
-    logger.info(f'USER ACCESS: transactions() by {request.user.username}')
     construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: transactions({construct.title_text}) by {request.user.username}')
     context = {'construct_id': construct.id, 'construct_name': construct.title_text}
     transactions = []
     direction = 'all'
