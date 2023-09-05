@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
@@ -410,12 +410,12 @@ def client(request, construct_id):
 def client_slug(request, slug):
     construct = Construct.objects.filter(slug_name=slug).first()
     if construct is None:
-        return Http404("Project not found")
-    logger.info(f'USER ACCESS: client({construct.title_text}) by {request.user.username}')
+        raise Http404("Project not found")
+    logger.info(f'USER ACCESS: client({construct.title_text}) with slug: {slug}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
-        construct.history_dump(request.user.id)
-    extend_session(request)
+        construct.history_dump(-1)
+    # extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
