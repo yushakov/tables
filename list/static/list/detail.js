@@ -360,7 +360,7 @@ function freezeActiveRow() {
 				var name     = document.getElementById("inpName").value;
 				var price    = document.getElementById("inpPrice").value;
                 var price_num = Number(price.replace(/,/g,''));
-				var qty      = document.getElementById("inpQty").value;
+				var qty      = document.getElementById("inpQty").value.replace(/,/g,'');
 				var units    = document.getElementById("inpUnits").value;
 				var asgnTo   = document.getElementById("inpAsgnTo").value;
 				var dayStart = document.getElementById("inpDayStart").value;
