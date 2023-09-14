@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('list', '0002_historyrecord'),
+        ('list', '0002_user_accessible_constructs_user_additional_info_and_more'),
     ]
 
     operations = [
