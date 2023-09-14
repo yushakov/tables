@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
@@ -95,7 +95,7 @@ def prepare_data(cells):
     data = dict()
     data['name_txt'] = cells['name']
     data['notes_txt'] = ''
-    data['quantity_num'] = float(cells['quantity'].strip())
+    data['quantity_num'] = float(cells['quantity'].replace(',','').strip())
     data['units_of_measure_text'] = cells['units']
     data['price_num'] = float(cells['price'].replace('£','').replace(',','').strip())
     data['workers'] = str(cells['assigned_to'])
@@ -394,6 +394,32 @@ def client(request, construct_id):
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
+    if construct.overall_progress_percent_num != construct_progress:
+        construct.overall_progress_percent_num = construct_progress
+        construct.save()
+    total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    context = {'construct': construct,
+               'ch_list': ch_list,
+               'construct_total': construct_total_price,
+               'total_and_profit': total_and_profit,
+               'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'construct_paid': construct.income()}
+    return render(request, 'list/client_view.html', context)
+
+
+def client_slug(request, slug):
+    construct = Construct.objects.filter(slug_name=slug).first()
+    if construct is None:
+        raise Http404("Project not found")
+    logger.info(f'USER ACCESS: client({construct.title_text}) with slug: {slug}')
+    if request.method == 'POST':
+        process_post(request, construct, client=True)
+        construct.history_dump(-1)
+    # extend_session(request)
+    struc_dict, choice_dict = getStructChoiceDict(construct)
+    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
+    if construct_total_price > 0.0:
+        construct_progress *= 100. / construct_total_price
     if construct.overall_progress_percent_num != construct_progress:
         construct.overall_progress_percent_num = construct_progress
         construct.save()

@@ -1,5 +1,4 @@
 from django.urls import path
-
 from . import views
 from django.shortcuts import redirect
 
@@ -17,6 +16,7 @@ urlpatterns = [
     path('history/', views.history, name='history'),
     path('<int:construct_id>/', views.detail, name='detail'),
     path('<int:construct_id>/client/', views.client, name='client'),
+    path('client/<str:slug>', views.client_slug, name='client_slug'),
     path('<int:construct_id>/gantt/', views.gantt, name='gantt'),
     path('<int:construct_id>/flows/', views.flows, name='flows'),
     path('<int:construct_id>/transactions/', views.transactions, name='transactions'),

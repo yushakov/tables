@@ -4,6 +4,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.utils.html import format_html
 from django.utils import timezone
+from django.utils.text import slugify
 from datetime import timedelta
 import uuid
 from django.core.files.base import ContentFile
@@ -13,6 +14,7 @@ from django.core import serializers
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 import difflib
+from random import seed, randint
 
 logger = logging.getLogger('django')
 
@@ -82,9 +84,18 @@ class Construct(models.Model):
     owner_profit_coeff = models.FloatField(validators=coeff_valid, default='0.13')
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
+    slug_name = models.CharField(max_length=500, null=True)
     
     def __str__(self):
         return self.title_text
+
+    def get_slug(self):
+        slug_title = slugify(self.title_text, allow_unicode=True)
+        slug_owner = slugify(self.owner_name_text, allow_unicode=True)
+        slug_date  = slugify(self.listed_date.date())
+        seed(int(self.id))
+        slug_rand  = randint(0, 100000)
+        return f"{slug_title}-{slug_owner}-{slug_date}-{slug_rand}"
 
     def shallow_copy(self):
         return Construct(
@@ -107,6 +118,9 @@ class Construct(models.Model):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
         self.last_save_date = timezone.now() + delta_to_make_construct_a_bit_younger
         super(Construct, self).save(*args, **kwargs)
+        self.slug_name = self.get_slug()
+        super(Construct, self).save(*args, **kwargs)
+
 
     def copy(self, new_title):
         if len(Construct.objects.filter(title_text=new_title.strip())) > 0:

@@ -423,6 +423,21 @@ class ModelTests(TestCase):
         self.assertEqual(construct1.get_struct_signature(), construct3.get_struct_signature())
         self.assertFalse(construct1.get_struct_signature() == construct2.get_struct_signature())
 
+    def test_get_slug(self):
+        construct1 = make_test_construct("First one", history=True)
+        construct2 = make_test_construct("Second construct", history=True)
+        construct3 = make_test_construct("Третий конструкт, ё!", history=True)
+        construct1.save()
+        construct2.save()
+        construct3.save()
+        s1 = construct1.get_slug()
+        s2 = construct2.get_slug()
+        s3 = construct3.get_slug()
+        self.assertTrue(len(s1.strip()) > 0)
+        self.assertTrue(len(s2.strip()) > 0)
+        self.assertTrue(len(s3.strip()) > 0)
+
+
     def test_dump_all_constructs(self):
         construct1 = make_test_construct("First one", history=True)
         construct2 = make_test_construct("Second construct", history=True)
@@ -1552,6 +1567,27 @@ class ViewTests(TestCase):
         self.assertIs(ret == choice_id, True)
 
 
+    def test_update_choice_big_quantity(self):
+        print("test_update_choice()")
+        cells = {'class': '',
+                 'name': 'task_name_to_update',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15',
+                 'days': '365'}
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        choice_id = create_choice(cell_data, construct)
+        cells['quantity'] = '2,100'
+        ret = update_choice(choice_id, cell_data)
+        self.assertIs(ret == choice_id, True)
+
+
     def test_update_choice_non_existing_choice(self):
         print("test_update_choice_non_existing_choice()")
         cells = {'class': '',
@@ -1785,7 +1821,7 @@ class ViewTests(TestCase):
     def test_format_date(self):
         construct = make_test_construct()
         for m in range(1, 13):
-            for d in range(1, 31):
+            for d in [0, 1, 2, 3, 9, 10, 11, 12, 19, 20, 21, 28, 29, 30, 31]:
                 for y in [1837, 1900, 1984, 1990, 1991, 2000, 2001, 2018, 2020, 2023, 2025]:
                     date_str = f"{y}-{m}-{d}"
                     choice = make_test_choice(construct)
@@ -2518,3 +2554,62 @@ class ViewTests(TestCase):
             "line_6":{"type":"Choice", "id":"47"}
             }''', choices)
         self.assertEqual(len(struc_dic), 9)
+
+
+class ClientSlugTests(TestCase):
+    def test_access_client_view(self):
+        c = Client()
+        cons = make_test_construct("Client page view")
+        cons.owner_name_text = "Mr. Ivan Ivanovich"
+        cons.save()
+        access_str = '/list/client/' + str(cons.slug_name)
+        print(access_str)
+        response = c.get(access_str)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+
+    def test_updating_notes(self):
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "my con notes", "client_notes": "tricky_str"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+        json_val = json.loads(request.POST['json_value'])
+        json_val['row_2']['id'] = 'tr_1'
+        request.POST["json_value"] = json.dumps(json_val)
+        request.POST["json_value"] = request.POST["json_value"].replace("tricky_str", "updated_str")
+        c = Client()
+        access_str = '/list/client/' + str(construct.slug_name)
+        response = c.post(access_str, {"json_value": request.POST["json_value"]})
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        structure_str = construct.struct_json
+        choices = construct.choice_set.all()
+        struc_dict = check_integrity(structure_str, choices)
+        self.assertIs(len(struc_dict), 2)
+        self.assertEqual(choices[0].client_notes, 'updated_str')
