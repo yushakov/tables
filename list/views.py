@@ -95,7 +95,7 @@ def prepare_data(cells):
     data = dict()
     data['name_txt'] = cells['name']
     data['notes_txt'] = ''
-    data['quantity_num'] = float(cells['quantity'].strip())
+    data['quantity_num'] = float(cells['quantity'].replace(',','').strip())
     data['units_of_measure_text'] = cells['units']
     data['price_num'] = float(cells['price'].replace('£','').replace(',','').strip())
     data['workers'] = str(cells['assigned_to'])
