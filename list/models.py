@@ -112,7 +112,8 @@ class Construct(models.Model):
                 company_profit_percent_num = self.company_profit_percent_num,
                 owner_profit_coeff = self.owner_profit_coeff,
                 paid_num = self.paid_num,
-                struct_json = self.struct_json)
+                struct_json = self.struct_json,
+                slug_name = self.slug_name)
 
     def save(self, *args, **kwargs):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
