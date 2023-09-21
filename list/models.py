@@ -239,7 +239,7 @@ class Construct(models.Model):
         return out
 
 
-    def safe_import_from_json(fname):
+    def safe_import_from_json(fname, prefix='Imported: '):
         with open(fname, 'r') as data_file:
             construct = None
             invoices = {}
@@ -248,7 +248,7 @@ class Construct(models.Model):
             invtra_objects = []
             for obj in serializers.deserialize("json", data_file):
                 if type(obj.object) == Construct:
-                    new_title = 'Imported: ' + obj.object.title_text
+                    new_title = prefix + obj.object.title_text
                     print('Construct: ', new_title)
                     construct = obj.object.shallow_copy()
                     construct.title_text = new_title
