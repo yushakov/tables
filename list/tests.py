@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import Permission
 import numpy as np
 import datetime as dt
 import json
@@ -17,6 +17,7 @@ from list.views import check_integrity,   \
                        fix_structure,     \
                        get_printed_invoice_lines
 from list.models import Construct, \
+                        User, \
                         Choice, \
                         Invoice, \
                         Transaction, \

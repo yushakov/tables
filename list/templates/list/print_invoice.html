@@ -18,12 +18,11 @@
                 {% comment %}
                     'Will get it from his account' 
                 {% endcomment %}
-                Sergej Safoncik<br>
-                Constructive Choice Ltd<br>
-                39 Kildare road, Mapperley<br>
-                Nottingham, NG3 3AF<br>
-                info@constructivechoice.co.uk<br>
-                VAT number: 335714013<br>
+                {{ user.first_name }} {{ user.last_name }}<br>
+                {{ user.company }}<br>
+                {{ user.business_address|linebreaksbr }}<br>
+                {{ user.email }}<br>
+                {{ user.additional_info }}<br>
             </td>
             <td id='invoice_info' colspan='2'>
                 <div id='invoice-info-table'>
@@ -48,7 +47,7 @@
         <tr>
             <td id='bill-to-content'>
                 {{ invoice.construct.owner_name_text }}<br>
-                {{ invoice.construct.address_text }}<br>
+                {{ invoice.construct.address_text|linebreaksbr }}<br>
             </td>
         </tr>
         <tr>
@@ -86,12 +85,7 @@
         <tr>
             <td colspan='2'>
                 <div id='notice'>
-                    <p>
-                        Make all invoices payable to Sergej Safoncik Constructive Choice 20-45-45 53323846
-                    </p>
-                    <p>
-                        If you have any questions concerning this invoice, contact Sergej Safoncik at info@constructivechoice.co.uk
-                    </p>
+                    {{ user.invoice_footer|linebreaksbr }}
                     <p class='thank-you'>
                         Thank you for your business!
                     </p>
