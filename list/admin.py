@@ -63,6 +63,7 @@ class MyUserAdmin(UserAdmin):
     """
     # fieldsets = UserAdmin.fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
     # add_fieldsets = UserAdmin.add_fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
+    list_display = ["username", "email", "first_name", "last_name", "is_staff"]
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'business_address',
