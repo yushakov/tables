@@ -441,7 +441,32 @@ class User(AbstractUser):
     additional_info = models.TextField(null=True, blank=True)
     invoice_footer = models.TextField(null=True, blank=True)
 
-    # struct_json = models.TextField(default='')
+    def shallow_copy(self):
+        return User(password=self.password,
+                    last_login=self.last_login,
+                    is_superuser=self.is_superuser,
+                    username=self.username,
+                    first_name=self.first_name,
+                    last_name=self.last_name,
+                    email=self.email,
+                    is_staff=self.is_staff,
+                    is_active=self.is_active,
+                    date_joined=self.date_joined)
+
+    def safe_import_from_json(fname):
+        with open(fname, 'r') as data_file:
+            for obj in serializers.deserialize("json", data_file):
+                print("type:", type(obj.object), "obj:", obj.object)
+                user = obj.object.shallow_copy()
+                user.save()
+
+
+def export_users(fname):
+    users = User.objects.all()
+    data = serializers.serialize('json', [*users],
+               use_natural_foreign_keys=True, use_natural_primary_keys=True)
+    with open(fname, 'w') as outfile:
+        outfile.write(data)
 
 
 class HistoryRecord(models.Model):
