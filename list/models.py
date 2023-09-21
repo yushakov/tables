@@ -53,12 +53,12 @@ def dump_all_constructs(folder):
         new_construct.delete()
 
 
-def load_all_constructs(folder):
+def load_all_constructs(folder, prefix='Imported: '):
     if not os.access(folder, os.F_OK):
         raise ValueError(f"folder '{folder}' is not accessible.")
     files = sorted([folder + '/' + f for f in os.listdir(folder) if f.endswith('.json')])
     for fname in files:
-        Construct.safe_import_from_json(fname)
+        Construct.safe_import_from_json(fname, prefix)
 
 
 class Client(models.Model):
