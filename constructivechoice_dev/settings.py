@@ -43,6 +43,7 @@ def ip_addresses():
 #ALLOWED_HOSTS = ip_addresses()
 ALLOWED_HOSTS = ['projects.constructivechoice.co.uk']
 
+AUTH_USER_MODEL = "list.User"
 
 # Application definition
 

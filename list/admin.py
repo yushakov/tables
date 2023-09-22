@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import Construct, Worker, Choice, Invoice, Transaction, InvoiceTransaction
+from django.contrib.auth.admin import UserAdmin
+from .models import User
 
 '''
 Customization tricks: https://realpython.com/customize-django-admin-python 
@@ -30,6 +32,7 @@ class ConstructAdmin(admin.ModelAdmin):
         form.base_fields["owner_profit_coeff"].label = "Owner profit coefficient"
         return form
 
+
 class ChoiceAdmin(admin.ModelAdmin):
     list_display = ["get_name", "construct", "get_progress"]
     list_filter  = ["construct"]
@@ -41,14 +44,37 @@ class ChoiceAdmin(admin.ModelAdmin):
               "actual_start_date", "actual_end_date",
               "constructive_notes", "client_notes"]
 
+
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ["get_from_txt", "get_to_txt", "number_link", "within", "get_type", "date", "amount"]
     list_filter = ["construct"]
+
 
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ["seller", "within", "number_link", "invoice_type", "status", "issue_date", "due_date", "amount"]
     list_filter = ["construct"]
 
+
+class MyUserAdmin(UserAdmin):
+    """
+    add your custom fields to fieldsets (for fields to be used in editing users)
+    and to add_fieldsets (for fields to be used when creating a user)
+    https://docs.djangoproject.com/en/4.2/topics/auth/customizing
+    """
+    # fieldsets = UserAdmin.fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
+    # add_fieldsets = UserAdmin.add_fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
+    list_display = ["username", "email", "first_name", "last_name", "is_staff"]
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'business_address',
+                                        'company', 'additional_info', 'invoice_footer')}),
+        (('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups',
+                                      'user_permissions', 'accessible_constructs')}),
+        (('Important dates'), {'fields': ('last_login', 'date_joined')}),
+    )
+
+
+admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
 admin.site.register(Worker)
 admin.site.register(Choice, ChoiceAdmin)

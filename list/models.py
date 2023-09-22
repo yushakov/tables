@@ -12,7 +12,7 @@ import logging
 import json
 from django.core import serializers
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 import difflib
 from random import seed, randint
 
@@ -53,12 +53,12 @@ def dump_all_constructs(folder):
         new_construct.delete()
 
 
-def load_all_constructs(folder):
+def load_all_constructs(folder, prefix='Imported: '):
     if not os.access(folder, os.F_OK):
         raise ValueError(f"folder '{folder}' is not accessible.")
     files = sorted([folder + '/' + f for f in os.listdir(folder) if f.endswith('.json')])
     for fname in files:
-        Construct.safe_import_from_json(fname)
+        Construct.safe_import_from_json(fname, prefix)
 
 
 class Client(models.Model):
@@ -239,7 +239,7 @@ class Construct(models.Model):
         return out
 
 
-    def safe_import_from_json(fname):
+    def safe_import_from_json(fname, prefix='Imported: '):
         with open(fname, 'r') as data_file:
             construct = None
             invoices = {}
@@ -248,7 +248,7 @@ class Construct(models.Model):
             invtra_objects = []
             for obj in serializers.deserialize("json", data_file):
                 if type(obj.object) == Construct:
-                    new_title = 'Imported: ' + obj.object.title_text
+                    new_title = prefix + obj.object.title_text
                     print('Construct: ', new_title)
                     construct = obj.object.shallow_copy()
                     construct.title_text = new_title
@@ -432,6 +432,41 @@ class Construct(models.Model):
     @property
     def full_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.progress_cost())))
+
+
+class User(AbstractUser):
+    accessible_constructs = models.ManyToManyField(Construct, blank=True)
+    business_address = models.TextField(null=True, blank=True)
+    company = models.CharField(max_length=200, null=True, blank=True)
+    additional_info = models.TextField(null=True, blank=True)
+    invoice_footer = models.TextField(null=True, blank=True)
+
+    def shallow_copy(self):
+        return User(password=self.password,
+                    last_login=self.last_login,
+                    is_superuser=self.is_superuser,
+                    username=self.username,
+                    first_name=self.first_name,
+                    last_name=self.last_name,
+                    email=self.email,
+                    is_staff=self.is_staff,
+                    is_active=self.is_active,
+                    date_joined=self.date_joined)
+
+    def safe_import_from_json(fname):
+        with open(fname, 'r') as data_file:
+            for obj in serializers.deserialize("json", data_file):
+                print("type:", type(obj.object), "obj:", obj.object)
+                user = obj.object.shallow_copy()
+                user.save()
+
+
+def export_users(fname):
+    users = User.objects.all()
+    data = serializers.serialize('json', [*users],
+               use_natural_foreign_keys=True, use_natural_primary_keys=True)
+    with open(fname, 'w') as outfile:
+        outfile.write(data)
 
 
 class HistoryRecord(models.Model):
