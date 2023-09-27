@@ -1500,7 +1500,7 @@ class ViewTests(TestCase):
         out = get_number(line)
         self.assertEqual(out, 0.0)
 
-    def test_print_invoice(self):
+    def test_print_invoice_warning(self):
         c = Client()
         c.login(username="yuran", password="secret")
         cons = Construct()
@@ -1517,6 +1517,26 @@ class ViewTests(TestCase):
         invoice = Invoice.objects.latest()
         response = c.get(f"/list/invoice/{invoice.id}/print/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(len(response.context['warning']) > 0)
+
+    def test_print_invoice_no_warning(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1 nr, desr, 20\n 2 hour, descr2, 40'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/print/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(len(response.context['warning']) == 0)
 
     def test_modify_invoice_post(self):
         c = Client()
