@@ -513,7 +513,7 @@ def get_printed_invoice_lines(details, amount=0):
 
 
 def get_number(line):
-    line2 = line.strip().replace(',', '')
+    line2 = str(line).strip().replace(',', '')
     mtch = re.search( '([0-9\.]+)', line2)
     number = 0.0
     try:
@@ -539,15 +539,23 @@ def process_invoice_lines(lines):
 def print_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
-    amount = float(invoice.amount)
-    vat_prc = float(invoice.construct.vat_percent_num)
-    vat_from_total = amount * 0.01 * vat_prc
-    total_and_vat = round(amount + vat_from_total)
+    invoice_amount = float(invoice.amount)
     lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
+    lines, lines_amount = process_invoice_lines(lines)
+    warning = ''
+    if abs(invoice_amount - lines_amount) > 0.01:
+        warning = f"Actual invoice amount (£{invoice_amount}) " + \
+                f"is different from the total amount from lines: £{lines_amount}. " + \
+                f"Either your invoice price is wrong, or there is a mistake in the lines."
+    vat_prc = float(invoice.construct.vat_percent_num)
+    vat_from_total = lines_amount * 0.01 * vat_prc
+    total_and_vat = round(lines_amount + vat_from_total)
     context = {'user': request.user,
                'invoice': invoice,
                'no_logout_link': True,
                'lines': lines,
+               'lines_amount': lines_amount,
+               'warning': warning,
                'vat_from_total': vat_from_total,
                'total_and_vat': total_and_vat}
     return render(request, 'list/print_invoice.html', context)

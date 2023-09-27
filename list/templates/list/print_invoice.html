@@ -15,9 +15,6 @@
         </tr>
         <tr>
             <td id='seller_info' colspan='2'>
-                {% comment %}
-                    'Will get it from his account' 
-                {% endcomment %}
                 {{ user.first_name }} {{ user.last_name }}<br>
                 {{ user.company }}<br>
                 {{ user.business_address|linebreaksbr }}<br>
@@ -56,20 +53,6 @@
             <td class='brown-line' id='unit-price'>Unit price</td>
             <td class='brown-line' id='amount'>Amount</td>
         </tr>
-        {% comment %}
-        <tr>
-            <td class='light-brown' style='text-align: center'>1</td>
-            <td class='light-brown'>Stage 1</td>
-            <td class='light-brown'>£ </td>
-            <td class='light-brown'>£ </td>
-        </tr>
-        <tr>
-            <td class='just-white' style='text-align: center'>1</td>
-            <td class='just-white'>Stage 2</td>
-            <td class='just-white'>£ </td>
-            <td class='just-white'>£ </td>
-        </tr>
-        {% endcomment %}
         {% for line in lines %}
             <tr>
                 <td class='{{ line.class }}' style='text-align: center'>{{ line.quantity }}</td>
@@ -79,9 +62,16 @@
             </tr>
         {% endfor %}
         <tr>
-            <td colspan='3'>Subtotal:</td>
-            <td>£ {{ invoice.amount }}</td>
+            <td colspan='3' style='font-weight: bold'>Subtotal:</td>
+            <td style='font-weight: bold'>£ {{ lines_amount }}</td>
         </tr>
+        {% if warning %}
+        <tr>
+            <td colspan='4'>
+                <div style='color: red'>{{ warning }}</div>
+            </td>
+        </tr>
+        {% endif %}
         <tr>
             <td colspan='2'>
                 <div id='notice'>

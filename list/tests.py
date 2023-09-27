@@ -1474,6 +1474,9 @@ class ViewTests(TestCase):
         line = '12'
         out = get_number(line)
         self.assertEqual(out, 12.0)
+        line = 12
+        out = get_number(line)
+        self.assertEqual(out, 12.0)
         line = '12,000'
         out = get_number(line)
         self.assertEqual(out, 12000.0)
