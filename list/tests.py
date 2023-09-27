@@ -15,7 +15,9 @@ from list.views import check_integrity,   \
                        process_post,      \
                        checkTimeStamp,    \
                        fix_structure,     \
-                       get_printed_invoice_lines
+                       get_printed_invoice_lines, \
+                       get_number,        \
+                       process_invoice_lines
 from list.models import Construct, \
                         User, \
                         Choice, \
@@ -1453,6 +1455,47 @@ class ViewTests(TestCase):
         self.assertEqual(len(out), 2)
         self.assertEqual(len(out[0]), 5)
         self.assertEqual(len(out[1]), 5)
+
+    def test_process_invoice_lines(self):
+        details = '1 hour, roof, 40\n' +  \
+                  '3 hour, floor, 50\n' + \
+                  '7 m2, wall, 1500'
+        lines = get_printed_invoice_lines(details)
+        lines, amount = process_invoice_lines(lines)
+        self.assertEqual(lines[0]['amount'], 40.)
+        self.assertEqual(lines[1]['amount'], 150.)
+        self.assertEqual(lines[2]['amount'], 10500.)
+        self.assertEqual(amount, 10690.)
+
+    def test_get_number(self):
+        line = '1'
+        out = get_number(line)
+        self.assertEqual(out, 1.0)
+        line = '12'
+        out = get_number(line)
+        self.assertEqual(out, 12.0)
+        line = '12,000'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = 'a12,000'
+        # import pdb; pdb.set_trace()
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = '  12,000'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = ' ab , 12,000'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = ' ab , 12,000 kc..., 00'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = ' ab , 0'
+        out = get_number(line)
+        self.assertEqual(out, 0.0)
+        line = ' ab , klsje  dl'
+        out = get_number(line)
+        self.assertEqual(out, 0.0)
 
     def test_print_invoice(self):
         c = Client()

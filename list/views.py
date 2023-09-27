@@ -5,6 +5,7 @@ from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getC
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
+import re
 from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
@@ -509,6 +510,28 @@ def get_printed_invoice_lines(details, amount=0):
             item['class'] = 'odd-line'
         out.append(item)
     return out
+
+
+def get_number(line):
+    line2 = line.strip().replace(',', '')
+    mtch = re.search( '([0-9\.]+)', line2)
+    number = 0.0
+    try:
+        number = float(mtch[0])
+    except:
+        number = 0.0
+    return number
+
+
+def process_invoice_lines(lines):
+    total_amount = 0.0
+    for line in lines:
+        quantity = get_number(line['quantity'])
+        unit_price = get_number(line['unit_price'])
+        amount = quantity * unit_price
+        line['amount'] = amount
+        total_amount += amount
+    return lines, total_amount
 
 
 @login_required
