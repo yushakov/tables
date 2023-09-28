@@ -131,10 +131,12 @@
                 <form action="#">
                     <button type="button" onclick="hideNotesForm(this)">Hide Notes</button><br><br>
                     {{ items.choice.name_txt }}<br><br>
-                    <p>Constructive notes</p>
+                    <p style="font-weight: bold">Constructive notes</p>
+                    <p style='font-style: italic'>At this page, you can modify "Client notes" only (below)!
+                    "Constructive notes" modifications will be ignored on saving.</p>
                     <textarea class='constructive_notes' name='con-notes' rows='10' cols='45'>
 {{ items.choice.constructive_notes }}</textarea><br><br>
-                    <p>Client notes</p>
+                    <p style="font-weight: bold">Client notes</p>
                     <textarea class='client_notes' name='cli-notes' rows='10' cols='45'>
 {{ items.choice.client_notes }}</textarea>
                 </form>
