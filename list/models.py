@@ -556,6 +556,7 @@ class Choice(models.Model):
     plan_days_num = models.FloatField()
     actual_start_date = models.DateField(default=timezone.now)
     actual_end_date = models.DateField(default=timezone.now)
+    main_contract_choice = models.BooleanField(default=False)
 
     @property
     def plan_start_date_formatted(self):
@@ -575,7 +576,8 @@ class Choice(models.Model):
                 plan_start_date = self.plan_start_date,
                 plan_days_num = self.plan_days_num,
                 actual_start_date = self.actual_start_date,
-                actual_end_date = self.actual_end_date)
+                actual_end_date = self.actual_end_date,
+                main_contract_choice=self.main_contract_choice)
 
     def copy(self, construct):
         new_choice = Choice(construct=construct,

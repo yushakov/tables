@@ -38,6 +38,7 @@ class ChoiceAdmin(admin.ModelAdmin):
     list_filter  = ["construct"]
     search_fields = ["name_txt__contains"]
     fields = ["construct", "workers", "name_txt",
+              "main_contract_choice",
               "quantity_num", "units_of_measure_text", "price_num",
               "progress_percent_num",
               "plan_start_date", "plan_days_num",

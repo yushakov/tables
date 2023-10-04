@@ -101,6 +101,7 @@ def prepare_data(cells):
     data['price_num'] = float(cells['price'].replace('£','').replace(',','').strip())
     data['workers'] = str(cells['assigned_to'])
     data['progress_percent_num'] = float(cells['progress'].replace('%','').strip())
+    data['main_contract_choice'] = False
     try:
         data['plan_start_date'] = format_date(cells['day_start'])
     except Exception as e:
@@ -112,6 +113,7 @@ def prepare_data(cells):
     if 'notes' in cells.keys():
         data['constructive_notes'] = cells['notes']['constructive_notes']
         data['client_notes'] = cells['notes']['client_notes']
+        data['main_contract_choice'] = data['constructive_notes'].find('#main') >= 0
     return data
 
 def update_choice(choice_id, cell_data, client=False):
@@ -147,6 +149,7 @@ def update_choice(choice_id, cell_data, client=False):
             choice.plan_days_num =            data['plan_days_num']          
             choice.constructive_notes =       data['constructive_notes']
             choice.client_notes =             data['client_notes']
+            choice.main_contract_choice =     data['main_contract_choice']
             choice.save()
             return int(choice_id)
         return -1
@@ -170,7 +173,8 @@ def create_choice(cell_data, construct):
              plan_start_date       = data['plan_start_date'],
              plan_days_num         = data['plan_days_num'],
              constructive_notes    = data['constructive_notes'],
-             client_notes          = data['client_notes'])
+             client_notes          = data['client_notes'],
+             main_contract_choice  = data['main_contract_choice'])
         choice.save()
         return choice.id
     # can be just header

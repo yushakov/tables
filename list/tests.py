@@ -2211,6 +2211,91 @@ class ViewTests(TestCase):
         self.assertIs(len(struc_dict), 4)
 
 
+    def test_post_detail_main_choice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon main", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "something smart #main", "client_notes": "bla bla bla"}
+    }
+  }
+}
+'''}
+        request = Request()
+        response = c.post("/list/" + str(construct.id) + "/", request.POST)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        choices = construct.choice_set.filter(main_contract_choice=True)
+        self.assertEqual(len(choices), 1)
+        self.assertEqual(choices[0].name_txt, "Bathtub silicon main")
+
+
+    def test_process_post_main_choice(self):
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon main", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "something smart #main", "client_notes": "bla bla bla"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        choices = construct.choice_set.filter(main_contract_choice=True)
+        self.assertEqual(len(choices), 1)
+        self.assertEqual(choices[0].name_txt, "Bathtub silicon main")
+
+
     def test_process_post_with_notes(self):
         print("\n>>> test_process_post_with_notes() <<<")
         construct = Construct(title_text="Construct name")
