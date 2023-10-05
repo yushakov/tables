@@ -36,7 +36,7 @@
     <td><b>Total:</b></td>
     <td id='project_total'>&#163; {{ construct_total }}</td>
     <td class='hide_for_pretty'><a href="{% url 'list:flows' construct.id %}">Expenses, etc.</a></td>
-    <td>
+    <td class='hide_for_pretty'>
         <a href="{% url 'list:submit_transaction' %}?construct={{ construct.id }}">add a transaction</a><br>
         <a href="{% url 'list:submit_transaction_bunch' %}?construct={{ construct.id }}">bunch of transactions</a><br>
     </td>
@@ -90,6 +90,7 @@
 </table>
 
 <br><br>
+<div  class='hide_for_pretty'>
 <div id='project_last_save_date'>
 {% if not history|length %}
         <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
@@ -111,7 +112,7 @@
 <div>
     <a href='#' onclick='return hideShow100(this)'>Hide completed</a>
 </div>
-
+</div>
 
 
 <br>
