@@ -625,6 +625,7 @@ def submit_transaction_bunch(request):
     constructs = Construct.objects.all()
     construct_id = int(request.GET.get("construct", -1))
     field_nums = "1,2,3,4,5,6,7"
+    delimiter = '\t'
     if request.method == 'POST':
         construct_id = int(request.POST.get('construct_id', -1))
         delimiter_option = request.POST.get('delimiter', "1")
@@ -649,7 +650,7 @@ def submit_transaction_bunch(request):
                 from_txt = str(fields[inds[0]])
                 to_txt   = str(fields[inds[1]])
                 amount   = abs(float(fields[inds[2]]))
-                inout    = str(fields[inds[3]])
+                inout    = str(fields[inds[3]]).upper()
                 date     = format_date(str(fields[inds[4]]))
                 number   = str(fields[inds[5]])
                 details  = str(fields[inds[6]])
@@ -659,8 +660,11 @@ def submit_transaction_bunch(request):
             except Exception as e:
                 lines_to_show += line.strip() + "\n"
                 errors.append(f"with \"{line.strip()}\" ({e})")
+    context_delimiters = [{'value': '1', 'selected': 'selected' if delimiter == '\t' else '', 'name': 'tab'},
+                          {'value': '2', 'selected': 'selected' if delimiter == ',' else '', 'name': 'comma'}]
     context = {'constructs': constructs, 'lines': lines_to_show, 'field_nums': field_nums,
-            'errors': errors, 'added': lines_added, 'construct_id': construct_id}
+            'errors': errors, 'added': lines_added, 'construct_id': construct_id,
+            'delimiters': context_delimiters}
     return render(request, 'list/submit_transaction_bunch.html', context)
 
 @login_required

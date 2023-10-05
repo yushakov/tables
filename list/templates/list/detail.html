@@ -37,7 +37,8 @@
     <td id='project_total'>&#163; {{ construct_total }}</td>
     <td class='hide_for_pretty'><a href="{% url 'list:flows' construct.id %}">Expenses, etc.</a></td>
     <td>
-        <a href="{% url 'list:submit_transaction' %}?construct={{ construct.id }}">add a transaction</a>
+        <a href="{% url 'list:submit_transaction' %}?construct={{ construct.id }}">add a transaction</a><br>
+        <a href="{% url 'list:submit_transaction_bunch' %}?construct={{ construct.id }}">bunch of transactions</a><br>
     </td>
     <td></td>
     <td></td>
