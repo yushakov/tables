@@ -598,7 +598,7 @@ function getNoteCellHtml() {
             "<form action='#'>" +
                 "<button type='button' onclick='hideNotesForm(this)'>Hide Notes</button><br><br>" +
                 "<p>Constructive notes</p>" +
-                "<textarea class='constructive_notes' name='con-notes' rows='10' cols='45'></textarea><br><br>" +
+                "<textarea class='constructive_notes' name='con-notes' rows='10' cols='45'>#main</textarea><br><br>" +
                 "<p>Client notes</p>" +
                 "<textarea class='client_notes' name='cli-notes' rows='10' cols='45'></textarea>" +
             "</form>" +
