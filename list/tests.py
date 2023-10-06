@@ -15,7 +15,9 @@ from list.views import check_integrity,   \
                        process_post,      \
                        checkTimeStamp,    \
                        fix_structure,     \
-                       get_printed_invoice_lines
+                       get_printed_invoice_lines, \
+                       get_number,        \
+                       process_invoice_lines
 from list.models import Construct, \
                         User, \
                         Choice, \
@@ -1052,6 +1054,26 @@ class ViewTests(TestCase):
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
+    def test_non_empty_list(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        choices = Choice.objects.all()
+        self.assertEqual(len(choices), 9)
+        choices[0].main_contract_choice = True
+        choices[0].progress_percent_num = 30
+        choices[0].save()
+        ta = Transaction.add(con1, 100.0, direction='in')
+        ta.details_txt = '#deposit'
+        ta.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_login_page_detail(self):
         c = Client()
         cons = Construct()
@@ -1454,7 +1476,51 @@ class ViewTests(TestCase):
         self.assertEqual(len(out[0]), 5)
         self.assertEqual(len(out[1]), 5)
 
-    def test_print_invoice(self):
+    def test_process_invoice_lines(self):
+        details = '1 hour, roof, 40\n' +  \
+                  '3 hour, floor, 50\n' + \
+                  '7 m2, wall, 1500'
+        lines = get_printed_invoice_lines(details)
+        lines, amount = process_invoice_lines(lines)
+        self.assertEqual(lines[0]['amount'], 40.)
+        self.assertEqual(lines[1]['amount'], 150.)
+        self.assertEqual(lines[2]['amount'], 10500.)
+        self.assertEqual(amount, 10690.)
+
+    def test_get_number(self):
+        line = '1'
+        out = get_number(line)
+        self.assertEqual(out, 1.0)
+        line = '12'
+        out = get_number(line)
+        self.assertEqual(out, 12.0)
+        line = 12
+        out = get_number(line)
+        self.assertEqual(out, 12.0)
+        line = '12,000'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = 'a12,000'
+        # import pdb; pdb.set_trace()
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = '  12,000'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = ' ab , 12,000'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = ' ab , 12,000 kc..., 00'
+        out = get_number(line)
+        self.assertEqual(out, 12000.0)
+        line = ' ab , 0'
+        out = get_number(line)
+        self.assertEqual(out, 0.0)
+        line = ' ab , klsje  dl'
+        out = get_number(line)
+        self.assertEqual(out, 0.0)
+
+    def test_print_invoice_warning(self):
         c = Client()
         c.login(username="yuran", password="secret")
         cons = Construct()
@@ -1471,6 +1537,85 @@ class ViewTests(TestCase):
         invoice = Invoice.objects.latest()
         response = c.get(f"/list/invoice/{invoice.id}/print/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(len(response.context['warning']) > 0)
+
+    def test_print_invoice_no_warning(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1 nr, desr, 20\n 2 hour, descr2, 40'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/print/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(len(response.context['warning']) == 0)
+
+    def test_submit_invoice_simple(self):
+        c = Client()
+        c.login(username="simple", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1 nr, desr, 20\n 2 hour, descr2, 40'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+
+    def test_print_invoice_no_warning_simple(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1 nr, desr, 20\n 2 hour, descr2, 40'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        c = Client()
+        # a simple user should not be able to get the print page
+        c.login(username="simple", password="secret")
+        response = c.get(f"/list/invoice/{invoice.id}/print/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
+
+    def test_print_invoice_no_warning_client(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1 nr, desr, 20\n 2 hour, descr2, 40'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        c = Client()
+        # client should not be able to get the print page
+        c.login(username="client", password="secret")
+        response = c.get(f"/list/invoice/{invoice.id}/print/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        self.assertIs(response.url.find('accounts/login') >= 0, True)
 
     def test_modify_invoice_post(self):
         c = Client()
@@ -2084,6 +2229,91 @@ class ViewTests(TestCase):
         struc_dict = check_integrity(structure_str, choices)
         print(struc_dict)
         self.assertIs(len(struc_dict), 4)
+
+
+    def test_post_detail_main_choice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon main", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "something smart #main", "client_notes": "bla bla bla"}
+    }
+  }
+}
+'''}
+        request = Request()
+        response = c.post("/list/" + str(construct.id) + "/", request.POST)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        choices = construct.choice_set.filter(main_contract_choice=True)
+        self.assertEqual(len(choices), 1)
+        self.assertEqual(choices[0].name_txt, "Bathtub silicon main")
+
+
+    def test_process_post_main_choice(self):
+        construct = Construct(title_text="Construct name")
+        construct.save()
+        time_later = int(dt.datetime.now().timestamp()) + 10
+        class Request:
+            method = "POST"
+            POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
+'''
+  "row_1": {
+    "id": "hd_0",
+    "class": "Header2",
+    "cells": {"class": "td_header_2", "name": "Bathroom", "price": "", "quantity": "", "units": "",
+      "total_price": "", "assigned_to": "", "day_start": "delete | modify"
+    }
+  },
+  "row_2": {
+    "id": "",
+    "class": "Choice",
+    "cells": {"class": "", "name": "mirror", "price": "£ 1", "quantity": "1", "units": "nr",
+      "total_price": "£ 1", "assigned_to": "Somebody", "day_start": "2023-05-09", "days": "1",
+      "progress_bar": "0.0%", "progress": "0.0 %", "delete_action": "delete | modify"
+    }
+  },
+  "row_3": {
+    "id": "",
+    "class": "Choice",
+    "cells": { "class": "", "name": "Bathtub silicon main", "price": "£1.0", "quantity": "1.0",
+      "units": "nr", "total_price": "£1.0", "assigned_to": "Somebody", "day_start": "May 9, 2023",
+      "days": "1.0", "progress_bar": "5.00%", "progress": "5.0 %", "delete_action": "delete | modify",
+      "notes": {"constructive_notes": "something smart #main", "client_notes": "bla bla bla"}
+    }
+  }
+}
+'''}
+        request = Request()
+        process_post(request, construct)
+        choices = construct.choice_set.filter(main_contract_choice=True)
+        self.assertEqual(len(choices), 1)
+        self.assertEqual(choices[0].name_txt, "Bathtub silicon main")
 
 
     def test_process_post_with_notes(self):

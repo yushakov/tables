@@ -5,6 +5,7 @@ from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getC
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
+import re
 from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
@@ -100,6 +101,7 @@ def prepare_data(cells):
     data['price_num'] = float(cells['price'].replace('£','').replace(',','').strip())
     data['workers'] = str(cells['assigned_to'])
     data['progress_percent_num'] = float(cells['progress'].replace('%','').strip())
+    data['main_contract_choice'] = False
     try:
         data['plan_start_date'] = format_date(cells['day_start'])
     except Exception as e:
@@ -111,6 +113,7 @@ def prepare_data(cells):
     if 'notes' in cells.keys():
         data['constructive_notes'] = cells['notes']['constructive_notes']
         data['client_notes'] = cells['notes']['client_notes']
+        data['main_contract_choice'] = data['constructive_notes'].find('#main') >= 0
     return data
 
 def update_choice(choice_id, cell_data, client=False):
@@ -146,6 +149,7 @@ def update_choice(choice_id, cell_data, client=False):
             choice.plan_days_num =            data['plan_days_num']          
             choice.constructive_notes =       data['constructive_notes']
             choice.client_notes =             data['client_notes']
+            choice.main_contract_choice =     data['main_contract_choice']
             choice.save()
             return int(choice_id)
         return -1
@@ -169,7 +173,8 @@ def create_choice(cell_data, construct):
              plan_start_date       = data['plan_start_date'],
              plan_days_num         = data['plan_days_num'],
              constructive_notes    = data['constructive_notes'],
-             client_notes          = data['client_notes'])
+             client_notes          = data['client_notes'],
+             main_contract_choice  = data['main_contract_choice'])
         choice.save()
         return choice.id
     # can be just header
@@ -511,20 +516,50 @@ def get_printed_invoice_lines(details, amount=0):
     return out
 
 
+def get_number(line):
+    line2 = str(line).strip().replace(',', '')
+    mtch = re.search( '([0-9\.]+)', line2)
+    number = 0.0
+    try:
+        number = float(mtch[0])
+    except:
+        number = 0.0
+    return number
+
+
+def process_invoice_lines(lines):
+    total_amount = 0.0
+    for line in lines:
+        quantity = get_number(line['quantity'])
+        unit_price = get_number(line['unit_price'])
+        amount = quantity * unit_price
+        line['amount'] = amount
+        total_amount += amount
+    return lines, total_amount
+
+
 @login_required
 @permission_required("list.view_invoice")
 def print_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
-    amount = float(invoice.amount)
-    vat_prc = float(invoice.construct.vat_percent_num)
-    vat_from_total = amount * 0.01 * vat_prc
-    total_and_vat = round(amount + vat_from_total)
+    invoice_amount = float(invoice.amount)
     lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
+    lines, lines_amount = process_invoice_lines(lines)
+    warning = ''
+    if abs(invoice_amount - lines_amount) > 0.01:
+        warning = f"Actual invoice amount (£{invoice_amount}) " + \
+                f"is different from the total amount from lines: £{lines_amount}. " + \
+                f"Either your invoice price is wrong, or there is a mistake in the lines."
+    vat_prc = float(invoice.construct.vat_percent_num)
+    vat_from_total = lines_amount * 0.01 * vat_prc
+    total_and_vat = round(lines_amount + vat_from_total)
     context = {'user': request.user,
                'invoice': invoice,
                'no_logout_link': True,
                'lines': lines,
+               'lines_amount': lines_amount,
+               'warning': warning,
                'vat_from_total': vat_from_total,
                'total_and_vat': total_and_vat}
     return render(request, 'list/print_invoice.html', context)
@@ -590,6 +625,7 @@ def submit_transaction_bunch(request):
     constructs = Construct.objects.all()
     construct_id = int(request.GET.get("construct", -1))
     field_nums = "1,2,3,4,5,6,7"
+    delimiter = '\t'
     if request.method == 'POST':
         construct_id = int(request.POST.get('construct_id', -1))
         delimiter_option = request.POST.get('delimiter', "1")
@@ -614,7 +650,7 @@ def submit_transaction_bunch(request):
                 from_txt = str(fields[inds[0]])
                 to_txt   = str(fields[inds[1]])
                 amount   = abs(float(fields[inds[2]]))
-                inout    = str(fields[inds[3]])
+                inout    = str(fields[inds[3]]).upper()
                 date     = format_date(str(fields[inds[4]]))
                 number   = str(fields[inds[5]])
                 details  = str(fields[inds[6]])
@@ -624,8 +660,11 @@ def submit_transaction_bunch(request):
             except Exception as e:
                 lines_to_show += line.strip() + "\n"
                 errors.append(f"with \"{line.strip()}\" ({e})")
+    context_delimiters = [{'value': '1', 'selected': 'selected' if delimiter == '\t' else '', 'name': 'tab'},
+                          {'value': '2', 'selected': 'selected' if delimiter == ',' else '', 'name': 'comma'}]
     context = {'constructs': constructs, 'lines': lines_to_show, 'field_nums': field_nums,
-            'errors': errors, 'added': lines_added, 'construct_id': construct_id}
+            'errors': errors, 'added': lines_added, 'construct_id': construct_id,
+            'delimiters': context_delimiters}
     return render(request, 'list/submit_transaction_bunch.html', context)
 
 @login_required

@@ -8,6 +8,9 @@
 {% if 'list.change_invoice' in perms %}
     &nbsp;&nbsp;<a href="{% url 'list:modify_invoice' invoice.id %}">modify this one</a>
 {% endif %}
+{% if user.is_authenticated %}
+    &nbsp;&nbsp;<a href="{% url 'list:print_invoice' invoice.id %}" target="_blank">print</a>
+{% endif %}
 <br />
 <br />
 <p>
