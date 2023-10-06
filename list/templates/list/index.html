@@ -15,15 +15,18 @@
         <th>Progress</th>
         <th>Chart</th>
         <th title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
-        <th title="Will be equal to Cost, when the project is 100% done.">Progressed<sup>?</sup></th>
-        <th title="Current income according to incoming transactions.">Income<sup>?</sup></th>
+        <th>Main<br>cost</th>
+        <th>Deposit</th>
+        <th title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
+        <th>Deposit<br>aware<br>progress</th>
+        <th title="Current income according to incoming transactions including the deposit.">Income<sup>?</sup></th>
         <th title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
         <th>Expenses +</th>
         <th>Salaries<br>paid</th>
         <th>Company<br>Profit</th>
         <th title="(Income &minus; VAT) * 0.13">Owner<sup>?</sup><br>Profit</th>
         <th title="Income &minus; VAT &minus; Owner Profit &minus; Outcome.">Salaries<sup>?</sup><br>Part</th>
-        <th title="Progressed &minus; Income. Invoice the client, if this is positive.">_Progress<sup>?</sup><br>Income</th>
+        <th title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
         <th title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
         <th title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
     </thead>
@@ -44,8 +47,14 @@
         <td align ='right'>
             {{ construct.full_cost }}
         </td>
+        <td align ='right'>{{ construct.main_cost }}</td>
+        <td align ='right'>{{ construct.deposit }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
         <td align ='right'>
             {{ construct.full_progress_cost }}
+        </td>
+        <td align ='right'>
+            {{ construct.no_deposit_progress_cost }} +<br>
+            {{ construct.full_side_progress_cost }}
         </td>
         <td align ='right'>
             <a href="{% url 'list:flows' construct.id %}#incoming-transactions">
@@ -76,7 +85,7 @@
             {{ construct.salaries_part }}
         </td>
         <td align ='right'>
-            {{ construct.progress_minus_income }}
+            {{ construct.left_to_pay }}
         </td>
         <td align ='right'>
             <a href="{% url 'list:flows' construct.id %}#outgoing-unpaid-invoices">

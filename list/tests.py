@@ -1054,6 +1054,26 @@ class ViewTests(TestCase):
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
+    def test_non_empty_list(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        choices = Choice.objects.all()
+        self.assertEqual(len(choices), 9)
+        choices[0].main_contract_choice = True
+        choices[0].progress_percent_num = 30
+        choices[0].save()
+        ta = Transaction.add(con1, 100.0, direction='in')
+        ta.details_txt = '#deposit'
+        ta.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_login_page_detail(self):
         c = Client()
         cons = Construct()

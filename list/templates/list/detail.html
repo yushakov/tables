@@ -40,8 +40,6 @@
         <a href="{% url 'list:submit_transaction' %}?construct={{ construct.id }}">add a transaction</a><br>
         <a href="{% url 'list:submit_transaction_bunch' %}?construct={{ construct.id }}">bunch of transactions</a><br>
     </td>
-    <td></td>
-    <td></td>
 </tr>
 <tr>
     <td><b>Phone:</b></td>
@@ -49,8 +47,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>+ {{ construct.company_profit_percent_num }}% profit:</b></td>
     <td id='project_total_profit'>&#163; {{ total_and_profit|floatformat:2 }}</td>
-    <td><b>Progress (incl. profit):</b></td>
-    <td id='progress_cost'>&#163; updating...</td>
+    <td><b>Full progress<br>(with profit + VAT):</b></td>
+    <td id='progress_vat'>&#163; updating...</td>
 </tr>
 <tr>
     <td><b>Owner:</b></td>
@@ -58,8 +56,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>VAT:</b></td>
     <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
-    <td rowspan='2'><b>Progress<br> + VAT:</b></td>
-    <td id='progress_vat' rowspan='2'>&#163; updating...</td>
+    <td><b>Main contract<br>progress:</b></td>
+    <td>&#163; {{ construct.no_deposit_progress_cost }}</td>
 </tr>
 <tr>
     <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
@@ -67,15 +65,17 @@
     <td></td>
     <td><b>Total + Profit + VAT:</b></td>
     <td id='project_total_profit_vat'>&#163; {{ total_profit_vat }}</td>
+    <td><b>Other works<br>progress:</b></td>
+    <td>£ {{ construct.full_side_progress_cost }}</td>
 </tr>
 <tr>
     <td></td>
     <td></td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td><b>Paid:</b></td>
-    <td id='paid'>&#163; {{ construct_paid }}</td>
+    <td><b>Deposit:</b></td>
+    <td>£ {{ construct.deposit }}</td>
+    <td><b>Income w/o deposit:</b></td>
+    <td id='paid'>&#163; {{ construct.income_wo_deposit }}</td>
 </tr>
 <tr>
     <td></td>
@@ -84,7 +84,7 @@
     <td></td>
     <td></td>
     <td><b>To be paid:</b></td>
-    <td id='to_be_paid'>&#163; updating...</td>
+    <td>£ {{ construct.left_to_pay }}</td>
 </tr>
 </tbody>
 </table>

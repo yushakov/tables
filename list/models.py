@@ -306,6 +306,15 @@ class Construct(models.Model):
     def goto(self):
         return format_html("<a href='/list/{}'>view</a>", self.id)
 
+    def withCompanyProfit(self, value):
+        return value * (1.0 + 0.01 * self.company_profit_percent_num)
+
+    def withVat(self, value):
+        return value * (1.0 + 0.01 * self.vat_percent_num)
+
+    def withOutVat(self, value):
+        return value / (1.0 + 0.01 * self.vat_percent_num)
+
     def balance(self):
         transactions = self.transaction_set.all()
         income  = sum([ta.amount for ta in transactions if ta.transaction_type == ta.INCOMING])
@@ -400,6 +409,28 @@ class Construct(models.Model):
             cost += price
         return cost
 
+    def main_progress_cost(self):
+        choices = self.choice_set.filter(main_contract_choice=True)
+        if choices is None: return 0.0
+        cost = 0.0
+        for ch in choices:
+            price = ch.quantity_num * ch.price_num * ch.progress_percent_num * 0.01
+            cost += price
+        return cost
+
+    def side_progress_cost(self):
+        choices = self.choice_set.filter(main_contract_choice=False)
+        if choices is None: return 0.0
+        cost = 0.0
+        for ch in choices:
+            price = ch.quantity_num * ch.price_num * ch.progress_percent_num * 0.01
+            cost += price
+        return cost
+
+    @property
+    def full_side_progress_cost(self):
+        return round(self.withVat(self.withCompanyProfit(self.side_progress_cost())))
+
     def overall_progress_percent(self):
         choices = self.choice_set.all()
         if choices is None: return 0.0
@@ -414,15 +445,6 @@ class Construct(models.Model):
         else:
             return 0.0
 
-    def withCompanyProfit(self, value):
-        return value * (1.0 + 0.01 * self.company_profit_percent_num)
-
-    def withVat(self, value):
-        return value * (1.0 + 0.01 * self.vat_percent_num)
-
-    def withOutVat(self, value):
-        return value / (1.0 + 0.01 * self.vat_percent_num)
-
     @property
     def full_cost(self):
         choices = self.choice_set.all()
@@ -430,8 +452,41 @@ class Construct(models.Model):
         return round(self.withVat(self.withCompanyProfit(choices_cost)))
 
     @property
+    def main_cost(self):
+        choices = self.choice_set.filter(main_contract_choice=True)
+        choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
+        return round(self.withVat(self.withCompanyProfit(choices_cost)))
+
+    @property
+    def deposit(self):
+        in_transactions = self.transaction_set.filter(details_txt__icontains='#deposit')
+        if in_transactions is None: return 0.0
+        deposit = sum([float(ta.amount) for ta in in_transactions])
+        return deposit
+
+    @property
+    def income_wo_deposit(self):
+        return round(self.income() - self.deposit)
+
+    @property
+    def deposit_percent(self):
+        if round(self.main_cost) == 0:
+            return 0.0
+        return 100. * self.deposit / self.main_cost
+
+    @property
+    def no_deposit_progress_cost(self):
+        return round(self.withVat(self.withCompanyProfit(self.main_progress_cost()))
+                     * (1. - self.deposit_percent * 0.01))
+
+    @property
     def full_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.progress_cost())))
+
+    @property
+    def left_to_pay(self):
+        return round(self.no_deposit_progress_cost + self.full_side_progress_cost
+                     - (self.income() - self.deposit))
 
 
 class User(AbstractUser):
