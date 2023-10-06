@@ -384,6 +384,165 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_deposit_main_only(self):
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        choice1 = Choice(construct=construct,
+                         name_txt="Floor",
+                         quantity_num = 25.,
+                         price_num=1000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice1.save()
+        choice2 = Choice(construct=construct,
+                         name_txt="Walls",
+                         quantity_num = 4.,
+                         price_num=10000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice2.save()
+        choice3 = Choice(construct=construct,
+                         name_txt="Roof",
+                         quantity_num = 35.,
+                         price_num=1000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice3.save()
+        def print_it():
+            print("         >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<")
+            print(f"Progress: {construct.overall_progress_percent()}%; " +
+                  f"Full cost: {construct.full_cost}; " +
+                  f"Main cost: {construct.main_cost}; " +
+                  f"Paid deposit: {construct.deposit} ({construct.deposit_percent :.2f}%); " +
+                  f"Full progress cost: {construct.full_progress_cost};\n" +
+                  f"Deposit aware progress cost: {construct.no_deposit_progress_cost} + " +
+                  f"{construct.full_side_progress_cost} = " +
+                  f"{construct.no_deposit_progress_cost + construct.full_side_progress_cost}; " +
+                  f"Income: {construct.round_income}; Outcome: {construct.round_outcome}; " +
+                  f"Left to pay: {construct.left_to_pay}")
+
+        def transaction(amo, det):
+            print(f"---------> Transaction: {amo}, {det}")
+            ta = Transaction(construct=construct, from_txt="Client", to_txt="Company",
+                             amount=amo, details_txt=det,
+                             transaction_type="IN")
+            ta.save()
+
+        def progress(val):
+            print(f"--------> Progress: {val}%")
+            choice1.progress_percent_num = val; choice1.save()
+            choice2.progress_percent_num = val; choice2.save()
+            choice3.progress_percent_num = val; choice3.save()
+
+        print_it()
+        # transaction(construct.main_cost * 0.15, "#deposit")
+        transaction(20000, "#deposit")
+        print_it()
+        progress(20.0)
+        print_it()
+        transaction(20000, "")
+        print_it()
+        progress(50.0)
+        print_it()
+        transaction(35000, "")
+        print_it()
+        progress(75.0)
+        print_it()
+        transaction(30000, "")
+        print_it()
+        progress(100.0)
+        print_it()
+        # transaction(26435, "")
+        transaction(26100, "")
+        print_it()
+
+    def test_deposit_main_side(self):
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        choice1 = Choice(construct=construct,
+                         name_txt="Floor",
+                         quantity_num = 25.,
+                         price_num=1000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice1.save()
+        choice2 = Choice(construct=construct,
+                         name_txt="Walls",
+                         quantity_num = 4.,
+                         price_num=10000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice2.save()
+        choice3 = Choice(construct=construct,
+                         name_txt="Roof",
+                         quantity_num = 35.,
+                         price_num=1000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice3.save()
+        choice4 = Choice(construct=construct,
+                         name_txt="Shed",
+                         quantity_num = 1.,
+                         price_num=30000,
+                         plan_days_num=3.,
+                         main_contract_choice=False)
+        choice4.save()
+
+        def print_it():
+            print("         >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<")
+            print(f"Progress: {construct.overall_progress_percent()}%; " +
+                  f"Full cost: {construct.full_cost}; " +
+                  f"Main cost: {construct.main_cost}; " +
+                  f"Paid deposit: {construct.deposit} ({construct.deposit_percent :.2f}%); " +
+                  f"Full progress cost: {construct.full_progress_cost};\n" +
+                  f"Deposit aware progress cost: {construct.no_deposit_progress_cost} + " +
+                  f"{construct.full_side_progress_cost} = " +
+                  f"{construct.no_deposit_progress_cost + construct.full_side_progress_cost}; " +
+                  f"Income: {construct.round_income}; Outcome: {construct.round_outcome}; " +
+                  f"Left to pay: {construct.left_to_pay}")
+
+        def transaction(amo, det):
+            print(f"---------> Transaction: {amo}, {det}")
+            ta = Transaction(construct=construct, from_txt="Client", to_txt="Company",
+                             amount=amo, details_txt=det,
+                             transaction_type="IN")
+            ta.save()
+
+        def progress(val):
+            print(f"--------> Progress: {val}%")
+            choice1.progress_percent_num = val; choice1.save()
+            choice2.progress_percent_num = val; choice2.save()
+            choice3.progress_percent_num = val; choice3.save()
+            choice4.progress_percent_num = val; choice4.save()
+
+        print_it()
+        # transaction(construct.main_cost * 0.15, "#deposit")
+        transaction(20000, "#deposit")
+        print_it()
+        progress(20.0)
+        print_it()
+        transaction(30000, "")
+        print_it()
+        progress(50.0)
+        print_it()
+        transaction(45000, "")
+        print_it()
+        progress(75.0)
+        print_it()
+        transaction(40000, "")
+        print_it()
+        progress(100.0)
+        print_it()
+        # transaction(26435, "")
+        transaction(26100 + 9330, "")
+        print_it()
+
     def test_get_struct_signature(self):
         construct1 = Construct(title_text="Number one")
         construct2 = Construct(title_text="Number two")
