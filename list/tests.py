@@ -412,6 +412,7 @@ class ModelTests(TestCase):
                          main_contract_choice=True)
         choice3.save()
         def print_it():
+            return
             print("         >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<")
             print(f"Progress: {construct.overall_progress_percent()}%; " +
                   f"Full cost: {construct.full_cost}; " +
@@ -425,14 +426,14 @@ class ModelTests(TestCase):
                   f"Left to pay: {construct.left_to_pay}")
 
         def transaction(amo, det):
-            print(f"---------> Transaction: {amo}, {det}")
+            # print(f"---------> Transaction: {amo}, {det}")
             ta = Transaction(construct=construct, from_txt="Client", to_txt="Company",
                              amount=amo, details_txt=det,
                              transaction_type="IN")
             ta.save()
 
         def progress(val):
-            print(f"--------> Progress: {val}%")
+            # print(f"--------> Progress: {val}%")
             choice1.progress_percent_num = val; choice1.save()
             choice2.progress_percent_num = val; choice2.save()
             choice3.progress_percent_num = val; choice3.save()
@@ -440,23 +441,32 @@ class ModelTests(TestCase):
         print_it()
         # transaction(construct.main_cost * 0.15, "#deposit")
         transaction(20000, "#deposit")
+        self.assertEqual(construct.deposit, 20000)
         print_it()
         progress(20.0)
+        self.assertEqual(construct.left_to_pay, 22220)
         print_it()
         transaction(20000, "")
+        self.assertEqual(construct.left_to_pay, 2220)
         print_it()
         progress(50.0)
+        self.assertEqual(construct.left_to_pay, 35550)
         print_it()
         transaction(35000, "")
+        self.assertEqual(construct.left_to_pay, 550)
         print_it()
         progress(75.0)
+        self.assertEqual(construct.left_to_pay, 28325)
         print_it()
         transaction(30000, "")
+        self.assertEqual(construct.left_to_pay, -1675)
         print_it()
         progress(100.0)
+        self.assertEqual(construct.left_to_pay, 26100)
         print_it()
         # transaction(26435, "")
         transaction(26100, "")
+        self.assertEqual(construct.left_to_pay, 0)
         print_it()
 
     def test_deposit_main_side(self):
@@ -495,6 +505,7 @@ class ModelTests(TestCase):
         choice4.save()
 
         def print_it():
+            return
             print("         >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<")
             print(f"Progress: {construct.overall_progress_percent()}%; " +
                   f"Full cost: {construct.full_cost}; " +
@@ -508,14 +519,14 @@ class ModelTests(TestCase):
                   f"Left to pay: {construct.left_to_pay}")
 
         def transaction(amo, det):
-            print(f"---------> Transaction: {amo}, {det}")
+            # print(f"---------> Transaction: {amo}, {det}")
             ta = Transaction(construct=construct, from_txt="Client", to_txt="Company",
                              amount=amo, details_txt=det,
                              transaction_type="IN")
             ta.save()
 
         def progress(val):
-            print(f"--------> Progress: {val}%")
+            # print(f"--------> Progress: {val}%")
             choice1.progress_percent_num = val; choice1.save()
             choice2.progress_percent_num = val; choice2.save()
             choice3.progress_percent_num = val; choice3.save()
@@ -524,23 +535,32 @@ class ModelTests(TestCase):
         print_it()
         # transaction(construct.main_cost * 0.15, "#deposit")
         transaction(20000, "#deposit")
+        self.assertEqual(construct.deposit, 20000)
         print_it()
         progress(20.0)
+        self.assertEqual(construct.left_to_pay, 30086)
         print_it()
         transaction(30000, "")
+        self.assertEqual(construct.left_to_pay, 86)
         print_it()
         progress(50.0)
+        self.assertEqual(construct.left_to_pay, 45215)
         print_it()
         transaction(45000, "")
+        self.assertEqual(construct.left_to_pay, 215)
         print_it()
         progress(75.0)
+        self.assertEqual(construct.left_to_pay, 37823)
         print_it()
         transaction(40000, "")
+        self.assertEqual(construct.left_to_pay, -2177)
         print_it()
         progress(100.0)
+        self.assertEqual(construct.left_to_pay, 35430)
         print_it()
         # transaction(26435, "")
         transaction(26100 + 9330, "")
+        self.assertEqual(construct.left_to_pay, 0)
         print_it()
 
     def test_get_struct_signature(self):
