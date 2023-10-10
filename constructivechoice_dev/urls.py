@@ -24,18 +24,19 @@ from django.contrib.auth import views as auth_views
 def redirect_to_admin(request):
     return redirect('admin:index')
 
-def redirect_to_list(request):
-    return redirect('admin:list')
+def redirect_to_list_account(request):
+    return redirect('list:account')
 
 admin.site.site_header = 'Constructive Choice Projects Administration'
 admin.site.index_title = 'Site Administration'
 admin.site.site_title = 'Constructive Choice Projects'
 
 urlpatterns = [
-    path('', redirect_to_admin),
+    # path('', include('list.urls')),
+    path('', redirect_to_list_account),
     path('list/', include('list.urls')),
     path('admin/', admin.site.urls),
-    path("accounts/login/", auth_views.LoginView.as_view(template_name='list/login.html'), name='login'),
-    path("accounts/profile", redirect_to_admin),
+    path("accounts/login/", auth_views.LoginView.as_view(template_name='list/login.html', next_page='profile'), name='login'),
+    path("accounts/profile", redirect_to_list_account, name='profile'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

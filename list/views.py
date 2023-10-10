@@ -39,6 +39,21 @@ def index(request):
               }
     return render(request, 'list/index.html', context)
     
+@login_required
+def account(request):
+    logger.info(f'USER ACCESS: account() by {request.user.username}')
+    groups = request.user.groups.all()
+    slugs = []
+    for constr in request.user.accessible_constructs.all():
+        slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
+    context = {'user': request.user,
+               'groups': groups,
+               'project_slugs': slugs,
+               'is_client': len(groups.filter(name='Clients')) > 0,
+               'is_worker': len(groups.filter(name='Workers')) > 0
+              }
+    return render(request, 'list/account.html', context)
+
 def is_yyyy_mm_dd(date_field):
     try:
         datetime.strptime(date_field, "%Y-%m-%d")
