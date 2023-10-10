@@ -18,6 +18,7 @@
                     Session expires on: {{ session_expiration }}&nbsp;&nbsp;
                 {% endif %}
                 {% if not no_logout_link %}
+                    <a href="{% url 'list:account' %}" id='account-link'>account</a>&nbsp;&nbsp
                     <a href="{% url 'logout' %}" id='logout-link'>LOGOUT</a>&nbsp;&nbsp
                 {% endif %}
             </p>
