@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Account Profile{% endblock %}
+{% block content %}
+<h2>User: {{ user.first_name }} {{ user.last_name }} ({{ user.username }})</h2>
+{% if 'is_staff' in perms %}
+    You belong to Staff.<br>
+{% endif %}
+{% if 'is_superuser' in perms %}
+    You are a Superuser.
+    <a href="{% url 'admin:index' %}">Admin page.</a>
+    <a href="{% url 'list:index' %}">List of projects.</a>
+    <br>
+{% endif %}
+{% if groups %}
+{% comment %}
+    <h3>Groups:</h3>
+    {% for group in groups %}
+        - {{ group }}<br>
+    {% endfor %}
+{% endcomment %}
+    {% if 'list.add_invoice' in perms %}
+        <a href="{% url 'list:submit_invoice' %}">Submit invoice</a>
+    {% endif %}
+    {% if is_client %}
+        <h3>Projects:</h3>
+        {% for slug in project_slugs %}
+            <a href="{% url 'list:client_slug' slug.url %}">{{ slug.project_name }}</a>
+        {% endfor %}
+    {% endif %}
+{% endif %}
+{% comment %}
+{% endcomment %}
+{% endblock %}

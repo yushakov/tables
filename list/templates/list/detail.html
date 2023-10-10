@@ -13,7 +13,11 @@
 &larr; <a href="{% url 'list:index' %}">back to the project list</a>
 <br><br>
 <b>Ctrl+Click</b> on a task name to move it <b>Down</b>.<br>
-<b>Alt+Click</b> to move it <b>Up</b>.<br><br>
+<b>Alt+Click</b> to move it <b>Up</b>.<br>
+<span class='main-contract' style='padding: 2px; border: 1px solid black'>Highlighted</span> are the main contract tasks
+(see the <b>#main</b> tag in "Constructive notes").
+<br>
+<br>
 <a href="{% url 'list:gantt' construct.id %}">Gantt Chart</a> &rarr;
 </div>
 <br class='hide_for_pretty'>
@@ -36,11 +40,10 @@
     <td><b>Total:</b></td>
     <td id='project_total'>&#163; {{ construct_total }}</td>
     <td class='hide_for_pretty'><a href="{% url 'list:flows' construct.id %}">Expenses, etc.</a></td>
-    <td>
-        <a href="{% url 'list:submit_transaction' %}?construct={{ construct.id }}">add a transaction</a>
+    <td class='hide_for_pretty'>
+        <a href="{% url 'list:submit_transaction' %}?construct={{ construct.id }}">add a transaction</a><br>
+        <a href="{% url 'list:submit_transaction_bunch' %}?construct={{ construct.id }}">bunch of transactions</a><br>
     </td>
-    <td></td>
-    <td></td>
 </tr>
 <tr>
     <td><b>Phone:</b></td>
@@ -48,8 +51,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>+ {{ construct.company_profit_percent_num }}% profit:</b></td>
     <td id='project_total_profit'>&#163; {{ total_and_profit|floatformat:2 }}</td>
-    <td><b>Progress (incl. profit):</b></td>
-    <td id='progress_cost'>&#163; updating...</td>
+    <td><b>Full progress<br>(incl. profit + VAT):</b></td>
+    <td id='progress_vat'>&#163; updating...</td>
 </tr>
 <tr>
     <td><b>Owner:</b></td>
@@ -57,8 +60,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>VAT:</b></td>
     <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
-    <td rowspan='2'><b>Progress<br> + VAT:</b></td>
-    <td id='progress_vat' rowspan='2'>&#163; updating...</td>
+    <td><b>Main contract<br>progress:</b></td>
+    <td>&#163; {{ construct.no_deposit_progress_cost }}</td>
 </tr>
 <tr>
     <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
@@ -66,15 +69,17 @@
     <td></td>
     <td><b>Total + Profit + VAT:</b></td>
     <td id='project_total_profit_vat'>&#163; {{ total_profit_vat }}</td>
+    <td><b>Other works<br>progress:</b></td>
+    <td>£ {{ construct.full_side_progress_cost }}</td>
 </tr>
 <tr>
     <td></td>
     <td></td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td><b>Paid:</b></td>
-    <td id='paid'>&#163; {{ construct_paid }}</td>
+    <td><b>Paid deposit:</b></td>
+    <td>£ {{ construct.deposit }}</td>
+    <td><b>Income w/o deposit:</b></td>
+    <td id='paid'>&#163; {{ construct.income_wo_deposit }}</td>
 </tr>
 <tr>
     <td></td>
@@ -83,12 +88,13 @@
     <td></td>
     <td></td>
     <td><b>To be paid:</b></td>
-    <td id='to_be_paid'>&#163; updating...</td>
+    <td>£ {{ construct.left_to_pay }}</td>
 </tr>
 </tbody>
 </table>
 
 <br><br>
+<div  class='hide_for_pretty'>
 <div id='project_last_save_date'>
 {% if not history|length %}
         <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
@@ -107,10 +113,11 @@
         {% endfor %}
     </ul>
 </div>
+<br>
 <div>
     <a href='#' onclick='return hideShow100(this)'>Hide completed</a>
 </div>
-
+</div>
 
 
 <br>
@@ -147,7 +154,7 @@
         </td>
     {% if items.type == 'Choice' %}
         {% autoescape off %}
-        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        <td class='name_cell {{ items.main_contract }}'>{{ items.choice.name_txt|escape|markup }}</td>
         {% endautoescape %}
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>

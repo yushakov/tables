@@ -2,6 +2,7 @@
 {% block title %}{{ construct.title_text }}{% endblock %}
 {% block content %}
 {% load static %}
+{% load app_filters %}
 <script src="{% static 'list/detail.js' %}">
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
@@ -40,8 +41,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>+ {{ construct.company_profit_percent_num }}% profit:</b></td>
     <td id='project_total_profit'>&#163; {{ total_and_profit|floatformat:2 }}</td>
-    <td><b>Progress (incl. profit):</b></td>
-    <td id='progress_cost'>&#163; updating...</td>
+    <td><b>Full progress<br>(with profit + VAT):</b></td>
+    <td id='progress_vat'>&#163; updating...</td>
 </tr>
 <tr>
     <td><b>Owner:</b></td>
@@ -49,8 +50,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>VAT:</b></td>
     <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
-    <td rowspan='2'><b>Progress<br> + VAT:</b></td>
-    <td id='progress_vat' rowspan='2'>&#163; updating...</td>
+    <td><b>Main contract<br>progress:</b></td>
+    <td>&#163; {{ construct.no_deposit_progress_cost }}</td>
 </tr>
 <tr>
     <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
@@ -58,15 +59,17 @@
     <td></td>
     <td><b>Total + Profit + VAT:</b></td>
     <td id='project_total_profit_vat'>&#163; {{ total_profit_vat }}</td>
+    <td><b>Other works<br>progress:</b></td>
+    <td>£ {{ construct.full_side_progress_cost }}</td>
 </tr>
 <tr>
     <td></td>
     <td></td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td><b>Paid:</b></td>
-    <td id='paid'>&#163; {{ construct_paid }}</td>
+    <td><b>Deposit:</b></td>
+    <td>£ {{ construct.deposit }}</td>
+    <td><b>Income w/o deposit:</b></td>
+    <td id='paid'>&#163; {{ construct.income_wo_deposit }}</td>
 </tr>
 <tr>
     <td></td>
@@ -75,7 +78,7 @@
     <td></td>
     <td></td>
     <td><b>To be paid:</b></td>
-    <td id='to_be_paid'>&#163; updating...</td>
+    <td>£ {{ construct.left_to_pay }}</td>
 </tr>
 </tbody>
 </table>
@@ -110,7 +113,9 @@
     {% endif %}
         <td align='right'>{{ forloop.counter }}</td>
     {% if items.type == 'Choice' %}
-        <td class='name_cell'>{{ items.choice.name_txt }}</td>
+        {% autoescape off %}
+        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        {% endautoescape %}
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
@@ -131,10 +136,12 @@
                 <form action="#">
                     <button type="button" onclick="hideNotesForm(this)">Hide Notes</button><br><br>
                     {{ items.choice.name_txt }}<br><br>
-                    <p>Constructive notes</p>
+                    <p style="font-weight: bold">Constructive notes</p>
+                    <p style='font-style: italic'>At this page, you can modify "Client notes" only (below)!
+                    "Constructive notes" modifications will be ignored on saving.</p>
                     <textarea class='constructive_notes' name='con-notes' rows='10' cols='45'>
 {{ items.choice.constructive_notes }}</textarea><br><br>
-                    <p>Client notes</p>
+                    <p style="font-weight: bold">Client notes</p>
                     <textarea class='client_notes' name='cli-notes' rows='10' cols='45'>
 {{ items.choice.client_notes }}</textarea>
                 </form>

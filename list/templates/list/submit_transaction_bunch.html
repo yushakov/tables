@@ -4,6 +4,9 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Submit a Bunch of Transactions</h2>
+<p>
+&larr; <a href="{% url 'list:index' %}">to the project list</a>
+</p>
 <form action="{% url 'list:submit_transaction_bunch' %}" method="post">
     {% csrf_token %}
     <p>
@@ -20,8 +23,9 @@
     &nbsp;&nbsp;
     Delimiter:
     <select name="delimiter">
-        <option value="1">tab</option>
-        <option value="2">comma</option>
+        {% for delim in delimiters %}
+        <option value="{{ delim.value }}" {{ delim.selected }}>{{ delim.name }}</option>
+        {% endfor %}
     </select>
     &nbsp;&nbsp;
     Field numbers to use (starting from 1):
@@ -32,6 +36,10 @@
         <b>from</b> tab <b>to</b> tab <b>amount</b> tab <b>in-out</b> tab <b>date</b> tab <b>number</b> tab <b>details</b><br> 
         or<br>
         <b>from</b>, <b>to</b>, <b>amount</b>, <b>in-out</b>, <b>date</b>, <b>number</b>, <b>details</b><br> 
+    </p>
+    <p>Date format is like: 05/10/2023; 2023-10-05; October 5, 2023 (if the delimiter is not comma).</p>
+    <p>
+        Example: Company, Ivan Ivanov, 5120, out, 13/09/2023, 12358, #salary
     </p>
     <p>
     {% for line in added %}
