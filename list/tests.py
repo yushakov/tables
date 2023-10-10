@@ -1227,6 +1227,12 @@ class ViewTests(TestCase):
         self.assertIs(response.url.find('accounts/login') >= 0, True)
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
+    def test_account_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_empty_list(self):
         c = Client()
         c.login(username="yuran", password="secret")
