@@ -314,6 +314,7 @@ class FakeChoice:
     def __init__(self, ID, name):
         self.id = ID
         self.name_txt = name
+        self.main_contract_choice = False
 
 
 def getChoiceListAndPrices(struc_dict, choice_dict):
@@ -329,7 +330,12 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
             construct_total_price += choice_price
         else:
             choice = FakeChoice(idx, line_x['id'])
-        ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice, 'choice_total_price': choice_price})
+        main_contract = ''
+        if choice.main_contract_choice:
+            main_contract = 'main-contract'
+        ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice,
+                        'choice_total_price': choice_price,
+                        'main_contract': main_contract})
     return ch_list, construct_progress, construct_total_price
 
 

@@ -13,7 +13,11 @@
 &larr; <a href="{% url 'list:index' %}">back to the project list</a>
 <br><br>
 <b>Ctrl+Click</b> on a task name to move it <b>Down</b>.<br>
-<b>Alt+Click</b> to move it <b>Up</b>.<br><br>
+<b>Alt+Click</b> to move it <b>Up</b>.<br>
+<span class='main-contract' style='padding: 2px; border: 1px solid black'>Highlighted</span> are the main contract tasks
+(see the <b>#main</b> tag in "Constructive notes").
+<br>
+<br>
 <a href="{% url 'list:gantt' construct.id %}">Gantt Chart</a> &rarr;
 </div>
 <br class='hide_for_pretty'>
@@ -109,6 +113,7 @@
         {% endfor %}
     </ul>
 </div>
+<br>
 <div>
     <a href='#' onclick='return hideShow100(this)'>Hide completed</a>
 </div>
@@ -149,7 +154,7 @@
         </td>
     {% if items.type == 'Choice' %}
         {% autoescape off %}
-        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        <td class='name_cell {{ items.main_contract }}'>{{ items.choice.name_txt|escape|markup }}</td>
         {% endautoescape %}
         <td align='right'>&#163;{{ items.choice.price_num }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
