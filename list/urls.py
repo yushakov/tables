@@ -11,8 +11,10 @@ def redirect_to_admin_invoices(request):
 
 app_name = 'list'
 urlpatterns = [
-    #path('', views.IndexView.as_view(), name='index'),
+    # path('', views.IndexView.as_view(), name='index'),
     path('', views.index, name='index'),
+    # path('', views.account, name='account'),
+    path('account/', views.account, name='account'),
     path('history/', views.history, name='history'),
     path('<int:construct_id>/', views.detail, name='detail'),
     path('<int:construct_id>/client/', views.client, name='client'),

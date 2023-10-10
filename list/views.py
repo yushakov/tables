@@ -39,6 +39,21 @@ def index(request):
               }
     return render(request, 'list/index.html', context)
     
+@login_required
+def account(request):
+    logger.info(f'USER ACCESS: account() by {request.user.username}')
+    groups = request.user.groups.all()
+    slugs = []
+    for constr in request.user.accessible_constructs.all():
+        slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
+    context = {'user': request.user,
+               'groups': groups,
+               'project_slugs': slugs,
+               'is_client': len(groups.filter(name='Clients')) > 0,
+               'is_worker': len(groups.filter(name='Workers')) > 0
+              }
+    return render(request, 'list/account.html', context)
+
 def is_yyyy_mm_dd(date_field):
     try:
         datetime.strptime(date_field, "%Y-%m-%d")
@@ -299,6 +314,7 @@ class FakeChoice:
     def __init__(self, ID, name):
         self.id = ID
         self.name_txt = name
+        self.main_contract_choice = False
 
 
 def getChoiceListAndPrices(struc_dict, choice_dict):
@@ -314,7 +330,12 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
             construct_total_price += choice_price
         else:
             choice = FakeChoice(idx, line_x['id'])
-        ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice, 'choice_total_price': choice_price})
+        main_contract = ''
+        if choice.main_contract_choice:
+            main_contract = 'main-contract'
+        ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice,
+                        'choice_total_price': choice_price,
+                        'main_contract': main_contract})
     return ch_list, construct_progress, construct_total_price
 
 

@@ -18,6 +18,10 @@
     z-index: 9;
 }
 
+.main-contract {
+    background-color: #fffef9;
+}
+
 .construct-title {
     max-width: 250px;
 }
