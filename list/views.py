@@ -429,6 +429,7 @@ def client(request, construct_id):
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'noscale': True,
                'construct_paid': construct.income()}
     return render(request, 'list/client_view.html', context)
 
@@ -455,6 +456,7 @@ def client_slug(request, slug):
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'noscale': True,
                'construct_paid': construct.income()}
     return render(request, 'list/client_view.html', context)
 
