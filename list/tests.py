@@ -1398,6 +1398,37 @@ class ViewTests(TestCase):
         tras = construct.transaction_set.all()
         self.assertEqual(len(tras), 3)
 
+    def test_transaction_bunch_sum(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = Construct(title_text='Test construct')
+        construct.save()
+        post_data = {'construct_id': ['1'], 'delimiter': ['2'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey, Yury, 5000, IN, 26/08/2023, 012341200, money for good life\r\n' + \
+                               'Marcos, Yury, 7000, IN, 30/08/2023, 77777, profit sharing']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 2)
+        total = sum([t.amount for t in tras])
+        self.assertEqual(total, 12000)
+
+    def test_transaction_bunch_with_negative(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = Construct(title_text='Test construct')
+        construct.save()
+        post_data = {'construct_id': ['1'], 'delimiter': ['2'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey, Yury, 5000, IN, 26/08/2023, 012341200, money for good life\r\n' + \
+                               'Marcos, Yury, 7000, IN, 30/08/2023, 77777, profit sharing\r\n' + \
+                               'Home Office, Yury, -3000, OUT, 12/12/2023, eeee, IHS Refund']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 3)
+        total = sum([t.amount for t in tras])
+        self.assertEqual(total, 9000)
+
     def test_transaction_bunch_tab(self):
         c = Client()
         c.login(username="yuran", password="secret")

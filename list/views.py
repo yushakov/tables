@@ -672,7 +672,7 @@ def submit_transaction_bunch(request):
                 inds = [int(f.strip()) - 1 for f in field_nums.split(',')]
                 from_txt = str(fields[inds[0]])
                 to_txt   = str(fields[inds[1]])
-                amount   = abs(float(fields[inds[2]]))
+                amount   = float(fields[inds[2]])
                 inout    = str(fields[inds[3]]).upper()
                 date     = format_date(str(fields[inds[4]]))
                 number   = str(fields[inds[5]])
