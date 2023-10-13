@@ -19,6 +19,8 @@
 &nbsp; &nbsp; &nbsp;
 <a href="{% url 'list:submit_transaction' %}?construct={{ construct_id }}">add a transaction</a>
 &nbsp; &nbsp; &nbsp;
+<a href="{% url 'list:submit_transaction_bunch' %}?construct={{ construct_id }}">bunch of transactions</a>
+&nbsp; &nbsp; &nbsp;
 <a href="{% url 'list:transactions' construct_id %}">see transactions unrolled</a>
 
 {% if incoming_transactions %}

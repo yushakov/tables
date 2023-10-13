@@ -7,6 +7,11 @@
 <p>
 &larr; <a href="{% url 'list:index' %}">to the project list</a>
 </p>
+{% for construct in constructs %}
+    {% if construct.id == construct_id %}
+        &larr; <a href="{% url 'list:detail' construct_id %}">to "{{ construct.title_text }}"</a>
+    {% endif %}
+{% endfor %}
 <form action="{% url 'list:submit_transaction_bunch' %}" method="post">
     {% csrf_token %}
     <p>
