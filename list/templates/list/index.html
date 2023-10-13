@@ -8,6 +8,12 @@
 &nbsp;&nbsp;
 <a href="{% url 'admin:index' %}">admin home page</a>
 <br><br>
+<b>Categories:</b>&nbsp;
+{% for ctg in categories %}
+    <span style="background-color: {{ ctg.color }}; padding: 2px; border-radius: 3px">
+        <a href="?category={{ ctg.id }}">{{ ctg.name }}</a>
+    </span>&nbsp;
+{% endfor %}
 {% if active_construct_list %}
 <table id='construct_list'>
     <thead>
@@ -33,7 +39,7 @@
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
-        <td class='construct-title'>
+        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px">
             <a href="{% url 'list:detail' construct.id %}">{{ construct.title_text }}</a>
         </td>
         <td align='left' class='progress-cell'>

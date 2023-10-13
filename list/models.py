@@ -490,6 +490,19 @@ class Construct(models.Model):
                      - (self.income() - self.deposit))
 
 
+class Category(models.Model):
+    constructs = models.ManyToManyField(Construct, blank=True)
+    name = models.CharField(max_length=200)
+    priority = models.IntegerField(default=0)
+    color = models.CharField(max_length=200, default='white')
+
+    class Meta:
+        ordering = ['priority']
+
+    def __str__(self):
+        return f"{self.name}, {self.priority}"
+
+
 class User(AbstractUser):
     accessible_constructs = models.ManyToManyField(Construct, blank=True)
     business_address = models.TextField(null=True, blank=True)

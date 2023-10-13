@@ -19,6 +19,7 @@ from list.views import check_integrity,   \
                        get_number,        \
                        process_invoice_lines
 from list.models import Construct, \
+                        Category, \
                         User, \
                         Choice, \
                         Invoice, \
@@ -384,6 +385,23 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_categories(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+
     def test_deposit_main_only(self):
         construct = Construct(title_text="Deposit holder",
                               vat_percent_num=15.0,
@@ -1257,6 +1275,29 @@ class ViewTests(TestCase):
         ta.details_txt = '#deposit'
         ta.save()
         response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_categories(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get('/list/?category=' + str(cat1.id))
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_login_page_detail(self):
