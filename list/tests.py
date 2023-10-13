@@ -402,6 +402,24 @@ class ModelTests(TestCase):
         cat1.save()
         cat2.save()
 
+    def test_add_category_to_construct(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat2.constructs.add(con2.id)
+        cons = Construct.objects.all()
+        for con in cons:
+            if len(con.category_set.all()) == 0:
+                con.category_set.add(cat1.id)
+        self.assertEqual(len(cat1.constructs.all()), 2)
+
     def test_deposit_main_only(self):
         construct = Construct(title_text="Deposit holder",
                               vat_percent_num=15.0,
@@ -1298,6 +1316,37 @@ class ViewTests(TestCase):
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         response = c.get('/list/?category=' + str(cat1.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_update_construct_category(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat2.constructs.add(con2.id)
+        cat2.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(len(cat1.constructs.all()), 2)
+
+    def test_update_construct_category_with_no_categories(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_login_page_detail(self):

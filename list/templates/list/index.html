@@ -9,6 +9,7 @@
 <a href="{% url 'admin:index' %}">admin home page</a>
 <br><br>
 <b>Categories:</b>&nbsp;
+    <a href="">all</a>&nbsp;
 {% for ctg in categories %}
     <span style="background-color: {{ ctg.color }}; padding: 2px; border-radius: 3px">
         <a href="?category={{ ctg.id }}">{{ ctg.name }}</a>
