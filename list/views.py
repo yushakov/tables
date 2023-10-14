@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
+from .models import Category
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -24,17 +25,33 @@ class IndexView(generic.ListView):
         """Return the projects"""
         return Construct.objects.order_by('overall_progress_percent_num')
 
+def fix_category(constructs, categories):
+    if len(categories) > 0:
+        for con in constructs:
+            if len(con.category_set.all()) == 0:
+                logger.warning(f"Put '{con}' into category '{categories[0].name}'")
+                con.category_set.add(categories[0].id)
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def index(request):
     logger.info(f'USER ACCESS: index() by {request.user.username}')
-    constructs = Construct.objects.order_by('-listed_date')
-    price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
-    for construct in constructs:
-        price += sum([choice.price_num * choice.quantity_num for choice in construct.choice_set.all()])
+    all_constructs = Construct.objects.all()
+    all_cats = Category.objects.order_by('priority')
+    fix_category(all_constructs, all_cats)
+    ctg_id = int(request.GET.get('category', '0'))
+    cats = all_cats
+    if ctg_id > 0:
+        cats = all_cats.filter(id=ctg_id)
+    constructs = []
+    for ctg in cats:
+        cons = all_constructs.filter(category=ctg.id)
+        for con in cons:
+            con.color = ctg.color
+            constructs.append(con)
     context = {'active_construct_list': constructs,
-               'price': price,
+               'categories': all_cats,
                'noscale': True
               }
     return render(request, 'list/index.html', context)

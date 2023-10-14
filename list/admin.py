@@ -1,11 +1,15 @@
 from django.contrib import admin
-from .models import Construct, Worker, Choice, Invoice, Transaction, InvoiceTransaction
+from .models import Construct, Worker, Choice, Invoice, Transaction, InvoiceTransaction, Category
 from django.contrib.auth.admin import UserAdmin
 from .models import User
 
 '''
 Customization tricks: https://realpython.com/customize-django-admin-python 
 '''
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "priority"]
+
 
 class ConstructAdmin(admin.ModelAdmin):
     list_display = ["title_text", "goto", "listed_date", "overall_progress", "email"]
@@ -74,7 +78,7 @@ class MyUserAdmin(UserAdmin):
         (('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
 
-
+admin.site.register(Category, CategoryAdmin)
 admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
 admin.site.register(Worker)
