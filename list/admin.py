@@ -9,6 +9,7 @@ Customization tricks: https://realpython.com/customize-django-admin-python
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ["name", "priority"]
+    filter_horizontal = ["constructs"]
 
 
 class ConstructAdmin(admin.ModelAdmin):
@@ -69,6 +70,7 @@ class MyUserAdmin(UserAdmin):
     # fieldsets = UserAdmin.fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
     # add_fieldsets = UserAdmin.add_fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
     list_display = ["username", "email", "first_name", "last_name", "is_staff"]
+    filter_horizontal = ["accessible_constructs", "groups", "user_permissions"]
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'business_address',
