@@ -32,6 +32,50 @@ def fix_category(constructs, categories):
                 logger.warning(f"Put '{con}' into category '{categories[0].name}'")
                 con.category_set.add(categories[0].id)
 
+def get_total(constructs):
+    total = {}
+    full_cost = 0
+    full_progress_cost = 0
+    round_income = 0
+    round_outcome = 0
+    round_expenses = 0
+    round_salaries = 0
+    company_profit = 0
+    owner_profit = 0
+    salaries_part = 0
+    left_to_pay = 0
+    invoices_to_pay = 0
+    invoices_pending_pay = 0
+    for con in constructs:
+        full_cost += con.full_cost
+        full_progress_cost += con.full_progress_cost
+        round_income += con.round_income
+        round_outcome += con.round_outcome
+        round_expenses += con.round_expenses
+        round_salaries += con.round_salaries
+        company_profit += con.company_profit
+        owner_profit += con.owner_profit
+        salaries_part += con.salaries_part
+        left_to_pay += con.left_to_pay
+        invoices_to_pay += con.invoices_to_pay
+        invoices_pending_pay += con.invoices_pending_pay
+    total['invoices_pending_pay'] = invoices_pending_pay
+    total['invoices_to_pay'] = invoices_to_pay
+    total['left_to_pay'] = left_to_pay
+    total['salaries_part'] = salaries_part
+    total['owner_profit'] = owner_profit
+    total['company_profit'] = company_profit
+    total['round_salaries'] = round_salaries
+    total['round_expenses'] = round_expenses
+    total['round_income'] = round_income
+    total['round_outcome'] = round_outcome
+    total['full_cost'] = full_cost
+    total['full_progress_cost'] = full_progress_cost
+    total['overall_progress_percent_num'] = 0.0
+    if full_cost > 1.e-4:
+        total['overall_progress_percent_num'] = full_progress_cost / full_cost * 100.0
+    return total
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
@@ -50,9 +94,11 @@ def index(request):
         for con in cons:
             con.color = ctg.color
             constructs.append(con)
+    total = get_total(constructs)
     context = {'active_construct_list': constructs,
                'categories': all_cats,
-               'noscale': True
+               'noscale': True,
+               'total': total
               }
     return render(request, 'list/index.html', context)
     
