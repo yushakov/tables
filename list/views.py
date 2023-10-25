@@ -669,7 +669,7 @@ def getInvoices(transaction):
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
-    logger.info(f'USER ACCESS: view_transaction(transaction.id) by {request.user.username}')
+    logger.info(f'USER ACCESS: view_transaction({transaction.id}) by {request.user.username}')
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
     context = {'transaction': transaction, 'invoices': invoices}
