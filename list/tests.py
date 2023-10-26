@@ -1226,6 +1226,11 @@ class ViewTests(TestCase):
                 email='client@domain.com')
         permission = Permission.objects.get(codename='view_construct')
         self.client_user.user_permissions.add(permission)
+        self.worker_user = User.objects.create_user(username='worker',
+                password='secret',
+                email='worker@domain.com')
+        permission = Permission.objects.get(codename='add_invoice')
+        self.worker_user.user_permissions.add(permission)
 
     def test_session_extension_on_detail_page(self):
         c = Client()
@@ -1955,7 +1960,29 @@ class ViewTests(TestCase):
                 'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
                 'details_txt': ['note'], 'photo': ['']}
         response = c.post("/list/invoice/submit/", post_data)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        
+    def test_worker_login_to_submit_invoice(self):
+        c = Client()
+        c.login(username="worker", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/invoice/submit/?construct_id=" +
+                str(cons.id) + "&worker")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        
+    def test_get_fields_submit_invoice(self):
+        c = Client()
+        c.login(username="worker", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/invoice/submit/?construct_id=" +
+                str(cons.id) + "&type=IN" +
+                "&details=1,deposit,20000&amount=20000&type=IN")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['form']['amount'].initial, '20000')
+        self.assertEqual(response.context['form']['details_txt'].initial, '1,deposit,20000')
+        self.assertEqual(response.context['form']['invoice_type'].initial, 'IN')
         
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")

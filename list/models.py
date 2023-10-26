@@ -489,6 +489,11 @@ class Construct(models.Model):
         return round(self.no_deposit_progress_cost + self.full_side_progress_cost
                      - (self.income() - self.deposit))
 
+    @property
+    def left_to_pay_str(self):
+        return str(round(self.no_deposit_progress_cost + self.full_side_progress_cost
+                     - (self.income() - self.deposit)))
+
 
 class Category(models.Model):
     constructs = models.ManyToManyField(Construct, blank=True)

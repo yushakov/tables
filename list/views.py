@@ -767,10 +767,14 @@ def submit_invoice(request):
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
+        invoice_type = request.GET.get('type', 'OUT')
+        details = request.GET.get('details', '-')
+        amount = request.GET.get('amount', '')
         initial_data = {'construct': construct_id,
                         'seller': request.user.username,
-                        'invoice_type': request.GET.get('type', 'OUT'),
-                       }
+                        'amount': amount,
+                        'invoice_type': invoice_type,
+                        'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
@@ -791,18 +795,6 @@ def modify_invoice(request, invoice_id):
             obj = Invoice.objects.get(pk=invoice_id)
             return redirect(obj)
     else:
-        #initial_data = {'construct': invoice.construct.id,
-        #                'seller': invoice.seller,
-        #                'amount': invoice.amount,
-        #                'number': invoice.number,
-        #                'invoice_type': invoice.invoice_type,
-        #                'status': invoice.status,
-        #                'issue_date': invoice.issue_date,
-        #                'due_date': invoice.due_date,
-        #                'photo': invoice.photo,
-        #                'details_txt': invoice.details_txt,
-        #               }
-        #form = InvoiceSubmitForm(initial=initial_data)
         form = InvoiceSubmitForm(instance=invoice)
         form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()
