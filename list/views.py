@@ -613,11 +613,12 @@ def get_number(line):
     return number
 
 
-def process_invoice_lines(lines):
+def process_invoice_lines(lines, price_coeff=1.0):
     total_amount = 0.0
     for line in lines:
         quantity = get_number(line['quantity'])
-        unit_price = get_number(line['unit_price'])
+        unit_price = price_coeff * get_number(line['unit_price'])
+        line['unit_price'] = unit_price
         amount = quantity * unit_price
         line['amount'] = amount
         total_amount += amount
@@ -630,16 +631,17 @@ def print_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
     invoice_amount = float(invoice.amount)
-    lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
-    lines, lines_amount = process_invoice_lines(lines)
-    warning = ''
-    if abs(invoice_amount - lines_amount) > 0.01:
-        warning = f"Actual invoice amount (£{invoice_amount}) " + \
-                f"is different from the total amount from lines: £{lines_amount}. " + \
-                f"Either your invoice price is wrong, or there is a mistake in the lines."
     vat_prc = float(invoice.construct.vat_percent_num)
+    vat_exclude_coeff = 1.0 / (vat_prc * 0.01 + 1.0)
+    lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
+    lines, lines_amount = process_invoice_lines(lines, vat_exclude_coeff)
     vat_from_total = lines_amount * 0.01 * vat_prc
-    total_and_vat = round(lines_amount + vat_from_total)
+    total_and_vat = lines_amount + vat_from_total
+    warning = ''
+    if abs(invoice_amount - total_and_vat) > 0.01:
+        warning = f"Actual invoice amount (£{invoice_amount}) " + \
+                f"is different from the total amount from lines: £{total_and_vat}. " + \
+                f"Either your invoice price is wrong, or there is a mistake in the lines."
     context = {'user': request.user,
                'invoice': invoice,
                'no_logout_link': True,
@@ -669,7 +671,7 @@ def getInvoices(transaction):
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
-    logger.info(f'USER ACCESS: view_transaction(transaction.id) by {request.user.username}')
+    logger.info(f'USER ACCESS: view_transaction({transaction.id}) by {request.user.username}')
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
     context = {'transaction': transaction, 'invoices': invoices}
@@ -765,10 +767,14 @@ def submit_invoice(request):
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
+        invoice_type = request.GET.get('type', 'OUT')
+        details = request.GET.get('details', '-')
+        amount = request.GET.get('amount', '')
         initial_data = {'construct': construct_id,
                         'seller': request.user.username,
-                        'invoice_type': request.GET.get('type', 'OUT'),
-                       }
+                        'amount': amount,
+                        'invoice_type': invoice_type,
+                        'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
@@ -789,18 +795,6 @@ def modify_invoice(request, invoice_id):
             obj = Invoice.objects.get(pk=invoice_id)
             return redirect(obj)
     else:
-        #initial_data = {'construct': invoice.construct.id,
-        #                'seller': invoice.seller,
-        #                'amount': invoice.amount,
-        #                'number': invoice.number,
-        #                'invoice_type': invoice.invoice_type,
-        #                'status': invoice.status,
-        #                'issue_date': invoice.issue_date,
-        #                'due_date': invoice.due_date,
-        #                'photo': invoice.photo,
-        #                'details_txt': invoice.details_txt,
-        #               }
-        #form = InvoiceSubmitForm(initial=initial_data)
         form = InvoiceSubmitForm(instance=invoice)
         form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()
