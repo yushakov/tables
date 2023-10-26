@@ -420,6 +420,43 @@ class ModelTests(TestCase):
                 con.category_set.add(cat1.id)
         self.assertEqual(len(cat1.constructs.all()), 2)
 
+    def test_expected_deposit_percent(self):
+        import list.models as lm
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        self.assertEqual(construct.deposit_percent_expect, lm.DEPOSIT_PERCENT_EXPECT)
+
+    def test_expected_deposit_percent_2(self):
+        import list.models as lm
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              deposit_percent_expect=20.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        self.assertEqual(construct.deposit_percent_expect, 20.0)
+
+    def test_expected_deposit(self):
+        import list.models as lm
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        choice1 = Choice(construct=construct,
+                         name_txt="Floor",
+                         quantity_num = 25.,
+                         price_num=1000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice1.save()
+        # (work price + VAT + company profit) * 15%
+        expected = 25000 * 1.15 * 1.14 * 0.15
+        self.assertEqual(construct.expected_deposit, round(expected))
+
     def test_deposit_main_only(self):
         construct = Construct(title_text="Deposit holder",
                               vat_percent_num=15.0,
