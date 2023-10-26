@@ -16,6 +16,8 @@ from django.contrib.auth.models import AbstractUser
 import difflib
 from random import seed, randint
 
+DEPOSIT_PERCENT_EXPECT = 15
+
 logger = logging.getLogger('django')
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
@@ -79,9 +81,10 @@ class Construct(models.Model):
     owner_name_text = models.CharField(max_length=200)
     assigned_to = models.CharField(max_length=800, default='Some Team')
     overall_progress_percent_num = models.FloatField('progress', default=0.0, validators=percent_valid)
-    vat_percent_num = models.FloatField(validators=percent_valid, default='5')
-    company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
-    owner_profit_coeff = models.FloatField(validators=coeff_valid, default='0.13')
+    vat_percent_num = models.FloatField(validators=percent_valid, default=5)
+    deposit_percent_expect = models.FloatField(validators=percent_valid, default=DEPOSIT_PERCENT_EXPECT)
+    company_profit_percent_num = models.FloatField(validators=percent_valid, default=15)
+    owner_profit_coeff = models.FloatField(validators=coeff_valid, default=0.13)
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
     slug_name = models.CharField(max_length=500, null=True)
@@ -459,11 +462,19 @@ class Construct(models.Model):
         return round(self.withVat(self.withCompanyProfit(choices_cost)))
 
     @property
+    def expected_deposit(self):
+        return round(self.main_cost * self.deposit_percent_expect * 0.01)
+
+    @property
     def deposit(self):
         in_transactions = self.transaction_set.filter(details_txt__icontains='#deposit')
         if in_transactions is None: return 0.0
         deposit = sum([float(ta.amount) for ta in in_transactions])
         return deposit
+
+    @property
+    def expected_deposit_str(self):
+        return str(self.main_cost * self.deposit_percent_expect * 0.01)
 
     @property
     def income_wo_deposit(self):

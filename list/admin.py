@@ -22,6 +22,7 @@ class ConstructAdmin(admin.ModelAdmin):
               "owner_name_text",
               "assigned_to",
               "vat_percent_num",
+              "deposit_percent_expect",
               "company_profit_percent_num",
               "owner_profit_coeff"]
 
@@ -33,6 +34,7 @@ class ConstructAdmin(admin.ModelAdmin):
         form.base_fields["phone_text"].label = "Phone"
         form.base_fields["owner_name_text"].label = "Owner"
         form.base_fields["vat_percent_num"].label = "VAT, %"
+        form.base_fields["deposit_percent_expect"].label = "Expected deposit, %"
         form.base_fields["company_profit_percent_num"].label = "Company profit, %"
         form.base_fields["owner_profit_coeff"].label = "Owner profit coefficient"
         return form

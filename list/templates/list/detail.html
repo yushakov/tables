@@ -79,8 +79,11 @@
     <td></td>
     <td></td>
     <td></td>
-    <td><b>Paid deposit:</b></td>
-    <td>£ {{ construct.deposit|floatformat:2 }}</td>
+    <td style="vertical-align: top"><b>Paid deposit:</b></td>
+    <td>
+        £ {{ construct.deposit|floatformat:2 }}<br>
+        ({{ construct.deposit_percent|floatformat:2 }}%)
+    </td>
     <td><b>Income w/o deposit:</b></td>
     <td id='paid'>&#163; {{ construct.income_wo_deposit }}</td>
 </tr>
@@ -88,8 +91,17 @@
     <td></td>
     <td></td>
     <td></td>
-    <td></td>
-    <td></td>
+    {% if construct.deposit <= 0 %}
+        <td style="vertical-align: top"><b>Expected deposit:</b></td>
+        <td>
+            £ {{ construct.expected_deposit }}<br>
+            ({{ construct.deposit_percent_expect }}%)<br>
+            <a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&details=1,deposit,{{ construct.expected_deposit_str }}&amount={{ construct.expected_deposit_str }}&type=IN">request</a>
+        </td>
+    {% else %}
+        <td></td>
+        <td></td>
+    {% endif %}
     <td><b>To be paid:</b></td>
     <td>
         £ {{ construct.left_to_pay }} (<a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&details=1,stage N,{{ construct.left_to_pay_str }}&amount={{ construct.left_to_pay_str }}&type=IN">request</a>)
