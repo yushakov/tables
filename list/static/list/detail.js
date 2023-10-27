@@ -68,7 +68,6 @@ function getDeleteCellHtml() {
 function updateRows() {
     var table = document.getElementById("choices");
     var rows = Array.from(table.rows);
-    console.log("updateRows");
     rows.forEach(function(row) {
         row.cells[g_name_cell_idx].addEventListener("click", function() {
             var active_row_holder = document.getElementById("active_row");
@@ -268,8 +267,7 @@ function validateInput(id) {
 }
 
 function encodeHTML(s) {
-    return s.replace(/&/g, '&amp;')
-	        .replace(/</g, '&lt;')
+    return s.replace(/</g, '&lt;')
 	        .replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;')
 			.replace(/'/g, '&#x27;');
@@ -819,7 +817,6 @@ function addHouse() {
 }
 
 function addGarage() {
-    //debugger;
     addRow(0, "Header2");
     document.getElementById('inpName').value = 'Garage';
     addRow(1, "Choice");
@@ -859,8 +856,18 @@ function addGarage() {
     freezeActiveRow();
 }
 
+function checkMarkup() {
+    addRow(0, "Header2");
+    document.getElementById('inpName').value = 'Garage';
+    addRow(1, "Choice");
+    document.getElementById('inpName').value = '**base** from B&Q';
+    document.getElementById('inpPrice').value = '5,000';
+    document.getElementById('inpPlanDays').value = '10';
+    document.getElementById('inpAsgnTo').value = 'Illarion';
+    freezeActiveRow();
+}
+
 function addGarageBottomUp() {
-    //debugger;
     var rows = document.getElementById("choices").rows;
     var lastIdx = rows.length - 1;
     addRow(lastIdx, "Header2");
@@ -951,10 +958,8 @@ function cellTextsToStr(cells) {
 function test_choices_header_pretty() {
     var row = document.getElementById("choices").rows[0];
     var titles1 = cellTextsToStr(row.cells);
-    //console.log(titles1);
     showPrettyRaw(0);
     var titles2 = cellTextsToStr(row.cells);
-    //console.log(titles2);
     showPrettyRaw(0);
     console.assert(titles1 == titles2, "Show Pretty breaks the headers!")
 }
@@ -967,4 +972,5 @@ function bigTest() {
     addGarage();
     addGarageBottomUp();
     delModifLineByLine();
+    checkMarkup();
 }
