@@ -774,6 +774,7 @@ def submit_invoice(request):
                         'seller': request.user.username,
                         'amount': amount,
                         'invoice_type': invoice_type,
+                        'number': getConstructAndMaxId(construct_id, Invoice),
                         'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
         if 'worker' in request.GET:

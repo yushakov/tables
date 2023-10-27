@@ -71,7 +71,7 @@
     <td></td>
     <td></td>
     <td><b>Total + Profit + VAT:</b></td>
-    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat }}</td>
+    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat|floatformat:2 }}</td>
     <td><b>Other works<br>progress:</b></td>
     <td>£ {{ construct.full_side_progress_cost }}</td>
 </tr>

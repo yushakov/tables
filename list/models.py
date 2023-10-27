@@ -466,15 +466,15 @@ class Construct(models.Model):
         return round(self.main_cost * self.deposit_percent_expect * 0.01)
 
     @property
+    def expected_deposit_str(self):
+        return f"{self.main_cost * self.deposit_percent_expect * 0.01 :.2f}"
+
+    @property
     def deposit(self):
         in_transactions = self.transaction_set.filter(details_txt__icontains='#deposit')
         if in_transactions is None: return 0.0
         deposit = sum([float(ta.amount) for ta in in_transactions])
         return deposit
-
-    @property
-    def expected_deposit_str(self):
-        return str(self.main_cost * self.deposit_percent_expect * 0.01)
 
     @property
     def income_wo_deposit(self):
@@ -514,6 +514,7 @@ class Category(models.Model):
 
     class Meta:
         ordering = ['priority']
+        verbose_name_plural = 'categories'
 
     def __str__(self):
         return f"{self.name}, {self.priority}"
