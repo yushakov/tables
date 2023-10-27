@@ -11,6 +11,9 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ["name", "priority"]
     filter_horizontal = ["constructs"]
 
+class CategoryInline(admin.TabularInline):
+    model = Category.constructs.through
+    extra = 1
 
 class ConstructAdmin(admin.ModelAdmin):
     list_display = ["title_text", "goto", "listed_date", "overall_progress", "email"]
@@ -25,6 +28,7 @@ class ConstructAdmin(admin.ModelAdmin):
               "deposit_percent_expect",
               "company_profit_percent_num",
               "owner_profit_coeff"]
+    inlines = [CategoryInline]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
