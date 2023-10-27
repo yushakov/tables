@@ -1410,6 +1410,17 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertIs(str(response.content).find("<b>bolddd</b>") > 0, True)
 
+    def test_detail_page_markup_amp(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct()
+        cons.save()
+        choice = make_test_choice(cons, name='Choice with a R&amp;D name')
+        choice.save()
+        response = c.get('/list/' + str(cons.id) +'/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("R&amp;D") > 0, True)
+
     def test_login_page_client_view(self):
         c = Client()
         cons = Construct()
