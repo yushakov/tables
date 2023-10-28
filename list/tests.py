@@ -1284,6 +1284,13 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
 
+    def test_actions_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/actions/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_session_extension_on_client_page(self):
         c = Client()
         c.login(username="client", password="secret")
@@ -3174,7 +3181,6 @@ class ClientSlugTests(TestCase):
         cons.owner_name_text = "Mr. Ivan Ivanovich"
         cons.save()
         access_str = '/list/client/' + str(cons.slug_name)
-        print(access_str)
         response = c.get(access_str)
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 

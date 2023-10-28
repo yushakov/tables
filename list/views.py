@@ -471,13 +471,35 @@ def detail(request, construct_id):
 
 
 @login_required
+def actions(request):
+    actions = []
+    with open('logs/info.log', 'r') as f:
+        for line in f:
+            if line.find("*action*") >= 0:
+                actions.append({'line': line.replace("*action*", "")
+                                            .replace("Transaction", "<b>Transaction</b>")
+                                            .replace("Invoice", "<b>Invoice</b>")
+                                            .replace("client", "<b>client</b>")
+                                            .replace("Client", "<b>Client</b>")
+                                            .replace("Choice", "<b>Choice</b>")
+                                            .replace("choice", "<b>choice</b>")
+                                            .replace("INFO", "")
+                                            })
+    actions = actions[::-1]
+    actions = actions[:500]
+    context = {'actions': actions}
+    return render(request, 'list/actions.html', context)
+
+
+@login_required
 @permission_required("list.view_construct")
 def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'USER ACCESS: client({construct.title_text}) by {request.user.username}')
+    logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
         construct.history_dump(request.user.id)
+        logger.info(f'*action* client submission for {construct.title_text} by {request.user.username}')
     extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
@@ -501,10 +523,11 @@ def client_slug(request, slug):
     construct = Construct.objects.filter(slug_name=slug).first()
     if construct is None:
         raise Http404("Project not found")
-    logger.info(f'USER ACCESS: client({construct.title_text}) with slug: {slug}')
+    logger.info(f'*action* USER ACCESS: client({construct.title_text}) with slug: {slug}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
         construct.history_dump(-1)
+        logger.info(f"*action* client (slug) submission for construct '{construct.title_text}'.")
     # extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
@@ -764,6 +787,7 @@ def submit_invoice(request):
         if form.is_valid():
             form.save()
             obj = Invoice.objects.latest()
+            logger.info(f"*action* Invoice submitted: {obj} for construct: {obj.construct.title_text}")
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
