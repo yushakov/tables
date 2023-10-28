@@ -704,9 +704,9 @@ class Choice(models.Model):
                 return
         # save(), if the instance is new or changed
         if self.pk:
-            logger.info(f'send {self.pk} to DB')
+            logger.info(f'*action* Update choice {self.pk} ({self.name_txt}) in DB -::- {self.construct.title_text}')
         else:
-            logger.info(f'New "{self.name_txt[:50]}" in DB')
+            logger.info(f'*action* New choice "{self.name_txt}" in DB -::- {self.construct.title_text}')
         self.construct.save()
         super(Choice, self).save(*args, **kwargs)
 
@@ -840,8 +840,7 @@ class Transaction(models.Model):
         return transaction
 
     def save(self, *args, **kwargs):
-        logger.info(f"Transaction.save(): {self}")
-        logger.info(self.photo)
+        logger.info(f"*action* Transaction.save(): {self} -::- {self.construct.title_text}")
         super(Transaction, self).save(*args, **kwargs)
 
 
@@ -938,7 +937,7 @@ class Invoice(models.Model):
             for ta in self.transactions.all():
                 if f"{ta.transaction_type}" != f"{self.invoice_type}":
                     raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
-        logger.info(f'Invoice.save(): {self}')
+        logger.info(f'*action* Invoice.save(): {self} -::- {self.construct.title_text}')
         super(Invoice, self).save(*args, **kwargs)
 
 
