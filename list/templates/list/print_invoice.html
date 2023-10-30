@@ -2,6 +2,7 @@
 {% block title %}Print Invoice{% endblock %}
 {% block content %}
 {% load static %}
+{% load app_filters %}
 <link rel="stylesheet" href="{% static 'list/print.css' %}">
 <table>
     <tbody>
@@ -56,7 +57,11 @@
         {% for line in lines %}
             <tr>
                 <td class='{{ line.class }}' style='text-align: center'>{{ line.quantity }}</td>
-                <td class='{{ line.class }}'>{{ line.description }}</td>
+                <td class='{{ line.class }}'>
+                    {% autoescape off %}
+                        {{ line.description|markup }}
+                    {% endautoescape %}
+                </td>
                 <td class='{{ line.class }}'>£ {{ line.unit_price|floatformat:2 }}</td>
                 <td class='{{ line.class }}'>£ {{ line.amount|floatformat:2 }}</td>
             </tr>
