@@ -94,7 +94,9 @@
                     </tr>
                     <tr>
                         <td class='vat-total-fields vat-total-label'>Total including VAT:</td>
-                        <td class='vat-total-fields vat-total-value'>£ {{ total_and_vat|floatformat:2 }}</td>
+                        <td class='vat-total-fields vat-total-value' style='font-size: large'>
+                            <b>£ {{ total_and_vat|floatformat:2 }}</b>
+                        </td>
                     </tr>
                 </table>
             </td>
