@@ -1,11 +1,19 @@
 from django.contrib import admin
-from .models import Construct, Worker, Choice, Invoice, Transaction, InvoiceTransaction
+from .models import Construct, Worker, Choice, Invoice, Transaction, InvoiceTransaction, Category
 from django.contrib.auth.admin import UserAdmin
 from .models import User
 
 '''
 Customization tricks: https://realpython.com/customize-django-admin-python 
 '''
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "priority"]
+    filter_horizontal = ["constructs"]
+
+class CategoryInline(admin.TabularInline):
+    model = Category.constructs.through
+    extra = 1
 
 class ConstructAdmin(admin.ModelAdmin):
     list_display = ["title_text", "goto", "listed_date", "overall_progress", "email"]
@@ -17,8 +25,10 @@ class ConstructAdmin(admin.ModelAdmin):
               "owner_name_text",
               "assigned_to",
               "vat_percent_num",
+              "deposit_percent_expect",
               "company_profit_percent_num",
               "owner_profit_coeff"]
+    inlines = [CategoryInline]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -28,6 +38,7 @@ class ConstructAdmin(admin.ModelAdmin):
         form.base_fields["phone_text"].label = "Phone"
         form.base_fields["owner_name_text"].label = "Owner"
         form.base_fields["vat_percent_num"].label = "VAT, %"
+        form.base_fields["deposit_percent_expect"].label = "Expected deposit, %"
         form.base_fields["company_profit_percent_num"].label = "Company profit, %"
         form.base_fields["owner_profit_coeff"].label = "Owner profit coefficient"
         return form
@@ -65,6 +76,7 @@ class MyUserAdmin(UserAdmin):
     # fieldsets = UserAdmin.fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
     # add_fieldsets = UserAdmin.add_fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
     list_display = ["username", "email", "first_name", "last_name", "is_staff"]
+    filter_horizontal = ["accessible_constructs", "groups", "user_permissions"]
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'business_address',
@@ -74,7 +86,7 @@ class MyUserAdmin(UserAdmin):
         (('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
 
-
+admin.site.register(Category, CategoryAdmin)
 admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
 admin.site.register(Worker)

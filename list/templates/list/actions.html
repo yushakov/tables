@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Last actions{% endblock %}
+{% block content %}
+{% load static %}
+<h1>Last actions</h1>
+<table id='construct_list'><tbody>
+{% for act in actions %}
+    <tr>
+        <td>
+            {% autoescape off %}
+            {{ act.line }}
+            {% endautoescape %}
+        </td>
+    </tr>
+{% endfor %}
+</tbody></table>
+{% endblock %}

@@ -30,8 +30,11 @@
     <td class='hide_for_pretty'><a href="{% url 'admin:list_construct_change' construct.id %}">Modify<br>basics</a></td>
     <td class='hide_for_pretty'><a href="{% url 'list:clone' construct.id %}">Clone this<br>project</a></td>
     <td class='hide_for_pretty'><a href="{% url 'list:client_slug' construct.slug_name %}">Client view</a></td>
-    <td class='hide_for_pretty'><a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&worker">
-            Worker Invoice Submission</a></td>
+    <td class='hide_for_pretty'>
+        <a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&worker">
+            Worker Invoice Submission</a><br>
+        <a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}">Invoice Submission</a>
+    </td>
 </tr>
 <tr>
     <td><b>Email:</b></td>
@@ -68,7 +71,7 @@
     <td></td>
     <td></td>
     <td><b>Total + Profit + VAT:</b></td>
-    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat }}</td>
+    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat|floatformat:2 }}</td>
     <td><b>Other works<br>progress:</b></td>
     <td>£ {{ construct.full_side_progress_cost }}</td>
 </tr>
@@ -76,8 +79,11 @@
     <td></td>
     <td></td>
     <td></td>
-    <td><b>Paid deposit:</b></td>
-    <td>£ {{ construct.deposit }}</td>
+    <td style="vertical-align: top"><b>Paid deposit:</b></td>
+    <td>
+        £ {{ construct.deposit|floatformat:2 }}<br>
+        ({{ construct.deposit_percent|floatformat:2 }}%)
+    </td>
     <td><b>Income w/o deposit:</b></td>
     <td id='paid'>&#163; {{ construct.income_wo_deposit }}</td>
 </tr>
@@ -85,10 +91,21 @@
     <td></td>
     <td></td>
     <td></td>
-    <td></td>
-    <td></td>
+    {% if construct.deposit <= 0 %}
+        <td style="vertical-align: top"><b>Expected deposit:</b></td>
+        <td>
+            £ {{ construct.expected_deposit }}<br>
+            ({{ construct.deposit_percent_expect }}%)<br>
+            <a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&details=1,deposit,{{ construct.expected_deposit_str }}&amount={{ construct.expected_deposit_str }}&type=IN">request</a>
+        </td>
+    {% else %}
+        <td></td>
+        <td></td>
+    {% endif %}
     <td><b>To be paid:</b></td>
-    <td>£ {{ construct.left_to_pay }}</td>
+    <td>
+        £ {{ construct.left_to_pay }} (<a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&details=1,stage N,{{ construct.left_to_pay_str }}&amount={{ construct.left_to_pay_str }}&type=IN">request</a>)
+    </td>
 </tr>
 </tbody>
 </table>

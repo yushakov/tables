@@ -8,6 +8,13 @@
 &nbsp;&nbsp;
 <a href="{% url 'admin:index' %}">admin home page</a>
 <br><br>
+<b>Categories:</b>&nbsp;
+<a href="{% url 'list:index' %}">all</a>&nbsp;
+{% for ctg in categories %}
+    <span style="background-color: {{ ctg.color }}; padding: 2px; border-radius: 3px">
+        <a href="?category={{ ctg.id }}">{{ ctg.name }}</a>
+    </span>&nbsp;
+{% endfor %}
 {% if active_construct_list %}
 <table id='construct_list'>
     <thead>
@@ -33,7 +40,7 @@
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
-        <td class='construct-title'>
+        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px">
             <a href="{% url 'list:detail' construct.id %}">{{ construct.title_text }}</a>
         </td>
         <td align='left' class='progress-cell'>
@@ -48,7 +55,7 @@
             {{ construct.full_cost }}
         </td>
         <td align ='right'>{{ construct.main_cost }}</td>
-        <td align ='right'>{{ construct.deposit }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
+        <td align ='right'>{{ construct.deposit|floatformat:2 }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
         <td align ='right'>
             {{ construct.full_progress_cost }}
         </td>
@@ -99,6 +106,59 @@
         </td>
         </tr>
     {% endfor %}
+    {% if total %}
+        <tr>
+        <td align='right'>
+            <b>Total:</b>
+        </td>
+        <td align='left' class='progress-cell'>
+            <div class='project-progress' style='width: {{ total.overall_progress_percent_num }}%'>
+                {{ total.overall_progress_percent_num|floatformat:2 }}&nbsp;%
+            </div>
+        </td>
+        <td></td>
+        <td align ='right'>
+            <b>{{ total.full_cost }}</b>
+        </td>
+        <td align ='right'><b>{{ total.main_cost }}</b></td>
+        <td align ='right'><b>{{ total.deposit }}</b></td>
+        <td align ='right'>
+            <b>{{ total.full_progress_cost }}</b>
+        </td>
+        <td align ='right'></td>
+        <td align ='right'>
+            <b>{{ total.round_income }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.round_outcome }}</b>
+            </a>
+        </td>
+        <td align ='right'>
+            <b>{{ total.round_expenses }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.round_salaries }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.company_profit }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.owner_profit }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.salaries_part }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.left_to_pay }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.invoices_to_pay }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.invoices_pending_pay }}</b>
+        </td>
+        </tr>
+    {% endif %}
     </tbody>
 </table>
 

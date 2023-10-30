@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
+from .models import Category
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -24,18 +25,80 @@ class IndexView(generic.ListView):
         """Return the projects"""
         return Construct.objects.order_by('overall_progress_percent_num')
 
+def fix_category(constructs, categories):
+    if len(categories) > 0:
+        for con in constructs:
+            if len(con.category_set.all()) == 0:
+                logger.warning(f"Put '{con}' into category '{categories[0].name}'")
+                con.category_set.add(categories[0].id)
+
+def get_total(constructs):
+    total = {}
+    full_cost = 0
+    full_progress_cost = 0
+    round_income = 0
+    round_outcome = 0
+    round_expenses = 0
+    round_salaries = 0
+    company_profit = 0
+    owner_profit = 0
+    salaries_part = 0
+    left_to_pay = 0
+    invoices_to_pay = 0
+    invoices_pending_pay = 0
+    for con in constructs:
+        full_cost += con.full_cost
+        full_progress_cost += con.full_progress_cost
+        round_income += con.round_income
+        round_outcome += con.round_outcome
+        round_expenses += con.round_expenses
+        round_salaries += con.round_salaries
+        company_profit += con.company_profit
+        owner_profit += con.owner_profit
+        salaries_part += con.salaries_part
+        left_to_pay += con.left_to_pay
+        invoices_to_pay += con.invoices_to_pay
+        invoices_pending_pay += con.invoices_pending_pay
+    total['invoices_pending_pay'] = invoices_pending_pay
+    total['invoices_to_pay'] = invoices_to_pay
+    total['left_to_pay'] = left_to_pay
+    total['salaries_part'] = salaries_part
+    total['owner_profit'] = owner_profit
+    total['company_profit'] = company_profit
+    total['round_salaries'] = round_salaries
+    total['round_expenses'] = round_expenses
+    total['round_income'] = round_income
+    total['round_outcome'] = round_outcome
+    total['full_cost'] = full_cost
+    total['full_progress_cost'] = full_progress_cost
+    total['overall_progress_percent_num'] = 0.0
+    if full_cost > 1.e-4:
+        total['overall_progress_percent_num'] = full_progress_cost / full_cost * 100.0
+    return total
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def index(request):
     logger.info(f'USER ACCESS: index() by {request.user.username}')
-    constructs = Construct.objects.order_by('-listed_date')
-    price, price_vat, profit, paid, tobe_paid_for_progress = 0.0, 0.0, 0.0, 0.0, 0.0
-    for construct in constructs:
-        price += sum([choice.price_num * choice.quantity_num for choice in construct.choice_set.all()])
+    all_constructs = Construct.objects.all()
+    all_cats = Category.objects.order_by('priority')
+    fix_category(all_constructs, all_cats)
+    ctg_id = int(request.GET.get('category', '0'))
+    cats = all_cats
+    if ctg_id > 0:
+        cats = all_cats.filter(id=ctg_id)
+    constructs = []
+    for ctg in cats:
+        cons = all_constructs.filter(category=ctg.id)
+        for con in cons:
+            con.color = ctg.color
+            constructs.append(con)
+    total = get_total(constructs)
     context = {'active_construct_list': constructs,
-               'price': price,
-               'noscale': True
+               'categories': all_cats,
+               'noscale': True,
+               'total': total
               }
     return render(request, 'list/index.html', context)
     
@@ -408,13 +471,35 @@ def detail(request, construct_id):
 
 
 @login_required
+def actions(request):
+    actions = []
+    with open('logs/info.log', 'r') as f:
+        for line in f:
+            if line.find("*action*") >= 0:
+                actions.append({'line': line.replace("*action*", "")
+                                            .replace("Transaction", "<b>Transaction</b>")
+                                            .replace("Invoice", "<b>Invoice</b>")
+                                            .replace("client", "<b>client</b>")
+                                            .replace("Client", "<b>Client</b>")
+                                            .replace("Choice", "<b>Choice</b>")
+                                            .replace("choice", "<b>choice</b>")
+                                            .replace("INFO", "")
+                                            })
+    actions = actions[::-1]
+    actions = actions[:500]
+    context = {'actions': actions}
+    return render(request, 'list/actions.html', context)
+
+
+@login_required
 @permission_required("list.view_construct")
 def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'USER ACCESS: client({construct.title_text}) by {request.user.username}')
+    logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
         construct.history_dump(request.user.id)
+        logger.info(f'*action* client submission for {construct.title_text} by {request.user.username}')
     extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
@@ -438,10 +523,11 @@ def client_slug(request, slug):
     construct = Construct.objects.filter(slug_name=slug).first()
     if construct is None:
         raise Http404("Project not found")
-    logger.info(f'USER ACCESS: client({construct.title_text}) with slug: {slug}')
+    logger.info(f'*action* USER ACCESS: client({construct.title_text}) with slug: {slug}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
         construct.history_dump(-1)
+        logger.info(f"*action* client (slug) submission for construct '{construct.title_text}'.")
     # extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
@@ -550,11 +636,12 @@ def get_number(line):
     return number
 
 
-def process_invoice_lines(lines):
+def process_invoice_lines(lines, price_coeff=1.0):
     total_amount = 0.0
     for line in lines:
         quantity = get_number(line['quantity'])
-        unit_price = get_number(line['unit_price'])
+        unit_price = price_coeff * get_number(line['unit_price'])
+        line['unit_price'] = unit_price
         amount = quantity * unit_price
         line['amount'] = amount
         total_amount += amount
@@ -567,16 +654,17 @@ def print_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
     invoice_amount = float(invoice.amount)
-    lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
-    lines, lines_amount = process_invoice_lines(lines)
-    warning = ''
-    if abs(invoice_amount - lines_amount) > 0.01:
-        warning = f"Actual invoice amount (£{invoice_amount}) " + \
-                f"is different from the total amount from lines: £{lines_amount}. " + \
-                f"Either your invoice price is wrong, or there is a mistake in the lines."
     vat_prc = float(invoice.construct.vat_percent_num)
+    vat_exclude_coeff = 1.0 / (vat_prc * 0.01 + 1.0)
+    lines = get_printed_invoice_lines(invoice.details_txt, invoice.amount)
+    lines, lines_amount = process_invoice_lines(lines, vat_exclude_coeff)
     vat_from_total = lines_amount * 0.01 * vat_prc
-    total_and_vat = round(lines_amount + vat_from_total)
+    total_and_vat = lines_amount + vat_from_total
+    warning = ''
+    if abs(invoice_amount - total_and_vat) > 0.01:
+        warning = f"Actual invoice amount (£{invoice_amount}) " + \
+                f"is different from the total amount from lines: £{total_and_vat}. " + \
+                f"Either your invoice price is wrong, or there is a mistake in the lines."
     context = {'user': request.user,
                'invoice': invoice,
                'no_logout_link': True,
@@ -606,7 +694,7 @@ def getInvoices(transaction):
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
-    logger.info(f'USER ACCESS: view_transaction(transaction.id) by {request.user.username}')
+    logger.info(f'USER ACCESS: view_transaction({transaction.id}) by {request.user.username}')
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
     context = {'transaction': transaction, 'invoices': invoices}
@@ -672,7 +760,7 @@ def submit_transaction_bunch(request):
                 inds = [int(f.strip()) - 1 for f in field_nums.split(',')]
                 from_txt = str(fields[inds[0]])
                 to_txt   = str(fields[inds[1]])
-                amount   = abs(float(fields[inds[2]]))
+                amount   = float(fields[inds[2]])
                 inout    = str(fields[inds[3]]).upper()
                 date     = format_date(str(fields[inds[4]]))
                 number   = str(fields[inds[5]])
@@ -699,13 +787,19 @@ def submit_invoice(request):
         if form.is_valid():
             form.save()
             obj = Invoice.objects.latest()
+            logger.info(f"*action* Invoice submitted: {obj} for construct: {obj.construct.title_text}")
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
+        invoice_type = request.GET.get('type', 'OUT')
+        details = request.GET.get('details', '-')
+        amount = request.GET.get('amount', '')
         initial_data = {'construct': construct_id,
                         'seller': request.user.username,
-                        'invoice_type': request.GET.get('type', 'OUT'),
-                       }
+                        'amount': amount,
+                        'invoice_type': invoice_type,
+                        'number': getConstructAndMaxId(construct_id, Invoice),
+                        'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
@@ -726,18 +820,6 @@ def modify_invoice(request, invoice_id):
             obj = Invoice.objects.get(pk=invoice_id)
             return redirect(obj)
     else:
-        #initial_data = {'construct': invoice.construct.id,
-        #                'seller': invoice.seller,
-        #                'amount': invoice.amount,
-        #                'number': invoice.number,
-        #                'invoice_type': invoice.invoice_type,
-        #                'status': invoice.status,
-        #                'issue_date': invoice.issue_date,
-        #                'due_date': invoice.due_date,
-        #                'photo': invoice.photo,
-        #                'details_txt': invoice.details_txt,
-        #               }
-        #form = InvoiceSubmitForm(initial=initial_data)
         form = InvoiceSubmitForm(instance=invoice)
         form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()

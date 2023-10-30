@@ -19,6 +19,7 @@ from list.views import check_integrity,   \
                        get_number,        \
                        process_invoice_lines
 from list.models import Construct, \
+                        Category, \
                         User, \
                         Choice, \
                         Invoice, \
@@ -384,6 +385,78 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_categories(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+
+    def test_add_category_to_construct(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat2.constructs.add(con2.id)
+        cons = Construct.objects.all()
+        for con in cons:
+            if len(con.category_set.all()) == 0:
+                con.category_set.add(cat1.id)
+        self.assertEqual(len(cat1.constructs.all()), 2)
+
+    def test_expected_deposit_percent(self):
+        import list.models as lm
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        self.assertEqual(construct.deposit_percent_expect, lm.DEPOSIT_PERCENT_EXPECT)
+
+    def test_expected_deposit_percent_2(self):
+        import list.models as lm
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              deposit_percent_expect=20.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        self.assertEqual(construct.deposit_percent_expect, 20.0)
+
+    def test_expected_deposit(self):
+        import list.models as lm
+        construct = Construct(title_text="Deposit holder",
+                              vat_percent_num=15.0,
+                              company_profit_percent_num=14.0,
+                              owner_profit_coeff=0.13)
+        construct.save()
+        choice1 = Choice(construct=construct,
+                         name_txt="Floor",
+                         quantity_num = 25.,
+                         price_num=1000,
+                         plan_days_num=3.,
+                         main_contract_choice=True)
+        choice1.save()
+        # (work price + VAT + company profit) * 15%
+        expected = 25000 * 1.15 * 1.14 * 0.15
+        self.assertEqual(construct.expected_deposit, round(expected))
+
     def test_deposit_main_only(self):
         construct = Construct(title_text="Deposit holder",
                               vat_percent_num=15.0,
@@ -1190,6 +1263,11 @@ class ViewTests(TestCase):
                 email='client@domain.com')
         permission = Permission.objects.get(codename='view_construct')
         self.client_user.user_permissions.add(permission)
+        self.worker_user = User.objects.create_user(username='worker',
+                password='secret',
+                email='worker@domain.com')
+        permission = Permission.objects.get(codename='add_invoice')
+        self.worker_user.user_permissions.add(permission)
 
     def test_session_extension_on_detail_page(self):
         c = Client()
@@ -1205,6 +1283,13 @@ class ViewTests(TestCase):
         updated_date = session.get_expiry_date()
         self.assertEqual(response.status_code, 200)
         self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
+
+    def test_actions_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/actions/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_session_extension_on_client_page(self):
         c = Client()
@@ -1259,6 +1344,60 @@ class ViewTests(TestCase):
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
+    def test_categories(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get('/list/?category=' + str(cat1.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_update_construct_category(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat2.constructs.add(con2.id)
+        cat2.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(len(cat1.constructs.all()), 2)
+
+    def test_update_construct_category_with_no_categories(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_login_page_detail(self):
         c = Client()
         cons = Construct()
@@ -1277,6 +1416,17 @@ class ViewTests(TestCase):
         response = c.get('/list/' + str(cons.id) +'/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertIs(str(response.content).find("<b>bolddd</b>") > 0, True)
+
+    def test_detail_page_markup_amp(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct()
+        cons.save()
+        choice = make_test_choice(cons, name='Choice with a R&amp;D name')
+        choice.save()
+        response = c.get('/list/' + str(cons.id) +'/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("R&amp;D") > 0, True)
 
     def test_login_page_client_view(self):
         c = Client()
@@ -1397,6 +1547,37 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         tras = construct.transaction_set.all()
         self.assertEqual(len(tras), 3)
+
+    def test_transaction_bunch_sum(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = Construct(title_text='Test construct')
+        construct.save()
+        post_data = {'construct_id': ['1'], 'delimiter': ['2'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey, Yury, 5000, IN, 26/08/2023, 012341200, money for good life\r\n' + \
+                               'Marcos, Yury, 7000, IN, 30/08/2023, 77777, profit sharing']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 2)
+        total = sum([t.amount for t in tras])
+        self.assertEqual(total, 12000)
+
+    def test_transaction_bunch_with_negative(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = Construct(title_text='Test construct')
+        construct.save()
+        post_data = {'construct_id': ['1'], 'delimiter': ['2'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey, Yury, 5000, IN, 26/08/2023, 012341200, money for good life\r\n' + \
+                               'Marcos, Yury, 7000, IN, 30/08/2023, 77777, profit sharing\r\n' + \
+                               'Home Office, Yury, -3000, OUT, 12/12/2023, eeee, IHS Refund']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        tras = construct.transaction_set.all()
+        self.assertEqual(len(tras), 3)
+        total = sum([t.amount for t in tras])
+        self.assertEqual(total, 9000)
 
     def test_transaction_bunch_tab(self):
         c = Client()
@@ -1834,7 +2015,29 @@ class ViewTests(TestCase):
                 'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
                 'details_txt': ['note'], 'photo': ['']}
         response = c.post("/list/invoice/submit/", post_data)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        
+    def test_worker_login_to_submit_invoice(self):
+        c = Client()
+        c.login(username="worker", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/invoice/submit/?construct_id=" +
+                str(cons.id) + "&worker")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        
+    def test_get_fields_submit_invoice(self):
+        c = Client()
+        c.login(username="worker", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/invoice/submit/?construct_id=" +
+                str(cons.id) + "&type=IN" +
+                "&details=1,deposit,20000&amount=20000&type=IN")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['form']['amount'].initial, '20000')
+        self.assertEqual(response.context['form']['details_txt'].initial, '1,deposit,20000')
+        self.assertEqual(response.context['form']['invoice_type'].initial, 'IN')
         
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")
@@ -2978,7 +3181,6 @@ class ClientSlugTests(TestCase):
         cons.owner_name_text = "Mr. Ivan Ivanovich"
         cons.save()
         access_str = '/list/client/' + str(cons.slug_name)
-        print(access_str)
         response = c.get(access_str)
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 

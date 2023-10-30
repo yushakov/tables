@@ -16,6 +16,8 @@ from django.contrib.auth.models import AbstractUser
 import difflib
 from random import seed, randint
 
+DEPOSIT_PERCENT_EXPECT = 15
+
 logger = logging.getLogger('django')
 
 percent_valid = [MinValueValidator(0), MaxValueValidator(100)] 
@@ -79,9 +81,10 @@ class Construct(models.Model):
     owner_name_text = models.CharField(max_length=200)
     assigned_to = models.CharField(max_length=800, default='Some Team')
     overall_progress_percent_num = models.FloatField('progress', default=0.0, validators=percent_valid)
-    vat_percent_num = models.FloatField(validators=percent_valid, default='5')
-    company_profit_percent_num = models.FloatField(validators=percent_valid, default='15')
-    owner_profit_coeff = models.FloatField(validators=coeff_valid, default='0.13')
+    vat_percent_num = models.FloatField(validators=percent_valid, default=5)
+    deposit_percent_expect = models.FloatField(validators=percent_valid, default=DEPOSIT_PERCENT_EXPECT)
+    company_profit_percent_num = models.FloatField(validators=percent_valid, default=15)
+    owner_profit_coeff = models.FloatField(validators=coeff_valid, default=0.13)
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
     slug_name = models.CharField(max_length=500, null=True)
@@ -459,6 +462,14 @@ class Construct(models.Model):
         return round(self.withVat(self.withCompanyProfit(choices_cost)))
 
     @property
+    def expected_deposit(self):
+        return round(self.main_cost * self.deposit_percent_expect * 0.01)
+
+    @property
+    def expected_deposit_str(self):
+        return f"{self.main_cost * self.deposit_percent_expect * 0.01 :.2f}"
+
+    @property
     def deposit(self):
         in_transactions = self.transaction_set.filter(details_txt__icontains='#deposit')
         if in_transactions is None: return 0.0
@@ -488,6 +499,25 @@ class Construct(models.Model):
     def left_to_pay(self):
         return round(self.no_deposit_progress_cost + self.full_side_progress_cost
                      - (self.income() - self.deposit))
+
+    @property
+    def left_to_pay_str(self):
+        return str(round(self.no_deposit_progress_cost + self.full_side_progress_cost
+                     - (self.income() - self.deposit)))
+
+
+class Category(models.Model):
+    constructs = models.ManyToManyField(Construct, blank=True)
+    name = models.CharField(max_length=200)
+    priority = models.IntegerField(default=0)
+    color = models.CharField(max_length=200, default='white')
+
+    class Meta:
+        ordering = ['priority']
+        verbose_name_plural = 'categories'
+
+    def __str__(self):
+        return f"{self.name}, {self.priority}"
 
 
 class User(AbstractUser):
@@ -674,9 +704,9 @@ class Choice(models.Model):
                 return
         # save(), if the instance is new or changed
         if self.pk:
-            logger.info(f'send {self.pk} to DB')
+            logger.info(f'*action* Update choice {self.pk} ({self.name_txt}) in DB -::- {self.construct.title_text}')
         else:
-            logger.info(f'New "{self.name_txt[:50]}" in DB')
+            logger.info(f'*action* New choice "{self.name_txt}" in DB -::- {self.construct.title_text}')
         self.construct.save()
         super(Choice, self).save(*args, **kwargs)
 
@@ -810,8 +840,7 @@ class Transaction(models.Model):
         return transaction
 
     def save(self, *args, **kwargs):
-        logger.info(f"Transaction.save(): {self}")
-        logger.info(self.photo)
+        logger.info(f"*action* Transaction.save(): {self} -::- {self.construct.title_text}")
         super(Transaction, self).save(*args, **kwargs)
 
 
@@ -908,7 +937,7 @@ class Invoice(models.Model):
             for ta in self.transactions.all():
                 if f"{ta.transaction_type}" != f"{self.invoice_type}":
                     raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
-        logger.info(f'Invoice.save(): {self}')
+        logger.info(f'*action* Invoice.save(): {self} -::- {self.construct.title_text}')
         super(Invoice, self).save(*args, **kwargs)
 
 
@@ -924,3 +953,8 @@ class InvoiceTransaction(models.Model):
     def __str__(self):
         return f'{self.invoice} - {self.transaction}'
 
+
+def list_constructs():
+    cons = Construct.objects.all()
+    for con in cons:
+        print(con.id, con.title_text)
