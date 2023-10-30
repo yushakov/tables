@@ -953,3 +953,8 @@ class InvoiceTransaction(models.Model):
     def __str__(self):
         return f'{self.invoice} - {self.transaction}'
 
+
+def list_constructs():
+    cons = Construct.objects.all()
+    for con in cons:
+        print(con.id, con.title_text)
