@@ -112,6 +112,7 @@ class Construct(models.Model):
                 assigned_to = self.assigned_to,
                 overall_progress_percent_num = self.overall_progress_percent_num,
                 vat_percent_num = self.vat_percent_num,
+                deposit_percent_expect = self.deposit_percent_expect,
                 company_profit_percent_num = self.company_profit_percent_num,
                 owner_profit_coeff = self.owner_profit_coeff,
                 paid_num = self.paid_num,
