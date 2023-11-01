@@ -42,6 +42,10 @@ def ip_addresses():
 
 #ALLOWED_HOSTS = ip_addresses()
 ALLOWED_HOSTS = ['projects.constructivechoice.co.uk']
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ["https://projects.constructivechoice.co.uk"]
 
 AUTH_USER_MODEL = "list.User"
 
