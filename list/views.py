@@ -913,3 +913,30 @@ def transactions(request, construct_id):
     context['transactions'] = transactions
     context['total'] = total
     return render(request, 'list/all_transactions.html', context)
+
+
+@login_required
+@permission_required("list.view_construct")
+@permission_required("list.change_construct")
+@permission_required("list.add_construct")
+def invoices(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'USER ACCESS: invoices({construct.title_text}) by {request.user.username}')
+    context = {'construct_id': construct.id, 'construct_name': construct.title_text}
+    invoices = []
+    direction = 'all'
+    if request.method == "GET":
+        direction = request.GET.get('direction', 'all')
+        context['direction'] = direction
+        if   direction == 'in':
+            invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING).order_by('issue_date')
+        elif direction == 'out':
+            invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING).order_by('issue_date')
+        elif direction == 'unpaid':
+            invoices = construct.invoice_set.filter(status=Invoice.UNPAID).order_by('issue_date')
+        else:
+            invoices = construct.invoice_set.all()
+    total = round(sum([inv.amount for inv in invoices]))
+    context['invoices'] = invoices
+    context['total'] = total
+    return render(request, 'list/all_invoices.html', context)

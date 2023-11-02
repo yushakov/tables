@@ -22,6 +22,7 @@ urlpatterns = [
     path('<int:construct_id>/gantt/', views.gantt, name='gantt'),
     path('<int:construct_id>/flows/', views.flows, name='flows'),
     path('<int:construct_id>/transactions/', views.transactions, name='transactions'),
+    path('<int:construct_id>/invoices/', views.invoices, name='invoices'),
     path('actions/', views.actions, name='actions'),
     path('invoice/', redirect_to_admin_invoices),
     path('invoice/<int:invoice_id>/', views.view_invoice, name='view_invoice'),

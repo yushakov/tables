@@ -22,6 +22,8 @@
 <a href="{% url 'list:submit_transaction_bunch' %}?construct={{ construct_id }}">bunch of transactions</a>
 &nbsp; &nbsp; &nbsp;
 <a href="{% url 'list:transactions' construct_id %}">see transactions unrolled</a>
+&nbsp; &nbsp; &nbsp;
+<a href="{% url 'list:invoices' construct_id %}">see invoices unrolled</a>
 
 {% if incoming_transactions %}
 <h3 id='incoming-transactions'>Incoming transactions: &#163; {{ income|floatformat:2 }}</h3>
