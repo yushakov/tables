@@ -95,12 +95,12 @@
             {{ construct.left_to_pay }}
         </td>
         <td align ='right'>
-            <a href="{% url 'list:flows' construct.id %}#outgoing-unpaid-invoices">
+            <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
             {{ construct.invoices_to_pay }}
             </a>
         </td>
         <td align ='right'>
-            <a href="{% url 'list:flows' construct.id %}#incoming-unpaid-invoices">
+            <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
             {{ construct.invoices_pending_pay }}
             </a>
         </td>

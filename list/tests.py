@@ -1291,6 +1291,46 @@ class ViewTests(TestCase):
         response = c.get("/list/actions/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
+    def test_transactions_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/transactions/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=all")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=in")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=out")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=salary")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=expenses")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_transactions_page_redirect(self):
+        c = Client()
+        c.login(username="client", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/transactions/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_invoices_page_redirect(self):
+        c = Client()
+        c.login(username="client", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/invoices/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_invoices_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/invoices/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/invoices/?direction=in")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
     def test_session_extension_on_client_page(self):
         c = Client()
         c.login(username="client", password="secret")
