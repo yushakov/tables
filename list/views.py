@@ -725,7 +725,7 @@ def submit_transaction(request):
         logger.debug(request.POST.get('photo','no_photo'))
         if form.is_valid():
             form.save()
-            obj = Transaction.objects.latest()
+            obj = Transaction.objects.order_by('id').last()
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
