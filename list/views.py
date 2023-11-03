@@ -101,7 +101,18 @@ def index(request):
                'total': total
               }
     return render(request, 'list/index.html', context)
-    
+
+def get_active_done_constructs():
+    cats = Category.objects.all()
+    active, done = [], []
+    active_cats = cats.filter(name__icontains='active')
+    done_cats = cats.filter(name__icontains='done')
+    if len(active_cats) > 0:
+        active = [con for con in active_cats[0].constructs.all()]
+    if len(done_cats) > 0:
+        done = [con for con in done_cats[0].constructs.all()]
+    return active + done
+
 @login_required
 def account(request):
     logger.info(f'USER ACCESS: account() by {request.user.username}')
@@ -109,11 +120,13 @@ def account(request):
     slugs = []
     for constr in request.user.accessible_constructs.all():
         slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
+    constructs = get_active_done_constructs()
     context = {'user': request.user,
                'groups': groups,
                'project_slugs': slugs,
                'is_client': len(groups.filter(name='Clients')) > 0,
-               'is_worker': len(groups.filter(name='Workers')) > 0
+               'is_worker': len(groups.filter(name='Workers')) > 0,
+               'constructs': constructs
               }
     return render(request, 'list/account.html', context)
 
@@ -786,7 +799,7 @@ def submit_invoice(request):
         form = InvoiceSubmitForm(request.POST)
         if form.is_valid():
             form.save()
-            obj = Invoice.objects.latest()
+            obj = Invoice.objects.order_by('id').last()
             logger.info(f"*action* Invoice submitted: {obj} for construct: {obj.construct.title_text}")
             return redirect(obj)
     else:
@@ -795,7 +808,7 @@ def submit_invoice(request):
         details = request.GET.get('details', '-')
         amount = request.GET.get('amount', '')
         initial_data = {'construct': construct_id,
-                        'seller': request.user.username,
+                        'seller': request.user.first_name + ' ' + request.user.last_name,
                         'amount': amount,
                         'invoice_type': invoice_type,
                         'number': getConstructAndMaxId(construct_id, Invoice),
