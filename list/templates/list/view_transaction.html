@@ -54,6 +54,7 @@
     <label for='id_details'><b>Details:</b></label>
     <span id='id_details' style='max-width: 400px'>{{ transaction.details_txt|linebreaks }}</span>
 </p>
+{% comment %}
 {% if transaction.photo %}
     <br />
     <a href="{{ transaction.photo.url }}">
@@ -64,4 +65,5 @@
         {% endif %}
     </a>
 {% endif %}
+{% endcomment %}
 {% endblock %}
