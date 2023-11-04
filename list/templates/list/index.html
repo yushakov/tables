@@ -22,10 +22,10 @@
         <th>Progress</th>
         <th>Chart</th>
         <th title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
-        <th>Main<br>cost</th>
+        <th style="display: none">Main<br>cost</th>
         <th>Paid<br>deposit</th>
         <th title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
-        <th title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
+        <th style="display: none" title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
         <th title="Current income according to incoming transactions including the deposit.">Income<sup>?</sup></th>
         <th title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
         <th>Expenses +</th>
@@ -54,12 +54,12 @@
         <td align ='right'>
             {{ construct.full_cost }}
         </td>
-        <td align ='right'>{{ construct.main_cost }}</td>
+        <td align ='right' style="display: none">{{ construct.main_cost }}</td>
         <td align ='right'>{{ construct.deposit|floatformat:2 }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
         <td align ='right'>
             {{ construct.full_progress_cost }}
         </td>
-        <td align ='right'>
+        <td align ='right' style="display: none">
             {{ construct.no_deposit_progress_cost }} +<br>
             {{ construct.full_side_progress_cost }}
         </td>
