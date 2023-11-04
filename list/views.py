@@ -851,6 +851,7 @@ def modify_invoice(request, invoice_id):
             return redirect(obj)
     else:
         form = InvoiceSubmitForm(instance=invoice)
+        form.fields['owner'].widget = forms.HiddenInput()
         form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()
         form.fields['status'].widget = forms.HiddenInput()
