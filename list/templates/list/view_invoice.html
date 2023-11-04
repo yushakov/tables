@@ -3,6 +3,13 @@
 {% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
+{% if not user_is_owner and 'is_staff' not in perms %}
+
+Sorryan, user <b>{{ username }}</b> is  not authorised to view the invoice with id <b>{{ invoice.id }}</b>.
+Please, report to administrators, if you think this is an issue.
+
+{% else %}
+
 <h2>Invoice</h2>
 <a href="{% url 'admin:list_invoice_changelist' %}">see all invoices</a>
 {% if 'list.change_invoice' in perms %}
@@ -77,5 +84,7 @@
             <img src="{{ invoice.photo.url }}">
         {% endif %}
     </a>
+{% endif %}
+
 {% endif %}
 {% endblock %}

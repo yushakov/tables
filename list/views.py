@@ -695,7 +695,14 @@ def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'USER ACCESS: view_invoice({invoice.id}) by {request.user.username}')
     tra_list = getTransactions(invoice)
-    context = {'invoice': invoice, 'transactions': tra_list}
+    user_is_owner = True
+    user_invoices = request.user.invoice_set.filter(id=invoice_id)
+    if len(user_invoices) == 0:
+        user_is_owner = False
+    context = {'invoice': invoice,
+               'transactions': tra_list,
+               'user_is_owner': user_is_owner,
+               'username': request.user.username}
     return render(request, 'list/view_invoice.html', context)
 
 
@@ -809,11 +816,13 @@ def submit_invoice(request):
         amount = request.GET.get('amount', '')
         initial_data = {'construct': construct_id,
                         'seller': request.user.first_name + ' ' + request.user.last_name,
+                        'owner': request.user.id,
                         'amount': amount,
                         'invoice_type': invoice_type,
                         'number': getConstructAndMaxId(construct_id, Invoice),
                         'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
+        form.fields['owner'].widget = forms.HiddenInput()
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
             form.fields['invoice_type'].initial = 'OUT'
