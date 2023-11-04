@@ -17,7 +17,7 @@ Please, report to administrators, if you think this is an issue.
 {% if 'list.change_invoice' in perms %}
     &nbsp;&nbsp;<a href="{% url 'list:modify_invoice' invoice.id %}">modify this one</a>
 {% endif %}
-{% if user.is_authenticated %}
+{% if 'is_staff' in perms %}
     &nbsp;&nbsp;<a href="{% url 'list:print_invoice' invoice.id %}" target="_blank">print</a>
 {% endif %}
 <br />
@@ -25,8 +25,12 @@ Please, report to administrators, if you think this is an issue.
 <p>
     
 <label for='id_project'><b>Project:</b></label>
-    <a href="{% url 'list:detail' invoice.construct.id %}" id='id_project'>
-    {{ invoice.construct.title_text }}
+    {% if 'is_staff' in perms %}
+        <a href="{% url 'list:detail' invoice.construct.id %}" id='id_project'>
+    {% else %}
+        <a href="{% url 'list:submit_invoice' %}?construct={{ invoice.construct.id }}&worker">
+    {% endif %}
+        {{ invoice.construct.title_text }}
     </a>
 </p>
 <p>
