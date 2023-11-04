@@ -85,7 +85,11 @@ def index(request):
     all_cats = Category.objects.order_by('priority')
     fix_category(all_constructs, all_cats)
     cats = all_cats
-    ctg_id = [int(c) for c in request.GET.get('category', '0').split(',')]
+    ctg_id = [0]
+    try:
+        ctg_id = [int(c) for c in request.GET.get('category', '0').split(',')]
+    except:
+        pass
     if ctg_id[0] > 0:
         cats = []
         for cid in ctg_id:
