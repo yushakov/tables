@@ -22,9 +22,18 @@
 {% if 'list.add_invoice' in perms and 'is_staff' not in perms %}
     <p style="font-size: larger">Invoice on:</p>
     {% for con in constructs %}
-    <p>&nbsp;<a href="{% url 'list:submit_invoice' %}?construct={{ con.id }}&worker"
-        style="text-decoration: none">
-            {{ con.title_text }}</a> (address: {{ con.address_text }}).</p>
+        <p>&nbsp;<a href="{% url 'list:submit_invoice' %}?construct={{ con.id }}&worker"
+            style="text-decoration: none">
+                {{ con.title_text }}</a> (address: {{ con.address_text }}).</p>
+    {% endfor %}
+    <p style="font-size: larger">Your Invoices:</p>
+    {% for inv in invoices %}
+    <p>&nbsp;&nbsp;{{ inv.issue_date }},
+        # <a href="{% url 'list:view_invoice' inv.id %}"
+                    style="text-decoration: none">
+            {{ inv.number }}</a>,
+        £ {{ inv.amount }}, {{ inv.status }}
+    </p>
     {% endfor %}
 {% else %}
     {% if 'is_staff' not in perms %}

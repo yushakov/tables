@@ -113,6 +113,12 @@ def get_active_done_constructs():
         done = [con for con in done_cats[0].constructs.all()]
     return active + done
 
+def get_user_invoices(user):
+    invoices = user.invoice_set.all()
+    unpaid = [inv for inv in invoices.filter(status=Invoice.UNPAID)]
+    paid = [inv for inv in invoices.filter(status=Invoice.PAID)]
+    return unpaid + paid
+
 @login_required
 def account(request):
     logger.info(f'USER ACCESS: account() by {request.user.username}')
@@ -121,12 +127,14 @@ def account(request):
     for constr in request.user.accessible_constructs.all():
         slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
     constructs = get_active_done_constructs()
+    invoices = get_user_invoices(request.user)
     context = {'user': request.user,
                'groups': groups,
                'project_slugs': slugs,
                'is_client': len(groups.filter(name='Clients')) > 0,
                'is_worker': len(groups.filter(name='Workers')) > 0,
-               'constructs': constructs
+               'constructs': constructs,
+               'invoices': invoices
               }
     return render(request, 'list/account.html', context)
 

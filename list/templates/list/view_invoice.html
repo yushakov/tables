@@ -11,7 +11,9 @@ Please, report to administrators, if you think this is an issue.
 {% else %}
 
 <h2>Invoice</h2>
-<a href="{% url 'admin:list_invoice_changelist' %}">see all invoices</a>
+{% if 'is_staff' in perms %}
+    <a href="{% url 'admin:list_invoice_changelist' %}">see all invoices</a>
+{% endif %}
 {% if 'list.change_invoice' in perms %}
     &nbsp;&nbsp;<a href="{% url 'list:modify_invoice' invoice.id %}">modify this one</a>
 {% endif %}
@@ -65,10 +67,12 @@ Please, report to administrators, if you think this is an issue.
             {% endfor %}
         </span>
     {% else %}
-        <label for='id_link_to_pay'><b>Link to pay:</b></label>
-        <span id='id_link_to_pay'>
-            <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
-        </span>
+        {% if 'is_staff' in perms %}
+            <label for='id_link_to_pay'><b>Link to pay:</b></label>
+            <span id='id_link_to_pay'>
+                <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
+            </span>
+        {% endif %}
     {% endif %}
 </p>
 <p>
