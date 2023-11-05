@@ -1716,8 +1716,9 @@ class ViewTests(TestCase):
         construct.save()
         c = Client()
         c.login(username="yuran", password="secret")
-        response = c.get("/list/transaction/submit/?construct=1&amount=100&invoice=29&type=IN")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
 
     def test_login_transaction_submit_form(self):
         c = Client()
