@@ -864,6 +864,7 @@ class Invoice(models.Model):
     due_date = models.DateField(default=timezone.now)
     seller = models.CharField(max_length=100)
     construct = models.ForeignKey(Construct, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True)
     transactions = models.ManyToManyField(Transaction, through='InvoiceTransaction')
     photo = models.ImageField(upload_to="invoices/%Y/%m/%d", default=empty_image)
     created_at = models.DateTimeField(auto_now_add=True)

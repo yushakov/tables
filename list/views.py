@@ -101,7 +101,24 @@ def index(request):
                'total': total
               }
     return render(request, 'list/index.html', context)
-    
+
+def get_active_done_constructs():
+    cats = Category.objects.all()
+    active, done = [], []
+    active_cats = cats.filter(name__icontains='active')
+    done_cats = cats.filter(name__icontains='done')
+    if len(active_cats) > 0:
+        active = [con for con in active_cats[0].constructs.all()]
+    if len(done_cats) > 0:
+        done = [con for con in done_cats[0].constructs.all()]
+    return active + done
+
+def get_user_invoices(user):
+    invoices = user.invoice_set.all()
+    unpaid = [inv for inv in invoices.filter(status=Invoice.UNPAID)]
+    paid = [inv for inv in invoices.filter(status=Invoice.PAID)]
+    return unpaid + paid
+
 @login_required
 def account(request):
     logger.info(f'USER ACCESS: account() by {request.user.username}')
@@ -109,11 +126,15 @@ def account(request):
     slugs = []
     for constr in request.user.accessible_constructs.all():
         slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
+    constructs = get_active_done_constructs()
+    invoices = get_user_invoices(request.user)
     context = {'user': request.user,
                'groups': groups,
                'project_slugs': slugs,
                'is_client': len(groups.filter(name='Clients')) > 0,
-               'is_worker': len(groups.filter(name='Workers')) > 0
+               'is_worker': len(groups.filter(name='Workers')) > 0,
+               'constructs': constructs,
+               'invoices': invoices
               }
     return render(request, 'list/account.html', context)
 
@@ -682,7 +703,14 @@ def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'USER ACCESS: view_invoice({invoice.id}) by {request.user.username}')
     tra_list = getTransactions(invoice)
-    context = {'invoice': invoice, 'transactions': tra_list}
+    user_is_owner = True
+    user_invoices = request.user.invoice_set.filter(id=invoice_id)
+    if len(user_invoices) == 0:
+        user_is_owner = False
+    context = {'invoice': invoice,
+               'transactions': tra_list,
+               'user_is_owner': user_is_owner,
+               'username': request.user.username}
     return render(request, 'list/view_invoice.html', context)
 
 
@@ -712,7 +740,7 @@ def submit_transaction(request):
         logger.debug(request.POST.get('photo','no_photo'))
         if form.is_valid():
             form.save()
-            obj = Transaction.objects.latest()
+            obj = Transaction.objects.order_by('id').last()
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
@@ -786,7 +814,7 @@ def submit_invoice(request):
         form = InvoiceSubmitForm(request.POST)
         if form.is_valid():
             form.save()
-            obj = Invoice.objects.latest()
+            obj = Invoice.objects.order_by('id').last()
             logger.info(f"*action* Invoice submitted: {obj} for construct: {obj.construct.title_text}")
             return redirect(obj)
     else:
@@ -795,12 +823,14 @@ def submit_invoice(request):
         details = request.GET.get('details', '-')
         amount = request.GET.get('amount', '')
         initial_data = {'construct': construct_id,
-                        'seller': request.user.username,
+                        'seller': request.user.first_name + ' ' + request.user.last_name,
+                        'owner': request.user.id,
                         'amount': amount,
                         'invoice_type': invoice_type,
                         'number': getConstructAndMaxId(construct_id, Invoice),
                         'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
+        form.fields['owner'].widget = forms.HiddenInput()
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
             form.fields['invoice_type'].initial = 'OUT'

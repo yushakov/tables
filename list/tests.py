@@ -1315,6 +1315,19 @@ class ViewTests(TestCase):
         response = c.get("/list/" + str(cons.id) + "/transactions/")
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
+    def test_invoice_ownership(self):
+        c = Client()
+        c.login(username="worker", password="secret")
+        construct = Construct(title_text='Original Construct')
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        ta = Transaction.add(construct, 100.0, direction='in')
+        invoice.transactions.add(ta)
+        invoice.owner = self.worker_user
+        invoice.save()
+        worker_invoices = self.worker_user.invoice_set.all()
+        self.assertEqual(len(worker_invoices), 1)
+
     def test_invoices_page_redirect(self):
         c = Client()
         c.login(username="client", password="secret")

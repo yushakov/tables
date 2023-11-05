@@ -18,15 +18,33 @@
         - {{ group }}<br>
     {% endfor %}
 {% endcomment %}
-    {% if 'list.add_invoice' in perms %}
-        <a href="{% url 'list:submit_invoice' %}">Submit invoice</a>
+{% endif %}
+{% if 'list.add_invoice' in perms and 'is_staff' not in perms %}
+    <p style="font-size: larger">Invoice on:</p>
+    {% for con in constructs %}
+        <p>&nbsp;<a href="{% url 'list:submit_invoice' %}?construct={{ con.id }}&worker"
+            style="text-decoration: none">
+                {{ con.title_text }}</a> (address: {{ con.address_text }}).</p>
+    {% endfor %}
+    <p style="font-size: larger">Your Invoices:</p>
+    {% for inv in invoices %}
+    <p>&nbsp;&nbsp;{{ inv.issue_date }},
+        # <a href="{% url 'list:view_invoice' inv.id %}"
+                    style="text-decoration: none">
+            {{ inv.number }}</a>,
+        £ {{ inv.amount }}, {{ inv.status }}
+    </p>
+    {% endfor %}
+{% else %}
+    {% if 'is_staff' not in perms %}
+        <p>If you need a permission to submit invoices, please, contact administrators.</p>
     {% endif %}
-    {% if is_client %}
-        <h3>Projects:</h3>
-        {% for slug in project_slugs %}
-            <a href="{% url 'list:client_slug' slug.url %}">{{ slug.project_name }}</a>
-        {% endfor %}
-    {% endif %}
+{% endif %}
+{% if is_client %}
+    <h3>Projects:</h3>
+    {% for slug in project_slugs %}
+        <a href="{% url 'list:client_slug' slug.url %}">{{ slug.project_name }}</a>
+    {% endfor %}
 {% endif %}
 {% comment %}
 {% endcomment %}

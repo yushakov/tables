@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 class InvoiceSubmitForm(ModelForm):
     class Meta:
         model = Invoice
-        fields = ['construct', 'seller', 'amount','number', 
+        fields = ['construct', 'owner', 'seller', 'amount','number', 
                   'invoice_type', 'status', 'issue_date',
                   'due_date', 'photo', 'details_txt']
         labels = {
