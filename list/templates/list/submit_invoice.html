@@ -57,6 +57,7 @@
 </form>
 <script>
     // same is in modify_invoice.html
+    {% if 'is_staff' in perms %}
     function get_number(field) {
             var line = String(field).trim();
             var num = 0.0;
@@ -81,41 +82,12 @@
             return amount;
     }
 
-    var details_label = document.getElementById('id_details_txt');
-    details_label.style.verticalAlign = 'top';
     var amount_field = document.getElementById('id_amount');
     amount_field.addEventListener('focus', function () {
         amount_field.value = get_amount();
     });
-    function get_number(field) {
-            var line = String(field).trim();
-            var num = 0.0;
-            var mtch = line.match(/([0-9\.]+)/);
-            try {
-                    num = Number(mtch[0]);
-            }
-            catch(err) {}
-            return num;
-    }
-
-    function get_amount() {
-            var text = document.getElementById('id_details_txt').value;
-            var lines = Array.from(text.split('\n'));
-            var amount = 0.0;
-            lines.forEach(function(line) {
-                    var fields = line.split(',');
-                    var quantity = get_number(fields[0]);
-                    var price = get_number(fields[2]);
-                    amount += quantity * price;
-                });
-            return amount;
-    }
-
+    {% endif %}
     var details_label = document.getElementById('id_details_txt');
     details_label.style.verticalAlign = 'top';
-    var amount_field = document.getElementById('id_amount');
-    amount_field.addEventListener('focus', function () {
-        amount_field.value = get_amount();
-    });
 </script>
 {% endblock %}
