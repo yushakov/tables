@@ -20,7 +20,7 @@
 {% endcomment %}
 {% endif %}
 {% if 'list.add_invoice' in perms and 'is_staff' not in perms %}
-    <p style="font-size: larger">Invoice on:</p>
+    <p style="font-size: larger">Invoice for:</p>
     {% for con in constructs %}
         <p>&nbsp;<a href="{% url 'list:submit_invoice' %}?construct={{ con.id }}&worker"
             style="text-decoration: none">
