@@ -10,6 +10,11 @@
 <br><br>
 <b>Categories:</b>&nbsp;
 <a href="{% url 'list:index' %}">all</a>&nbsp;
+{% if active_done_inds %}
+<span style="background-color: lightblue; padding: 2px; border-radius: 3px">
+    <a href="?category={{ active_done_inds }}">Active+Done</a>
+</span>&nbsp;
+{% endif %}
 {% for ctg in categories %}
     <span style="background-color: {{ ctg.color }}; padding: 2px; border-radius: 3px">
         <a href="?category={{ ctg.id }}">{{ ctg.name }}</a>
@@ -120,12 +125,10 @@
         <td align ='right'>
             <b>{{ total.full_cost }}</b>
         </td>
-        <td align ='right'><b>{{ total.main_cost }}</b></td>
         <td align ='right'><b>{{ total.deposit }}</b></td>
         <td align ='right'>
             <b>{{ total.full_progress_cost }}</b>
         </td>
-        <td align ='right'></td>
         <td align ='right'>
             <b>{{ total.round_income }}</b>
         </td>

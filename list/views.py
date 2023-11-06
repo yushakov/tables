@@ -84,10 +84,26 @@ def index(request):
     all_constructs = Construct.objects.all()
     all_cats = Category.objects.order_by('priority')
     fix_category(all_constructs, all_cats)
-    ctg_id = int(request.GET.get('category', '0'))
     cats = all_cats
-    if ctg_id > 0:
-        cats = all_cats.filter(id=ctg_id)
+    ctg_id = [0]
+    try:
+        ctg_id = [int(c) for c in request.GET.get('category', '0').split(',')]
+    except:
+        pass
+    if ctg_id[0] > 0:
+        cats = []
+        for cid in ctg_id:
+            try:
+                cat = all_cats.get(id=cid)
+                cats.append(cat)
+            except:
+                pass
+    adi = ''
+    try:
+        adi += str(all_cats.filter(name__icontains='active')[0].id) + ','
+        adi += str(all_cats.filter(name__icontains='done')[0].id)
+    except:
+        pass
     constructs = []
     for ctg in cats:
         cons = all_constructs.filter(category=ctg.id)
@@ -97,6 +113,7 @@ def index(request):
     total = get_total(constructs)
     context = {'active_construct_list': constructs,
                'categories': all_cats,
+               'active_done_inds': adi,
                'noscale': True,
                'total': total
               }
