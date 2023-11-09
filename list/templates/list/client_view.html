@@ -170,7 +170,21 @@
 {% endfor %}
 </tbody>
 </table>
-<script>setForm();</script>
+<script>
+    setForm();
+    document.querySelectorAll('textarea[name="con-notes"]').forEach(function(textarea) {
+        textarea.addEventListener('focus', function() {
+            // Find the next textarea in the sequence
+            var nextTextarea = this;
+            while (nextTextarea = nextTextarea.nextElementSibling) {
+                if (nextTextarea.tagName.toLowerCase() === 'textarea') {
+                    nextTextarea.focus();
+                    break;
+                }
+            }
+        });
+    });
+</script>
 <br>
 <table id='choices_footer'>
 <tr>
