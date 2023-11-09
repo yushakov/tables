@@ -137,8 +137,7 @@
                     <button type="button" onclick="hideNotesForm(this)">Hide Notes</button><br><br>
                     {{ items.choice.name_txt }}<br><br>
                     <p style="font-weight: bold">Constructive notes</p>
-                    <p style='font-style: italic'>At this page, you can modify "Client notes" only (below)!
-                    "Constructive notes" modifications will be ignored on saving.</p>
+                    <p style='font-style: italic'>At this page, you can modify "Client notes" only (below)!</p>
                     <textarea class='constructive_notes' name='con-notes' rows='10' cols='45'>
 {{ items.choice.constructive_notes }}</textarea><br><br>
                     <p style="font-weight: bold">Client notes</p>
@@ -170,7 +169,21 @@
 {% endfor %}
 </tbody>
 </table>
-<script>setForm();</script>
+<script>
+    setForm();
+    document.querySelectorAll('textarea[name="con-notes"]').forEach(function(textarea) {
+        textarea.addEventListener('focus', function() {
+            // Find the next textarea in the sequence
+            var nextTextarea = this;
+            while (nextTextarea = nextTextarea.nextElementSibling) {
+                if (nextTextarea.tagName.toLowerCase() === 'textarea') {
+                    nextTextarea.focus();
+                    break;
+                }
+            }
+        });
+    });
+</script>
 <br>
 <table id='choices_footer'>
 <tr>
