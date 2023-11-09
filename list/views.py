@@ -76,11 +76,22 @@ def get_total(constructs):
         total['overall_progress_percent_num'] = full_progress_cost / full_cost * 100.0
     return total
 
+
+def get_client_ip_address(request):
+    req_headers = request.META
+    x_forwarded_for_value = req_headers.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for_value:
+        ip_addr = x_forwarded_for_value.split(',')[-1].strip()
+    else:
+        ip_addr = req_headers.get('REMOTE_ADDR')
+    return ip_addr
+
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def index(request):
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: index() by {request.user.username} --::-- ip: {ip}')
     all_constructs = Construct.objects.all()
     all_cats = Category.objects.order_by('priority')
@@ -139,7 +150,7 @@ def get_user_invoices(user):
 
 @login_required
 def account(request):
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: account() by {request.user.username}, {ip}')
     groups = request.user.groups.all()
     slugs = []
@@ -482,7 +493,7 @@ def extend_session(request):
 @permission_required("list.change_construct")
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: detail({construct.title_text}) by {request.user.username}, {ip}')
     if request.method == 'POST':
         process_post(request, construct)
@@ -535,7 +546,7 @@ def actions(request):
 @permission_required("list.view_construct")
 def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}, {ip}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
@@ -564,7 +575,7 @@ def client_slug(request, slug):
     construct = Construct.objects.filter(slug_name=slug).first()
     if construct is None:
         raise Http404("Project not found")
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: client({construct.title_text}) with slug: {slug}, {ip}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
@@ -722,7 +733,7 @@ def print_invoice(request, invoice_id):
 @permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: view_invoice({invoice.id}) by {request.user.username}, {ip}')
     tra_list = getTransactions(invoice)
     user_is_owner = True
@@ -744,7 +755,7 @@ def getInvoices(transaction):
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: view_transaction({transaction.id}) by {request.user.username}, {ip}')
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
@@ -756,7 +767,7 @@ def view_transaction(request, transaction_id):
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
 def submit_transaction(request):
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_transaction() by {request.user.username}, {ip}')
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
@@ -782,7 +793,7 @@ def submit_transaction(request):
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
 def submit_transaction_bunch(request):
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_transaction() by {request.user.username}, {ip}')
     lines_to_show = ""
     lines_added = []
@@ -835,7 +846,7 @@ def submit_transaction_bunch(request):
 @login_required
 @permission_required("list.add_invoice")
 def submit_invoice(request):
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_invoice() by {request.user.username}, {ip}')
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST)
@@ -912,7 +923,7 @@ def getTotalAmount(transactions):
 @permission_required("list.add_construct")
 def flows(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: flows({construct.title_text}) by {request.user.username}, {ip}')
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING).order_by('date')
     outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING).order_by('date')
@@ -949,7 +960,7 @@ def flows(request, construct_id):
 @permission_required("list.add_construct")
 def transactions(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: transactions({construct.title_text}) by {request.user.username}, {ip}')
     context = {'construct_id': construct.id, 'construct_name': construct.title_text}
     transactions = []
@@ -981,7 +992,7 @@ def transactions(request, construct_id):
 @permission_required("list.add_construct")
 def invoices(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    ip = request.META['REMOTE_ADDR']
+    ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: invoices({construct.title_text}) by {request.user.username}, {ip}')
     context = {'construct_id': construct.id, 'construct_name': construct.title_text}
     invoices = []
