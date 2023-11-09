@@ -9,6 +9,8 @@
 <a href="{% url 'admin:list_transaction_change' transaction.id %}">modify this one</a>
 &nbsp;
 <a href="{% url 'list:transactions' transaction.construct.id %}">project's transactions</a>
+&nbsp;
+<a href="{% url 'list:index' %}">List of Projects</a>
 <br />
 <br />
 <p>
@@ -54,6 +56,7 @@
     <label for='id_details'><b>Details:</b></label>
     <span id='id_details' style='max-width: 400px'>{{ transaction.details_txt|linebreaks }}</span>
 </p>
+{% comment %}
 {% if transaction.photo %}
     <br />
     <a href="{{ transaction.photo.url }}">
@@ -64,4 +67,5 @@
         {% endif %}
     </a>
 {% endif %}
+{% endcomment %}
 {% endblock %}

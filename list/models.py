@@ -88,6 +88,10 @@ class Construct(models.Model):
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
     slug_name = models.CharField(max_length=500, null=True)
+
+    def __init__(self, *args, **kwargs):
+        self.numbers = {}
+        super().__init__(*args, **kwargs)
     
     def __str__(self):
         return self.title_text
@@ -124,6 +128,7 @@ class Construct(models.Model):
         self.last_save_date = timezone.now() + delta_to_make_construct_a_bit_younger
         super(Construct, self).save(*args, **kwargs)
         self.slug_name = self.get_slug()
+        self.numbers = {}
         super(Construct, self).save(*args, **kwargs)
 
 
@@ -320,46 +325,97 @@ class Construct(models.Model):
         return value / (1.0 + 0.01 * self.vat_percent_num)
 
     def balance(self):
-        transactions = self.transaction_set.all()
-        income  = sum([ta.amount for ta in transactions if ta.transaction_type == ta.INCOMING])
-        outcome = sum([ta.amount for ta in transactions if ta.transaction_type == ta.OUTGOING])
-        return income - outcome
+        try:
+            return self.numbers['balance']
+        except:
+            if 'transactions' not in self.numbers:
+                self.numbers['transactions'] = self.transaction_set.all()
+            transactions = self.numbers['transactions']
+            income  = sum([ta.amount for ta in transactions if ta.transaction_type == ta.INCOMING])
+            outcome = sum([ta.amount for ta in transactions if ta.transaction_type == ta.OUTGOING])
+            self.numbers['balance'] = income - outcome
+        return self.numbers['balance']
 
     def debt(self):
-        invoices = self.invoice_set.all()
-        income  = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.INCOMING and iv.status != Invoice.PAID])
-        outcome = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.OUTGOING and iv.status != Invoice.PAID])
-        return income - outcome
+        try:
+            return self.numbers['debt']
+        except:
+            if 'invoices' not in self.numbers:
+                self.numbers['invoices'] = self.invoice_set.all()
+            invoices = self.numbers['invoices']
+            income  = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.INCOMING and iv.status != Invoice.PAID])
+            outcome = sum([iv.amount for iv in invoices if iv.invoice_type == Transaction.OUTGOING and iv.status != Invoice.PAID])
+            self.numbers['debt'] = income - outcome
+            return self.numbers['debt']
 
     @property
     def invoices_to_pay(self):
-        invoices = self.invoice_set.filter(invoice_type=Transaction.OUTGOING, status=Invoice.UNPAID)
-        if invoices is None: return 0.0
-        return round(sum([iv.amount for iv in invoices]))
+        try:
+            return self.numbers['invoices_to_pay']
+        except:
+            if 'invoices' not in self.numbers:
+                self.numbers['invoices'] = self.invoice_set.all()
+            invoices = self.numbers['invoices'].filter(invoice_type=Transaction.OUTGOING, status=Invoice.UNPAID)
+            if invoices is None: return 0.0
+            self.numbers['invoices_to_pay'] = round(sum([iv.amount for iv in invoices]))
+        return self.numbers['invoices_to_pay']
 
     @property
     def invoices_pending_pay(self):
-        invoices = self.invoice_set.filter(invoice_type=Transaction.INCOMING, status=Invoice.UNPAID)
-        if invoices is None: return 0.0
-        return round(sum([iv.amount for iv in invoices]))
+        try:
+            return self.numbers['invoices_pending_pay']
+        except:
+            if 'invoices' not in self.numbers:
+                self.numbers['invoices'] = self.invoice_set.all()
+            invoices = self.numbers['invoices'].filter(invoice_type=Transaction.INCOMING, status=Invoice.UNPAID)
+            if invoices is None: return 0.0
+            self.numbers['invoices_pending_pay'] = round(sum([iv.amount for iv in invoices]))
+        return self.numbers['invoices_pending_pay']
 
     def income(self):
-        in_transactions = self.transaction_set.filter(transaction_type = Transaction.INCOMING)
-        if in_transactions is None: return 0.0
-        income = sum([float(ta.amount) for ta in in_transactions])
-        return income
+        try:
+            return self.numbers['income']
+        except:
+            if 'transactions' not in self.numbers:
+                self.numbers['transactions'] = self.transaction_set.all()
+            in_transactions = self.numbers['transactions'].filter(transaction_type = Transaction.INCOMING)
+            if in_transactions is None: return 0.0
+            self.numbers['income'] = sum([float(ta.amount) for ta in in_transactions])
+            return self.numbers['income']
 
     def salaries(self):
-        transactions = self.transaction_set.filter(transaction_type=Transaction.OUTGOING, details_txt__icontains='salary')
-        if transactions is None: return 0.0
-        summ = sum([float(ta.amount) for ta in transactions])
-        return summ
+        try:
+            return self.numbers['salaries']
+        except:
+            if 'transactions' not in self.numbers:
+                self.numbers['transactions'] = self.transaction_set.all()
+            transactions = self.numbers['transactions'].filter(transaction_type=Transaction.OUTGOING, details_txt__icontains='salary')
+            if transactions is None: return 0.0
+            self.numbers['salaries'] = sum([float(ta.amount) for ta in transactions])
+            return self.numbers['salaries']
 
     def outcome(self):
-        out_transactions = self.transaction_set.filter(transaction_type = Transaction.OUTGOING)
-        if out_transactions is None: return 0.0
-        outcome = sum([float(ta.amount) for ta in out_transactions])
-        return outcome
+        try:
+            return self.numbers['outcome']
+        except:
+            if 'transactions' not in self.numbers:
+                self.numbers['transactions'] = self.transaction_set.all()
+            out_transactions = self.numbers['transactions'].filter(transaction_type = Transaction.OUTGOING)
+            if out_transactions is None: return 0.0
+            self.numbers['outcome'] = sum([float(ta.amount) for ta in out_transactions])
+            return self.numbers['outcome']
+
+    @property
+    def discard_numbers(self):
+        '''
+        The dictionary self.numbers is required mostly for speeding up the index.html page.
+        However, the numbers change when a transaction (invoice, choice) is added, modified or deleted.
+        Thus, the function should be called when any of those happens.
+        '''
+        # keys = ','.join([k for k in self.numbers.keys()])
+        keys = ''
+        self.numbers = {}
+        return keys
 
     def expenses(self):
         return self.outcome() - self.salaries()
@@ -405,7 +461,9 @@ class Construct(models.Model):
         return round(self.full_progress_cost - self.income())
 
     def progress_cost(self):
-        choices = self.choice_set.all()
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices']
         if choices is None: return 0.0
         cost = 0.0
         for ch in choices:
@@ -414,7 +472,9 @@ class Construct(models.Model):
         return cost
 
     def main_progress_cost(self):
-        choices = self.choice_set.filter(main_contract_choice=True)
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices'].filter(main_contract_choice=True)
         if choices is None: return 0.0
         cost = 0.0
         for ch in choices:
@@ -423,7 +483,9 @@ class Construct(models.Model):
         return cost
 
     def side_progress_cost(self):
-        choices = self.choice_set.filter(main_contract_choice=False)
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices'].filter(main_contract_choice=False)
         if choices is None: return 0.0
         cost = 0.0
         for ch in choices:
@@ -436,7 +498,9 @@ class Construct(models.Model):
         return round(self.withVat(self.withCompanyProfit(self.side_progress_cost())))
 
     def overall_progress_percent(self):
-        choices = self.choice_set.all()
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices']
         if choices is None: return 0.0
         total_cost, progress_cost = 0.0, 0.0
         for ch in choices:
@@ -452,13 +516,17 @@ class Construct(models.Model):
 
     @property
     def full_cost(self):
-        choices = self.choice_set.all()
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices']
         choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
         return round(self.withVat(self.withCompanyProfit(choices_cost)))
 
     @property
     def main_cost(self):
-        choices = self.choice_set.filter(main_contract_choice=True)
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices'].filter(main_contract_choice=True)
         choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
         return round(self.withVat(self.withCompanyProfit(choices_cost)))
 
@@ -472,10 +540,14 @@ class Construct(models.Model):
 
     @property
     def deposit(self):
-        in_transactions = self.transaction_set.filter(details_txt__icontains='#deposit')
+        if 'deposit' in self.numbers:
+            return self.numbers['deposit']
+        if 'transactions' not in self.numbers:
+            self.numbers['transactions'] = self.transaction_set.all()
+        in_transactions = self.numbers['transactions'].filter(details_txt__icontains='#deposit')
         if in_transactions is None: return 0.0
-        deposit = sum([float(ta.amount) for ta in in_transactions])
-        return deposit
+        self.numbers['deposit'] = sum([float(ta.amount) for ta in in_transactions])
+        return self.numbers['deposit']
 
     @property
     def income_wo_deposit(self):
@@ -622,7 +694,7 @@ def instances_are_equal(instance1, instance2, fields=None):
         fields = [f.name for f in instance1._meta.fields]
     for field in fields:
         if getattr(instance1, field) != getattr(instance2, field):
-            logger.debug(f'"{getattr(instance1, field)}" != "{getattr(instance2, field)}"')
+            # logger.debug(f'"{getattr(instance1, field)}" != "{getattr(instance2, field)}"')
             return False
     return True
 
@@ -701,7 +773,7 @@ class Choice(models.Model):
         if self.pk:  # pk will be None for a new instance
             existing_instance = Choice.objects.get(pk=self.pk)
             if instances_are_equal(existing_instance, self):
-                logger.debug('Nothing to update, instances are equal...')
+                # logger.debug('Nothing to update, instances are equal...')
                 return
         # save(), if the instance is new or changed
         if self.pk:
@@ -709,6 +781,7 @@ class Choice(models.Model):
         else:
             logger.info(f'*action* New choice "{self.name_txt}" in DB -::- {self.construct.title_text}')
         self.construct.save()
+        self.construct.numbers = {}
         super(Choice, self).save(*args, **kwargs)
 
 
@@ -842,6 +915,7 @@ class Transaction(models.Model):
 
     def save(self, *args, **kwargs):
         logger.info(f"*action* Transaction.save(): {self} -::- {self.construct.title_text}")
+        self.construct.numbers = {}
         super(Transaction, self).save(*args, **kwargs)
 
 
@@ -940,6 +1014,7 @@ class Invoice(models.Model):
                 if f"{ta.transaction_type}" != f"{self.invoice_type}":
                     raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
         logger.info(f'*action* Invoice.save(): {self} -::- {self.construct.title_text}')
+        self.construct.numbers = {}
         super(Invoice, self).save(*args, **kwargs)
 
 
