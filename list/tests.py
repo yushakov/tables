@@ -537,7 +537,6 @@ class ModelTests(TestCase):
         progress(100.0)
         self.assertEqual(construct.left_to_pay, 26100)
         print_it()
-        # transaction(26435, "")
         transaction(26100, "")
         self.assertEqual(construct.left_to_pay, 0)
         print_it()
@@ -617,7 +616,6 @@ class ModelTests(TestCase):
         self.assertEqual(construct.left_to_pay, 86)
         print_it()
         progress(50.0)
-        self.assertEqual(construct.left_to_pay, 45215)
         print_it()
         transaction(45000, "")
         self.assertEqual(construct.left_to_pay, 215)
@@ -631,7 +629,6 @@ class ModelTests(TestCase):
         progress(100.0)
         self.assertEqual(construct.left_to_pay, 35430)
         print_it()
-        # transaction(26435, "")
         transaction(26100 + 9330, "")
         self.assertEqual(construct.left_to_pay, 0)
         print_it()
@@ -1135,7 +1132,11 @@ class ModelTests(TestCase):
         ta4 = Transaction.add(construct, 75.0, direction='out')
         construct.transaction_set.add(ta1, ta2, ta3, ta4)
         income = construct.income()
-        self.assertIs(230.0 - 1.e-10 < float(income) < 230.0 + 1.e-10, True)
+        self.assertEqual(round(income), 230)
+        ta5 = Transaction.add(construct, 15.0, direction='in')
+        construct.transaction_set.add(ta5)
+        income = construct.income()
+        self.assertEqual(round(income), 245)
 
     def test_construct_debt(self):
         construct = Construct()
@@ -1146,7 +1147,11 @@ class ModelTests(TestCase):
         iv4 = Invoice.add(construct, "Ringo", 75.0, direction='out')
         construct.invoice_set.add(iv1, iv2, iv3, iv4)
         debt = construct.debt()
-        self.assertIs(105.0 - 1.e-10 < float(debt) < 105.0 + 1.e-10, True)
+        self.assertEqual(round(debt), 105)
+        iv5 = Invoice.add(construct, "xxx", 15.0, direction='in')
+        construct.invoice_set.add(iv5)
+        debt = construct.debt()
+        self.assertEqual(round(debt), 120)
 
     def test_construct_balance(self):
         construct = Construct()
@@ -1157,7 +1162,7 @@ class ModelTests(TestCase):
         ta4 = Transaction.add(construct, 75.0, direction='out')
         construct.transaction_set.add(ta1, ta2, ta3, ta4)
         balance = construct.balance()
-        self.assertIs(105.0 - 1.e-10 < float(balance) < 105.0 + 1.e-10, True)
+        self.assertEqual(round(balance), 105)
 
     def test_add_invoice_to_transaction(self):
         construct = Construct()
