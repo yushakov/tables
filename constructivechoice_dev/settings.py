@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_spaghetti',
 ]
 
 MIDDLEWARE = [
@@ -192,4 +193,11 @@ LOGGING = {
             "propagate": True,
         },
     },
+}
+
+SPAGHETTI_SAUCE = {
+  'apps':['auth','list'],
+  'show_fields':False,
+  'exclude':{'auth':['user']},
+  'show_proxy':True,
 }
