@@ -88,6 +88,7 @@ class Construct(models.Model):
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
     slug_name = models.CharField(max_length=500, null=True)
+    foreman = models.ForeignKey("User", on_delete=models.DO_NOTHING, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         self.numbers = {}
