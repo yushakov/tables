@@ -385,6 +385,16 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_foreman(self):
+        foreman = User(username='Foreman')
+        foreman.save()
+        con = Construct(title_text='construct')
+        con.save()
+        con.foreman = foreman
+        con.save()
+        foreman_cons = foreman.construct_set.all()
+        self.assertEqual(len(foreman_cons), 1)
+
     def test_categories(self):
         con1 = make_test_construct(construct_name="Number one")
         con2 = make_test_construct(construct_name="Number two")
@@ -1447,6 +1457,40 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         response = c.get('/list/?category=' + str(cat1.id) + ',' + str(cat2.id))
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_combined_categories_and_foreman(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        foreman = User(username='foreman')
+        foreman.save()
+        con1.foreman = foreman
+        con3.foreman = foreman
+        con1.save()
+        con3.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        get_str = '/list/?category=' + str(cat1.id) + ',' + str(cat2.id) + '&foreman=' + str(foreman.id)
+        response = c.get(get_str)
+        # response = c.get('/list/?category=' + str(cat1.id) + ',' + str(cat2.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("Number one") > 0, True)
+        self.assertIs(str(response.content).find("Number two") > 0, False)
+        self.assertIs(str(response.content).find("Number three") > 0, True)
 
     def test_empty_categories(self):
         c = Client()

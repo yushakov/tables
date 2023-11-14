@@ -122,6 +122,9 @@ def index(request):
         for con in cons:
             con.color = ctg.color
             constructs.append(con)
+    foreman = int(request.GET.get('foreman', '-1'))
+    if foreman > 0:
+        constructs = [con for con in constructs if con.foreman is not None and con.foreman.id == foreman]
     total = get_total(constructs)
     context = {'active_construct_list': constructs,
                'categories': all_cats,
