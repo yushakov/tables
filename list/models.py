@@ -524,6 +524,14 @@ class Construct(models.Model):
         return round(self.withVat(self.withCompanyProfit(choices_cost)))
 
     @property
+    def full_cost_vat(self):
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices']
+        choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
+        return round(self.withCompanyProfit(choices_cost) * 0.01 * self.vat_percent_num)
+
+    @property
     def main_cost(self):
         if 'choices' not in self.numbers:
             self.numbers['choices'] = self.choice_set.all()
