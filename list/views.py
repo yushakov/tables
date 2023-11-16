@@ -35,6 +35,7 @@ def fix_category(constructs, categories):
 def get_total(constructs):
     total = {}
     full_cost = 0
+    full_cost_vat = 0
     full_progress_cost = 0
     round_income = 0
     round_outcome = 0
@@ -48,6 +49,7 @@ def get_total(constructs):
     invoices_pending_pay = 0
     for con in constructs:
         full_cost += con.full_cost
+        full_cost_vat += con.full_cost_vat
         full_progress_cost += con.full_progress_cost
         round_income += con.round_income
         round_outcome += con.round_outcome
@@ -70,6 +72,7 @@ def get_total(constructs):
     total['round_income'] = round_income
     total['round_outcome'] = round_outcome
     total['full_cost'] = full_cost
+    total['full_cost_vat'] = full_cost_vat
     total['full_progress_cost'] = full_progress_cost
     total['overall_progress_percent_num'] = 0.0
     if full_cost > 1.e-4:

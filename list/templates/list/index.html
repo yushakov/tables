@@ -28,6 +28,7 @@
         <th>Chart</th>
         <th>Foreman</th>
         <th title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
+        <th>VAT</th>
         <th style="display: none">Main<br>cost</th>
         <th>Paid<br>deposit</th>
         <th title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
@@ -64,6 +65,10 @@
         </td>
         <td align ='right'>
             {{ construct.full_cost }}
+        </td>
+        <td align ='right'>
+            {{ construct.full_cost_vat }}<br>
+            ({{ construct.vat_percent_num }}%))
         </td>
         <td align ='right' style="display: none">{{ construct.main_cost }}</td>
         <td align ='right'>{{ construct.deposit|floatformat:2 }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
@@ -131,6 +136,9 @@
         <td></td>
         <td align ='right'>
             <b>{{ total.full_cost }}</b>
+        </td>
+        <td align ='right'>
+            <b>{{ total.full_cost_vat }}</b>
         </td>
         <td align ='right'><b>{{ total.deposit }}</b></td>
         <td align ='right'>
