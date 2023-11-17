@@ -28,7 +28,7 @@
         <th>Chart</th>
         <th>Foreman</th>
         <th title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
-        <th>VAT</th>
+        <th title="VAT from actual Income, not the full cost.">VAT<sup>?</sup></th>
         <th style="display: none">Main<br>cost</th>
         <th>Paid<br>deposit</th>
         <th title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
@@ -37,7 +37,7 @@
         <th title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
         <th>Expenses +</th>
         <th>Salaries<br>paid</th>
-        <th>Company<br>Profit</th>
+        <th title="Income - Outcome">Company<br>Profit<sup>?</sup></th>
         <th title="(Income &minus; VAT) * 0.13">Owner<sup>?</sup><br>Profit</th>
         <th title="Income &minus; VAT &minus; Owner Profit &minus; Outcome.">Salaries<sup>?</sup><br>Part</th>
         <th title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
@@ -67,7 +67,7 @@
             {{ construct.full_cost }}
         </td>
         <td align ='right'>
-            {{ construct.full_cost_vat }}<br>
+            {{ construct.vat_from_income }}<br>
             ({{ construct.vat_percent_num }}%)
         </td>
         <td align ='right' style="display: none">{{ construct.main_cost }}</td>
@@ -138,7 +138,7 @@
             <b>{{ total.full_cost }}</b>
         </td>
         <td align ='right'>
-            <b>{{ total.full_cost_vat }}</b>
+            <b>{{ total.vat_from_income }}</b>
         </td>
         <td align ='right'><b>{{ total.deposit }}</b></td>
         <td align ='right'>
