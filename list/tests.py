@@ -2209,7 +2209,6 @@ class ViewTests(TestCase):
 
 
     def test_update_choice_no_update(self):
-        print("test_update_choice_no_update()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',
@@ -2229,7 +2228,6 @@ class ViewTests(TestCase):
 
 
     def test_update_choice(self):
-        print("test_update_choice()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',
@@ -2249,8 +2247,31 @@ class ViewTests(TestCase):
         self.assertIs(ret == choice_id, True)
 
 
+    def test_update_choice_of_huge_id(self):
+        cells = {'class': '',
+                 'name': 'task_name_to_update',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15',
+                 'days': '365'}      
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        choice_id = create_choice(cell_data, construct)
+        while choice_id < 1200:
+            choice_id = create_choice(cell_data, construct)
+        cells['units'] = 'sq. m.'
+        choice_id = '1,200'
+        print("big choice id:", choice_id)
+        ret = update_choice(choice_id, cell_data)
+        self.assertIs(ret == 1200, True)
+
+
     def test_update_choice_big_quantity(self):
-        print("test_update_choice()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',

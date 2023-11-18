@@ -3,6 +3,7 @@
 {% block content %}
 {% load static %}
 {% load app_filters %}
+{% load l10n %}
 <script src="{% static 'list/detail.js' %}">
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
@@ -169,9 +170,9 @@
 <tbody>
 {% for items in ch_list %}
     {% if items.type == 'Choice' %}
-        <tr id='tr_{{ items.choice.id }}' class='{{ items.type }}'>
+        <tr id='tr_{{ items.choice.id|unlocalize }}' class='{{ items.type }}'>
     {% else %}
-        <tr id='hd_{{ items.choice.id }}' class='{{ items.type }}'>
+        <tr id='hd_{{ items.choice.id|unlocalize }}' class='{{ items.type }}'>
     {% endif %}
         <td align='right'>
             <a href="#" onclick="return addRow({{ items.idx }}, 'Choice');">task</a> |
