@@ -11,7 +11,9 @@ from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
 import logging
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required,\
+                                           permission_required, \
+                                           user_passes_test
 from django.utils import timezone
 from django import forms
 
@@ -167,11 +169,13 @@ def account(request):
         slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
     constructs = get_active_done_constructs()
     invoices = get_user_invoices(request.user)
+    foreman_constructs = [con for con in constructs if con.foreman and con.foreman.id == request.user.id]
     context = {'user': request.user,
                'groups': groups,
                'project_slugs': slugs,
                'is_client': len(groups.filter(name='Clients')) > 0,
                'is_worker': len(groups.filter(name='Workers')) > 0,
+               'foreman_constructs': foreman_constructs,
                'constructs': constructs,
                'invoices': invoices
               }
@@ -556,13 +560,25 @@ def actions(request):
     return render(request, 'list/actions.html', context)
 
 
+def client_or_worker(user):
+    if user.is_staff:
+        return True
+    groups = user.groups.all()
+    if len(groups.filter(name='Clients')) > 0 or \
+            len(groups.filter(name='Workers')) > 0:
+        return True
+    return False
+
+
 @login_required
-@permission_required("list.view_construct")
+@user_passes_test(client_or_worker)
 def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}, {ip}')
-    if request.method == 'POST':
+    is_foreman = request.user.id == construct.foreman.id
+    is_client = len(request.user.accessible_constructs.filter(id=construct.id)) > 0
+    if request.method == 'POST' and not is_foreman:
         process_post(request, construct, client=True)
         construct.history_dump(request.user.id)
         logger.info(f'*action* client submission for {construct.title_text} by {request.user.username}')
@@ -575,7 +591,11 @@ def client(request, construct_id):
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    is_worker = not (is_foreman or is_client)
     context = {'construct': construct,
+               'is_foreman': is_foreman,
+               'is_client': is_client,
+               'is_worker': is_worker,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
@@ -606,6 +626,7 @@ def client_slug(request, slug):
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
     context = {'construct': construct,
                'ch_list': ch_list,
+               'is_client': True,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),

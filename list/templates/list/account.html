@@ -19,6 +19,18 @@
     {% endfor %}
 {% endcomment %}
 {% endif %}
+{% if foreman_constructs %}
+    <p style="font-size: larger">You are the foreman for:</p>
+    {% for con in foreman_constructs %}
+        <p>&nbsp;<a href="{% url 'list:worker' con.id %}"
+            style="text-decoration: none">
+                {{ con.title_text }}</a> (address: {{ con.address_text }}).
+            [<a href="{% url 'list:submit_invoice' %}?construct={{ con.id }}&worker"
+                        style="text-decoration: none">
+                            invoice</a>]
+        </p>
+    {% endfor %}
+{% endif %}
 {% if 'list.add_invoice' in perms and 'is_staff' not in perms %}
     <p style="font-size: larger">Invoice for:</p>
     {% for con in constructs %}
