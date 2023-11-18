@@ -2268,7 +2268,7 @@ class ViewTests(TestCase):
         choice_id = '1,200'
         print("big choice id:", choice_id)
         ret = update_choice(choice_id, cell_data)
-        self.assertIs(ret == choice_id, True)
+        self.assertIs(ret == 1200, True)
 
 
     def test_update_choice_big_quantity(self):

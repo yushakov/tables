@@ -256,6 +256,8 @@ def prepare_data(cells):
 
 def update_choice(choice_id, cell_data, client=False):
     # can be a header
+    if type(choice_id) != int:
+        choice_id = int(str(choice_id).replace(',', '').strip())
     if cell_data['class'].find('Choice') >= 0:
         cells = cell_data['cells']
         try:

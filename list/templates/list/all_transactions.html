@@ -2,6 +2,7 @@
 {% block title %}All transactions for: {{ construct_name }}{% endblock %}
 {% block content %}
 {% load static %}
+{% load l10n %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Transactions for: {{ construct_name }}</h2>
 <a href="{% url 'list:detail' construct_id %}">go to the project</a>&nbsp;&nbsp;&nbsp;
@@ -23,7 +24,7 @@
         <tr>
             <td>
                 <a href="{% url 'admin:list_transaction_change' tra.id%}">
-                {{ tra.id }}
+                {{ tra.id|unlocalize }}
                 </a>
             </td>
             <td>
