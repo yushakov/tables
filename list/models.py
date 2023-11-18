@@ -532,6 +532,11 @@ class Construct(models.Model):
         return round(self.withCompanyProfit(choices_cost) * 0.01 * self.vat_percent_num)
 
     @property
+    def vat_from_income(self):
+        income = self.income()
+        return round(income - self.withOutVat(income))
+
+    @property
     def main_cost(self):
         if 'choices' not in self.numbers:
             self.numbers['choices'] = self.choice_set.all()
