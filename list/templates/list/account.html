@@ -20,7 +20,7 @@
 {% endcomment %}
 {% endif %}
 {% if foreman_constructs %}
-    <p style="font-size: larger">You are the foreman for:</p>
+    <p style="font-size: larger"><b>You are the foreman for:</b></p>
     {% for con in foreman_constructs %}
         <p>&nbsp;<a href="{% url 'list:worker' con.id %}"
             style="text-decoration: none">
@@ -32,13 +32,18 @@
     {% endfor %}
 {% endif %}
 {% if 'list.add_invoice' in perms and 'is_staff' not in perms %}
-    <p style="font-size: larger">Invoice for:</p>
+    <p style="font-size: larger"><b>Invoice for:</b></p>
     {% for con in constructs %}
-        <p>&nbsp;<a href="{% url 'list:submit_invoice' %}?construct={{ con.id }}&worker"
+        <p>
+            &nbsp;<a href="{% url 'list:submit_invoice' %}?construct={{ con.id }}&worker"
             style="text-decoration: none">
-                {{ con.title_text }}</a> (address: {{ con.address_text }}).</p>
+                {{ con.title_text }}</a> (address: {{ con.address_text }}).
+            [<a href="{% url 'list:worker' con.id %}"
+                        style="text-decoration: none">
+                            view tasks</a>]
+        </p>
     {% endfor %}
-    <p style="font-size: larger">Your Invoices:</p>
+    <p style="font-size: larger"><b>Your Invoices:</b></p>
     {% for inv in invoices %}
     <p>&nbsp;&nbsp;{{ inv.issue_date }},
         # <a href="{% url 'list:view_invoice' inv.id %}"
