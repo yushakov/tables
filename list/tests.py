@@ -1410,6 +1410,45 @@ class ViewTests(TestCase):
         response = c.get('/list/account/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
+    def test_account_page_worker(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_account_page_client(self):
+        c = Client()
+        c.login(username="client2", password="secret")
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_account_page_foreman(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the client session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_worker_page_foreman(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the client session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        response = c.get('/list/' + str(cons.id) + '/worker/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("price") > 0, True)
+
+    def test_worker_page(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the client session')
+        response = c.get('/list/' + str(cons.id) + '/worker/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("price") > 0, False)
+
     def test_empty_list(self):
         c = Client()
         c.login(username="yuran", password="secret")
