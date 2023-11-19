@@ -90,7 +90,7 @@ class MyUserAdmin(UserAdmin):
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
-admin.site.register(Worker)
+# admin.site.register(Worker)
 admin.site.register(Choice, ChoiceAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Transaction, TransactionAdmin)

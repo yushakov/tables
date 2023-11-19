@@ -26,7 +26,7 @@ window.addEventListener('beforeunload', function (e) {
     }
 });
 
-function showNotesForm(ths) {
+function showNotesForm(ths, set_modified = true) {
     var parent = ths.parentNode.parentNode.parentNode;
     var elements = parent.getElementsByClassName('notes-form');
     var form = elements[0];
@@ -35,7 +35,9 @@ function showNotesForm(ths) {
     form.style.display = 'block';
     form.style.top = (centerY - form.offsetHeight / 2) + 'px';
     form.style.left = (centerX - form.offsetWidth / 2) + 'px';
-    setModified();
+    if (set_modified) {
+        setModified();
+    }
     return false;
 }
 
