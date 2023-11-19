@@ -576,7 +576,7 @@ def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}, {ip}')
-    is_foreman = request.user.id == construct.foreman.id
+    is_foreman = (request.user.id == construct.foreman.id) if construct.foreman else False
     is_client = len(request.user.accessible_constructs.filter(id=construct.id)) > 0
     if request.method == 'POST' and not is_foreman:
         process_post(request, construct, client=True)

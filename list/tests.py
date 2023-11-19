@@ -1,7 +1,8 @@
 from django.test import TestCase, Client
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 import numpy as np
 import datetime as dt
 import json
@@ -1284,6 +1285,29 @@ class ViewTests(TestCase):
         permission = Permission.objects.get(codename='add_invoice')
         self.worker_user.user_permissions.add(permission)
 
+        # worker in the Workers group
+        workers_group, _ = Group.objects.get_or_create(name='Workers')
+        content_type = ContentType.objects.get_for_model(Invoice)
+        add_invoice_permission, _ = Permission.objects.get_or_create(
+            codename='add_invoice',
+            name='Can add invoice',
+            content_type=content_type,
+        )
+        view_invoice_permission, _ = Permission.objects.get_or_create(
+            codename='view_invoice',
+            name='Can view invoice',
+            content_type=content_type,
+        )
+        workers_group.permissions.add(add_invoice_permission, view_invoice_permission)
+        self.worker_user_2 = User.objects.create_user('worker2', 'worker@example.com', 'secret')
+        self.worker_user_2.groups.add(workers_group)
+
+        # client in the Clients group
+        clients_group, _ = Group.objects.get_or_create(name='Clients')
+        content_type = ContentType.objects.get_for_model(Invoice)
+        self.client_user_2 = User.objects.create_user('client2', 'client@example.com', 'secret')
+        self.client_user_2.groups.add(clients_group)
+
     def test_session_extension_on_detail_page(self):
         c = Client()
         c.login(username="yuran", password="secret")
@@ -1361,7 +1385,7 @@ class ViewTests(TestCase):
 
     def test_session_extension_on_client_page(self):
         c = Client()
-        c.login(username="client", password="secret")
+        c.login(username="client2", password="secret")
         cons = make_test_construct('Test construct for the client session')
         session = c.session
         session['key'] = 'value'
@@ -1754,7 +1778,7 @@ class ViewTests(TestCase):
 
     def test_call_client_page_client(self):
         c = Client()
-        c.login(username="client", password="secret")
+        c.login(username="client2", password="secret")
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/client/")
