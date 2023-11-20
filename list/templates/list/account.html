@@ -60,7 +60,14 @@
 {% if is_client %}
     <h3>Projects:</h3>
     {% for slug in project_slugs %}
-        <a href="{% url 'list:client_slug' slug.url %}">{{ slug.project_name }}</a>
+        <p>
+            <a href="{% url 'list:client_slug' slug.url %}" style="text-decoration: none">
+                {{ slug.project_name }}
+            </a>
+            [<a href="{% url 'list:client' slug.id %}" style="text-decoration: none">
+                via ID
+            </a>]
+        </p>
     {% endfor %}
 {% endif %}
 {% comment %}
