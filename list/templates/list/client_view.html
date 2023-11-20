@@ -24,7 +24,7 @@
     <b>Money left</b>: £ {{ construct.salaries_part }}<br>
 </p>
 
-{% elif is_client %}
+{% elif is_client and has_access %}
 
 <table id='choices_head'>
 <tbody>

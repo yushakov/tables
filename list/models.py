@@ -17,6 +17,8 @@ import difflib
 from random import seed, randint
 
 DEPOSIT_PERCENT_EXPECT = 15
+CLIENT_GROUP_NAME = 'Clients'
+WORKER_GROUP_NAME = 'Workers'
 
 logger = logging.getLogger('django')
 

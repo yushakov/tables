@@ -29,7 +29,9 @@ from list.models import Construct, \
                         HistoryRecord, \
                         getConstructAndMaxId, \
                         dump_all_constructs, \
-                        load_all_constructs
+                        load_all_constructs, \
+                        CLIENT_GROUP_NAME, \
+                        WORKER_GROUP_NAME
 import os
 
 
@@ -1286,7 +1288,7 @@ class ViewTests(TestCase):
         self.worker_user.user_permissions.add(permission)
 
         # worker in the Workers group
-        workers_group, _ = Group.objects.get_or_create(name='Workers')
+        workers_group, _ = Group.objects.get_or_create(name=WORKER_GROUP_NAME)
         content_type = ContentType.objects.get_for_model(Invoice)
         add_invoice_permission, _ = Permission.objects.get_or_create(
             codename='add_invoice',
@@ -1303,7 +1305,7 @@ class ViewTests(TestCase):
         self.worker_user_2.groups.add(workers_group)
 
         # client in the Clients group
-        clients_group, _ = Group.objects.get_or_create(name='Clients')
+        clients_group, _ = Group.objects.get_or_create(name=CLIENT_GROUP_NAME)
         content_type = ContentType.objects.get_for_model(Invoice)
         self.client_user_2 = User.objects.create_user('client2', 'client@example.com', 'secret')
         self.client_user_2.groups.add(clients_group)
@@ -1384,9 +1386,10 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_session_extension_on_client_page(self):
+        cons = make_test_construct('Test construct for the client session')
+        self.client_user_2.accessible_constructs.add(cons)
         c = Client()
         c.login(username="client2", password="secret")
-        cons = make_test_construct('Test construct for the client session')
         session = c.session
         session['key'] = 'value'
         one_hour = 60 * 60
@@ -1816,12 +1819,22 @@ class ViewTests(TestCase):
         self.assertEqual(len(tras), 1)
 
     def test_call_client_page_client(self):
-        c = Client()
-        c.login(username="client2", password="secret")
         cons = Construct()
         cons.save()
+        self.client_user_2.accessible_constructs.add(cons)
+        c = Client()
+        c.login(username="client2", password="secret")
         response = c.get("/list/" + str(cons.id) + "/client/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("price") > 0, True)
+
+    def test_call_client_page_non_accessible(self):
+        cons = Construct()
+        cons.save()
+        c = Client()
+        c.login(username="client2", password="secret")
+        response = c.get("/list/" + str(cons.id) + "/client/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_flows_page_with_invoices(self):
         c = Client()
@@ -1833,7 +1846,7 @@ class ViewTests(TestCase):
         Invoice.add(cons, "George", 102.0, direction='out', status='paid')
         Invoice.add(cons, "Ringo", 123.0, direction='out', status='unpaid')
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_flows_page_with_transactions(self):
         c = Client()

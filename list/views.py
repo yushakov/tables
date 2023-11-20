@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
-from .models import Category
+from .models import Category, CLIENT_GROUP_NAME, WORKER_GROUP_NAME
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -166,15 +166,17 @@ def account(request):
     groups = request.user.groups.all()
     slugs = []
     for constr in request.user.accessible_constructs.all():
-        slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
+        slugs.append({'url': constr.slug_name,
+                      'project_name': constr.title_text,
+                      'id': constr.id})
     constructs = get_active_done_constructs()
     invoices = get_user_invoices(request.user)
     foreman_constructs = [con for con in constructs if con.foreman and con.foreman.id == request.user.id]
     context = {'user': request.user,
                'groups': groups,
                'project_slugs': slugs,
-               'is_client': len(groups.filter(name='Clients')) > 0,
-               'is_worker': len(groups.filter(name='Workers')) > 0,
+               'is_client': len(groups.filter(name=CLIENT_GROUP_NAME)) > 0,
+               'is_worker': len(groups.filter(name=WORKER_GROUP_NAME)) > 0,
                'foreman_constructs': foreman_constructs,
                'constructs': constructs,
                'invoices': invoices
@@ -564,8 +566,8 @@ def client_or_worker(user):
     if user.is_staff:
         return True
     groups = user.groups.all()
-    if len(groups.filter(name='Clients')) > 0 or \
-            len(groups.filter(name='Workers')) > 0:
+    if len(groups.filter(name=CLIENT_GROUP_NAME)) > 0 or \
+            len(groups.filter(name=WORKER_GROUP_NAME)) > 0:
         return True
     return False
 
@@ -577,7 +579,10 @@ def client(request, construct_id):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}, {ip}')
     is_foreman = (request.user.id == construct.foreman.id) if construct.foreman else False
-    is_client = len(request.user.accessible_constructs.filter(id=construct.id)) > 0
+    is_client = len(request.user.groups.filter(name=CLIENT_GROUP_NAME)) > 0
+    has_access = len(request.user.accessible_constructs.filter(id=construct.id)) > 0
+    if is_client and not has_access:
+        return redirect('list:account')
     if request.method == 'POST' and not is_foreman:
         process_post(request, construct, client=True)
         construct.history_dump(request.user.id)
@@ -595,6 +600,7 @@ def client(request, construct_id):
     context = {'construct': construct,
                'is_foreman': is_foreman,
                'is_client': is_client,
+               'has_access': has_access,
                'is_worker': is_worker,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
@@ -627,6 +633,7 @@ def client_slug(request, slug):
     context = {'construct': construct,
                'ch_list': ch_list,
                'is_client': True,
+               'has_access': True,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
