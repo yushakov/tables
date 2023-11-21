@@ -597,6 +597,7 @@ def client(request, construct_id):
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
     is_worker = not (is_foreman or is_client)
+    logger.info(f'*action* client({construct.title_text}) by {request.user.username} as worker ({is_worker}), foreman ({is_foreman}), client ({is_client}), has access ({has_access}), {ip}')
     context = {'construct': construct,
                'is_foreman': is_foreman,
                'is_client': is_client,
