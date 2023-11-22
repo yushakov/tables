@@ -16,6 +16,9 @@ from django.contrib.auth.decorators import login_required,\
                                            user_passes_test
 from django.utils import timezone
 from django import forms
+from django.conf import settings
+import os
+import shutil
 
 logger = logging.getLogger('django')
 
@@ -93,6 +96,32 @@ def get_client_ip_address(request):
     else:
         ip_addr = req_headers.get('REMOTE_ADDR')
     return ip_addr
+
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def backup(request):
+    db_file = settings.BASE_DIR / 'db.sqlite3'
+    backup_folder = settings.BASE_DIR / 'backups'
+    new_file_name = 'Can not access db or folder.'
+    if os.access(db_file, os.F_OK) and os.access(backup_folder, os.F_OK):
+        try:
+            now = timezone.now()
+            # no often than every hour
+            time_suffix = now.strftime('%Y_%m_%d_around_%H_oclock')
+            new_file_name = 'db_' + time_suffix + '.sqlite3'
+            dst = backup_folder / new_file_name
+            if os.access(dst, os.F_OK):
+                new_file_name = 'File already exists.'
+            else:
+                shutil.copy(db_file, dst)
+                new_file_name = f'File copied: {new_file_name}.'
+        except:
+            new_file_name = 'Error copying db file'
+    ip = get_client_ip_address(request)
+    whatever = f"Backup at {timezone.now()}, {new_file_name}"
+    logger.info(f"*action* backup() by '{request.user.username}'. Info: {whatever}. --::-- {ip}")
+    return render(request, 'list/account.html', {'whatever': whatever})
 
 
 @login_required
@@ -597,6 +626,7 @@ def client(request, construct_id):
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
     is_worker = not (is_foreman or is_client)
+    logger.info(f'*action* client({construct.title_text}) by {request.user.username} as worker ({is_worker}), foreman ({is_foreman}), client ({is_client}), has access ({has_access}), {ip}')
     context = {'construct': construct,
                'is_foreman': is_foreman,
                'is_client': is_client,

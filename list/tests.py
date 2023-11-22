@@ -1332,6 +1332,25 @@ class ViewTests(TestCase):
         response = c.get("/list/actions/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
+    def test_db_backup(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/backup/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find('File copied') > 0, True)
+
+
+    def test_db_backup_twice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/backup/")
+        response = c.get("/list/backup/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find('File already exists') > 0, True)
+
+
     def test_transactions_page(self):
         c = Client()
         c.login(username="yuran", password="secret")
