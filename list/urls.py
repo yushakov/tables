@@ -16,6 +16,7 @@ urlpatterns = [
     # path('', views.account, name='account'),
     path('account/', views.account, name='account'),
     path('history/', views.history, name='history'),
+    path('backup/', views.backup, name='backup'),
     path('<int:construct_id>/', views.detail, name='detail'),
     path('<int:construct_id>/client/', views.client, name='client'),
     path('<int:construct_id>/worker/', views.client, name='worker'),

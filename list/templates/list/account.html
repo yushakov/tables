@@ -2,6 +2,13 @@
 {% block title %}Account Profile{% endblock %}
 {% block content %}
 <h2>User: {{ user.first_name }} {{ user.last_name }} ({{ user.username }})</h2>
+{% if whatever %}
+    <ul>
+        <li>
+            {{ whatever }}
+        </li>
+    </ul>
+{% endif %}
 {% if 'is_staff' in perms %}
     You belong to Staff.<br>
 {% endif %}
