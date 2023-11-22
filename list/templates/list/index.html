@@ -10,6 +10,11 @@
 <br><br>
 <b>Categories:</b>&nbsp;
 <a href="{% url 'list:index' %}">all</a>&nbsp;
+{% if active_done_inds %}
+<span style="background-color: lightblue; padding: 2px; border-radius: 3px">
+    <a href="?category={{ active_done_inds }}">Active+Done</a>
+</span>&nbsp;
+{% endif %}
 {% for ctg in categories %}
     <span style="background-color: {{ ctg.color }}; padding: 2px; border-radius: 3px">
         <a href="?category={{ ctg.id }}">{{ ctg.name }}</a>
@@ -21,16 +26,18 @@
         <th>Project name</th>
         <th>Progress</th>
         <th>Chart</th>
+        <th>Foreman</th>
         <th title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
-        <th>Main<br>cost</th>
+        <th title="VAT from actual Income, not the full cost.">VAT<sup>?</sup></th>
+        <th style="display: none">Main<br>cost</th>
         <th>Paid<br>deposit</th>
         <th title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
-        <th title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
+        <th style="display: none" title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
         <th title="Current income according to incoming transactions including the deposit.">Income<sup>?</sup></th>
         <th title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
         <th>Expenses +</th>
         <th>Salaries<br>paid</th>
-        <th>Company<br>Profit</th>
+        <th title="Income - Outcome">Company<br>Profit<sup>?</sup></th>
         <th title="(Income &minus; VAT) * 0.13">Owner<sup>?</sup><br>Profit</th>
         <th title="Income &minus; VAT &minus; Owner Profit &minus; Outcome.">Salaries<sup>?</sup><br>Part</th>
         <th title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
@@ -51,15 +58,24 @@
         <td>
             <a href="{% url 'list:gantt' construct.id %}">Gantt</a>
         </td>
+        <td>
+            <a href="?foreman={{ construct.foreman.id }}">
+                {{ construct.foreman.username }}
+            </a>
+        </td>
         <td align ='right'>
             {{ construct.full_cost }}
         </td>
-        <td align ='right'>{{ construct.main_cost }}</td>
+        <td align ='right'>
+            {{ construct.vat_from_income }}<br>
+            ({{ construct.vat_percent_num }}%)
+        </td>
+        <td align ='right' style="display: none">{{ construct.main_cost }}</td>
         <td align ='right'>{{ construct.deposit|floatformat:2 }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
         <td align ='right'>
             {{ construct.full_progress_cost }}
         </td>
-        <td align ='right'>
+        <td align ='right' style="display: none">
             {{ construct.no_deposit_progress_cost }} +<br>
             {{ construct.full_side_progress_cost }}
         </td>
@@ -95,12 +111,12 @@
             {{ construct.left_to_pay }}
         </td>
         <td align ='right'>
-            <a href="{% url 'list:flows' construct.id %}#outgoing-unpaid-invoices">
+            <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
             {{ construct.invoices_to_pay }}
             </a>
         </td>
         <td align ='right'>
-            <a href="{% url 'list:flows' construct.id %}#incoming-unpaid-invoices">
+            <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
             {{ construct.invoices_pending_pay }}
             </a>
         </td>
@@ -117,15 +133,17 @@
             </div>
         </td>
         <td></td>
+        <td></td>
         <td align ='right'>
             <b>{{ total.full_cost }}</b>
         </td>
-        <td align ='right'><b>{{ total.main_cost }}</b></td>
+        <td align ='right'>
+            <b>{{ total.vat_from_income }}</b>
+        </td>
         <td align ='right'><b>{{ total.deposit }}</b></td>
         <td align ='right'>
             <b>{{ total.full_progress_cost }}</b>
         </td>
-        <td align ='right'></td>
         <td align ='right'>
             <b>{{ total.round_income }}</b>
         </td>

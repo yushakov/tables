@@ -3,12 +3,22 @@
 {% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
+{% if not user_is_owner and 'is_staff' not in perms %}
+
+Sorryan, user <b>{{ username }}</b> is  not authorised to view the invoice with id <b>{{ invoice.id }}</b>.
+Please, report to administrators, if you think this is an issue.
+
+{% else %}
+
 <h2>Invoice</h2>
-<a href="{% url 'admin:list_invoice_changelist' %}">see all invoices</a>
+{% if 'is_staff' in perms %}
+    &larr; <a href="{% url 'list:index' %}">to the project list</a>
+    &nbsp;&nbsp;<a href="{% url 'admin:list_invoice_changelist' %}">see all invoices</a>
+{% endif %}
 {% if 'list.change_invoice' in perms %}
     &nbsp;&nbsp;<a href="{% url 'list:modify_invoice' invoice.id %}">modify this one</a>
 {% endif %}
-{% if user.is_authenticated %}
+{% if 'is_staff' in perms %}
     &nbsp;&nbsp;<a href="{% url 'list:print_invoice' invoice.id %}" target="_blank">print</a>
 {% endif %}
 <br />
@@ -16,8 +26,12 @@
 <p>
     
 <label for='id_project'><b>Project:</b></label>
-    <a href="{% url 'list:detail' invoice.construct.id %}" id='id_project'>
-    {{ invoice.construct.title_text }}
+    {% if 'is_staff' in perms %}
+        <a href="{% url 'list:detail' invoice.construct.id %}" id='id_project'>
+    {% else %}
+        <a href="{% url 'list:submit_invoice' %}?construct={{ invoice.construct.id }}&worker">
+    {% endif %}
+        {{ invoice.construct.title_text }}
     </a>
 </p>
 <p>
@@ -58,16 +72,19 @@
             {% endfor %}
         </span>
     {% else %}
-        <label for='id_link_to_pay'><b>Link to pay:</b></label>
-        <span id='id_link_to_pay'>
-            <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
-        </span>
+        {% if 'is_staff' in perms %}
+            <label for='id_link_to_pay'><b>Link to pay:</b></label>
+            <span id='id_link_to_pay'>
+                <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&to={{ invoice.seller }}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
+            </span>
+        {% endif %}
     {% endif %}
 </p>
 <p>
     <label for='id_details'><b>Details:</b></label>
     <div id='id_details' style='max-width: 400px'>{{ invoice.details_txt|linebreaks }}</div>
 </p>
+{% comment %}
 {% if invoice.photo %}
     <br />
     <a href="{{ invoice.photo.url }}">
@@ -77,5 +94,8 @@
             <img src="{{ invoice.photo.url }}">
         {% endif %}
     </a>
+{% endif %}
+{% endcomment %}
+
 {% endif %}
 {% endblock %}

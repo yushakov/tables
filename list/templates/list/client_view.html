@@ -15,6 +15,17 @@
     <br>
 {% endif %}
 
+{% if is_foreman %}
+
+<p>
+    <b>Address</b>: {{ construct.address_text }}<br>
+</p>
+<p>
+    <b>Money left</b>: £ {{ construct.salaries_part }}<br>
+</p>
+
+{% elif is_client and has_access %}
+
 <table id='choices_head'>
 <tbody>
 <tr>
@@ -83,6 +94,8 @@
 </tbody>
 </table>
 
+{% endif %}
+
 <br><br>
 <div id='project_last_save_date'>
 <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
@@ -94,10 +107,10 @@
 <thead><tr>
     <td></td>
     <th class="name_cell">Task name</th>
-    <th>Unit price</th>
+    {% if not is_worker %}<th>Unit price</th>{% endif %}
     <th>Quantity</th>
     <th><!--Units--></th>
-    <th>Total price</th>
+    {% if not is_worker %}<th>Total price</th>{% endif %}
     <th style='display:none'></th>
     <th>Date start</th>
     <th>Planned days</th>
@@ -116,10 +129,12 @@
         {% autoescape off %}
         <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
         {% endautoescape %}
-        <td align='right'>&#163;{{ items.choice.price_num }}</td>
+        {% if not is_worker %}<td align='right'>&#163;{{ items.choice.price_num }}</td>{% endif %}
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
-        <td align='right' class='choice_total_price'>&#163;{{ items.choice_total_price|floatformat:2 }}</td>
+        {% if not is_worker %}
+            <td align='right' class='choice_total_price'>&#163;{{ items.choice_total_price|floatformat:2 }}</td>
+        {% endif %}
         <td style='display:none'></td>
         <td>{{ items.choice.plan_start_date }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
@@ -137,8 +152,7 @@
                     <button type="button" onclick="hideNotesForm(this)">Hide Notes</button><br><br>
                     {{ items.choice.name_txt }}<br><br>
                     <p style="font-weight: bold">Constructive notes</p>
-                    <p style='font-style: italic'>At this page, you can modify "Client notes" only (below)!
-                    "Constructive notes" modifications will be ignored on saving.</p>
+                    <p style='font-style: italic'>At this page, you can modify "Client notes" only (below)!</p>
                     <textarea class='constructive_notes' name='con-notes' rows='10' cols='45'>
 {{ items.choice.constructive_notes }}</textarea><br><br>
                     <p style="font-weight: bold">Client notes</p>
@@ -150,9 +164,9 @@
                 <a href='#' title="<<<Constructive>>>: &quot;{{ items.choice.constructive_notes }}&quot;
 <<<Client>>>: &quot;{{ items.choice.client_notes}}&quot;"
                 {% if items.choice.constructive_notes|length > 2 or items.choice.client_notes|length > 2 %}
-                    class="link-txt" onclick="return showNotesForm(this);">NOTES</a>
+                            class="link-txt" onclick="return showNotesForm(this, {{ is_client|lower }});">NOTES</a>
                 {% else %}
-                    class="link-txt" onclick="return showNotesForm(this);">notes</a>
+                    class="link-txt" onclick="return showNotesForm(this, {{ is_client|lower }});">notes</a>
                 {% endif %}
             </div>
             <div class='constructive-notes'>{{ items.choice.constructive_notes }}</div>
@@ -170,8 +184,25 @@
 {% endfor %}
 </tbody>
 </table>
-<script>setForm();</script>
+<script>
+    setForm();
+    {% if is_client %}
+    document.querySelectorAll('textarea[name="con-notes"]').forEach(function(textarea) {
+        textarea.addEventListener('focus', function() {
+            // Find the next textarea in the sequence
+            var nextTextarea = this;
+            while (nextTextarea = nextTextarea.nextElementSibling) {
+                if (nextTextarea.tagName.toLowerCase() === 'textarea') {
+                    nextTextarea.focus();
+                    break;
+                }
+            }
+        });
+    });
+    {% endif %}
+</script>
 <br>
+{% if is_client %}
 <table id='choices_footer'>
 <tr>
     <td>
@@ -180,8 +211,11 @@
     <td><input type='submit' value='Save modifications'></td>
 </tr>
 </table>
+{% endif %}
 </form>
 <div style='display:none' id='active_row'>-1</div>
 <div style='display:none' id='modified'>no</div>
+{% if not is_worker %}
 <script>updateHeaders();</script>
+{% endif %}
 {% endblock %}

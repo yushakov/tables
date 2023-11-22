@@ -3,6 +3,7 @@
 {% block content %}
 {% load static %}
 {% load app_filters %}
+{% load l10n %}
 <script src="{% static 'list/detail.js' %}">
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
@@ -76,8 +77,12 @@
     <td>£ {{ construct.full_side_progress_cost }}</td>
 </tr>
 <tr>
-    <td></td>
-    <td></td>
+    <td><b>Unpaid<br>(out):</b></td>
+    <td>£
+        <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
+            {{ construct.invoices_to_pay }}
+        </a>
+    </td>
     <td></td>
     <td style="vertical-align: top"><b>Paid deposit:</b></td>
     <td>
@@ -88,8 +93,12 @@
     <td id='paid'>&#163; {{ construct.income_wo_deposit }}</td>
 </tr>
 <tr>
-    <td></td>
-    <td></td>
+    <td style="vertical-align: top"><b>Unpaid<br>(in):</b></td>
+    <td>£
+        <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
+            {{ construct.invoices_pending_pay }}
+        </a>
+    </td>
     <td></td>
     {% if construct.deposit <= 0 %}
         <td style="vertical-align: top"><b>Expected deposit:</b></td>
@@ -161,9 +170,9 @@
 <tbody>
 {% for items in ch_list %}
     {% if items.type == 'Choice' %}
-        <tr id='tr_{{ items.choice.id }}' class='{{ items.type }}'>
+        <tr id='tr_{{ items.choice.id|unlocalize }}' class='{{ items.type }}'>
     {% else %}
-        <tr id='hd_{{ items.choice.id }}' class='{{ items.type }}'>
+        <tr id='hd_{{ items.choice.id|unlocalize }}' class='{{ items.type }}'>
     {% endif %}
         <td align='right'>
             <a href="#" onclick="return addRow({{ items.idx }}, 'Choice');">task</a> |

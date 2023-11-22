@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
-from .models import Category
+from .models import Category, CLIENT_GROUP_NAME, WORKER_GROUP_NAME
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -11,9 +11,14 @@ from urllib.parse import unquote_plus
 from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
 import logging
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required,\
+                                           permission_required, \
+                                           user_passes_test
 from django.utils import timezone
 from django import forms
+from django.conf import settings
+import os
+import shutil
 
 logger = logging.getLogger('django')
 
@@ -35,6 +40,8 @@ def fix_category(constructs, categories):
 def get_total(constructs):
     total = {}
     full_cost = 0
+    full_cost_vat = 0
+    vat_from_income = 0
     full_progress_cost = 0
     round_income = 0
     round_outcome = 0
@@ -48,6 +55,8 @@ def get_total(constructs):
     invoices_pending_pay = 0
     for con in constructs:
         full_cost += con.full_cost
+        full_cost_vat += con.full_cost_vat
+        vat_from_income += con.vat_from_income
         full_progress_cost += con.full_progress_cost
         round_income += con.round_income
         round_outcome += con.round_outcome
@@ -70,50 +79,136 @@ def get_total(constructs):
     total['round_income'] = round_income
     total['round_outcome'] = round_outcome
     total['full_cost'] = full_cost
+    total['full_cost_vat'] = full_cost_vat
+    total['vat_from_income'] = vat_from_income
     total['full_progress_cost'] = full_progress_cost
     total['overall_progress_percent_num'] = 0.0
     if full_cost > 1.e-4:
         total['overall_progress_percent_num'] = full_progress_cost / full_cost * 100.0
     return total
 
+
+def get_client_ip_address(request):
+    req_headers = request.META
+    x_forwarded_for_value = req_headers.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for_value:
+        ip_addr = x_forwarded_for_value.split(',')[-1].strip()
+    else:
+        ip_addr = req_headers.get('REMOTE_ADDR')
+    return ip_addr
+
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def backup(request):
+    db_file = settings.BASE_DIR / 'db.sqlite3'
+    backup_folder = settings.BASE_DIR / 'backups'
+    new_file_name = 'Can not access db or folder.'
+    if os.access(db_file, os.F_OK) and os.access(backup_folder, os.F_OK):
+        try:
+            now = timezone.now()
+            # no often than every hour
+            time_suffix = now.strftime('%Y_%m_%d_around_%H_oclock')
+            new_file_name = 'db_' + time_suffix + '.sqlite3'
+            dst = backup_folder / new_file_name
+            if os.access(dst, os.F_OK):
+                new_file_name = 'File already exists.'
+            else:
+                shutil.copy(db_file, dst)
+                new_file_name = f'File copied: {new_file_name}.'
+        except:
+            new_file_name = 'Error copying db file'
+    ip = get_client_ip_address(request)
+    whatever = f"Backup at {timezone.now()}, {new_file_name}"
+    logger.info(f"*action* backup() by '{request.user.username}'. Info: {whatever}. --::-- {ip}")
+    return render(request, 'list/account.html', {'whatever': whatever})
+
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
 def index(request):
-    logger.info(f'USER ACCESS: index() by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: index() by {request.user.username} --::-- ip: {ip}')
     all_constructs = Construct.objects.all()
     all_cats = Category.objects.order_by('priority')
     fix_category(all_constructs, all_cats)
-    ctg_id = int(request.GET.get('category', '0'))
     cats = all_cats
-    if ctg_id > 0:
-        cats = all_cats.filter(id=ctg_id)
+    ctg_id = [0]
+    try:
+        ctg_id = [int(c) for c in request.GET.get('category', '0').split(',')]
+    except:
+        pass
+    if ctg_id[0] > 0:
+        cats = []
+        for cid in ctg_id:
+            try:
+                cat = all_cats.get(id=cid)
+                cats.append(cat)
+            except:
+                pass
+    adi = ''
+    try:
+        adi += str(all_cats.filter(name__icontains='active')[0].id) + ','
+        adi += str(all_cats.filter(name__icontains='done')[0].id)
+    except:
+        pass
     constructs = []
     for ctg in cats:
         cons = all_constructs.filter(category=ctg.id)
         for con in cons:
             con.color = ctg.color
             constructs.append(con)
+    foreman = int(request.GET.get('foreman', '-1'))
+    if foreman > 0:
+        constructs = [con for con in constructs if con.foreman is not None and con.foreman.id == foreman]
     total = get_total(constructs)
     context = {'active_construct_list': constructs,
                'categories': all_cats,
+               'active_done_inds': adi,
                'noscale': True,
                'total': total
               }
     return render(request, 'list/index.html', context)
-    
+
+def get_active_done_constructs():
+    cats = Category.objects.all()
+    active, done = [], []
+    active_cats = cats.filter(name__icontains='active')
+    done_cats = cats.filter(name__icontains='done')
+    if len(active_cats) > 0:
+        active = [con for con in active_cats[0].constructs.all()]
+    if len(done_cats) > 0:
+        done = [con for con in done_cats[0].constructs.all()]
+    return active + done
+
+def get_user_invoices(user):
+    invoices = user.invoice_set.all()
+    unpaid = [inv for inv in invoices.filter(status=Invoice.UNPAID)]
+    paid = [inv for inv in invoices.filter(status=Invoice.PAID)]
+    return unpaid + paid
+
 @login_required
 def account(request):
-    logger.info(f'USER ACCESS: account() by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: account() by {request.user.username}, {ip}')
     groups = request.user.groups.all()
     slugs = []
     for constr in request.user.accessible_constructs.all():
-        slugs.append({'url': constr.slug_name, 'project_name': constr.title_text})
+        slugs.append({'url': constr.slug_name,
+                      'project_name': constr.title_text,
+                      'id': constr.id})
+    constructs = get_active_done_constructs()
+    invoices = get_user_invoices(request.user)
+    foreman_constructs = [con for con in constructs if con.foreman and con.foreman.id == request.user.id]
     context = {'user': request.user,
                'groups': groups,
                'project_slugs': slugs,
-               'is_client': len(groups.filter(name='Clients')) > 0,
-               'is_worker': len(groups.filter(name='Workers')) > 0
+               'is_client': len(groups.filter(name=CLIENT_GROUP_NAME)) > 0,
+               'is_worker': len(groups.filter(name=WORKER_GROUP_NAME)) > 0,
+               'foreman_constructs': foreman_constructs,
+               'constructs': constructs,
+               'invoices': invoices
               }
     return render(request, 'list/account.html', context)
 
@@ -196,6 +291,11 @@ def prepare_data(cells):
 
 def update_choice(choice_id, cell_data, client=False):
     # can be a header
+    if type(choice_id) != int:
+        try:
+            choice_id = int(str(choice_id).replace(',', '').strip())
+        except:
+            choice_id = -1
     if cell_data['class'].find('Choice') >= 0:
         cells = cell_data['cells']
         try:
@@ -294,7 +394,6 @@ def save_update(data, construct, client=False):
         add_to_structure(structure, data[key], choice_id, client)
     if client_try_to_change_structure: return
     string_structure = json.dumps(structure)
-    logger.info('Project structure: %s\n', string_structure)
     construct.struct_json = string_structure
     construct.save()
 
@@ -443,7 +542,8 @@ def extend_session(request):
 @permission_required("list.change_construct")
 def detail(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'USER ACCESS: detail({construct.title_text}) by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: detail({construct.title_text}) by {request.user.username}, {ip}')
     if request.method == 'POST':
         process_post(request, construct)
         construct.history_dump(request.user.id)
@@ -491,12 +591,28 @@ def actions(request):
     return render(request, 'list/actions.html', context)
 
 
+def client_or_worker(user):
+    if user.is_staff:
+        return True
+    groups = user.groups.all()
+    if len(groups.filter(name=CLIENT_GROUP_NAME)) > 0 or \
+            len(groups.filter(name=WORKER_GROUP_NAME)) > 0:
+        return True
+    return False
+
+
 @login_required
-@permission_required("list.view_construct")
+@user_passes_test(client_or_worker)
 def client(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}')
-    if request.method == 'POST':
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: client({construct.title_text}) by {request.user.username}, {ip}')
+    is_foreman = (request.user.id == construct.foreman.id) if construct.foreman else False
+    is_client = len(request.user.groups.filter(name=CLIENT_GROUP_NAME)) > 0
+    has_access = len(request.user.accessible_constructs.filter(id=construct.id)) > 0
+    if is_client and not has_access:
+        return redirect('list:account')
+    if request.method == 'POST' and not is_foreman:
         process_post(request, construct, client=True)
         construct.history_dump(request.user.id)
         logger.info(f'*action* client submission for {construct.title_text} by {request.user.username}')
@@ -509,7 +625,13 @@ def client(request, construct_id):
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    is_worker = not (is_foreman or is_client)
+    logger.info(f'*action* client({construct.title_text}) by {request.user.username} as worker ({is_worker}), foreman ({is_foreman}), client ({is_client}), has access ({has_access}), {ip}')
     context = {'construct': construct,
+               'is_foreman': is_foreman,
+               'is_client': is_client,
+               'has_access': has_access,
+               'is_worker': is_worker,
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
@@ -523,7 +645,8 @@ def client_slug(request, slug):
     construct = Construct.objects.filter(slug_name=slug).first()
     if construct is None:
         raise Http404("Project not found")
-    logger.info(f'*action* USER ACCESS: client({construct.title_text}) with slug: {slug}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: client({construct.title_text}) with slug: {slug}, {ip}')
     if request.method == 'POST':
         process_post(request, construct, client=True)
         construct.history_dump(-1)
@@ -539,6 +662,8 @@ def client_slug(request, slug):
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
     context = {'construct': construct,
                'ch_list': ch_list,
+               'is_client': True,
+               'has_access': True,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
@@ -552,7 +677,7 @@ def client_slug(request, slug):
 @permission_required("list.change_construct")
 def clone_construct(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'USER ACCESS: clone_construct({construct.title_text}) by {request.user.username}')
+    logger.info(f'*action* USER ACCESS: clone_construct({construct.title_text}) by {request.user.username}')
     new_name = 'Copy ' + str(datetime.now()) + ' ' + str(construct.title_text)
     new_construct = construct.copy(new_name)
     context = {'next_page': 'list:index',
@@ -584,7 +709,7 @@ def getMarking(choice_list):
 @permission_required("list.change_construct")
 def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'USER ACCESS: gantt({construct.title_text}) by {request.user.username}')
+    logger.info(f'*action* USER ACCESS: gantt({construct.title_text}) by {request.user.username}')
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     common_start, marking, total, labels = getMarking(ch_list)
@@ -652,7 +777,7 @@ def process_invoice_lines(lines, price_coeff=1.0):
 @permission_required("list.view_invoice")
 def print_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
-    logger.info(f'USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
+    logger.info(f'*action* USER ACCESS: print_invoice({invoice.id}) by {request.user.username}')
     invoice_amount = float(invoice.amount)
     vat_prc = float(invoice.construct.vat_percent_num)
     vat_exclude_coeff = 1.0 / (vat_prc * 0.01 + 1.0)
@@ -680,9 +805,17 @@ def print_invoice(request, invoice_id):
 @permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
-    logger.info(f'USER ACCESS: view_invoice({invoice.id}) by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: view_invoice({invoice.id}) by {request.user.username}, {ip}')
     tra_list = getTransactions(invoice)
-    context = {'invoice': invoice, 'transactions': tra_list}
+    user_is_owner = True
+    user_invoices = request.user.invoice_set.filter(id=invoice_id)
+    if len(user_invoices) == 0:
+        user_is_owner = False
+    context = {'invoice': invoice,
+               'transactions': tra_list,
+               'user_is_owner': user_is_owner,
+               'username': request.user.username}
     return render(request, 'list/view_invoice.html', context)
 
 
@@ -694,7 +827,8 @@ def getInvoices(transaction):
 @permission_required("list.view_transaction")
 def view_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
-    logger.info(f'USER ACCESS: view_transaction({transaction.id}) by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: view_transaction({transaction.id}) by {request.user.username}, {ip}')
     inv_list = getInvoices(transaction)
     invoices = {'len': len(inv_list), 'list': inv_list}
     context = {'transaction': transaction, 'invoices': invoices}
@@ -705,20 +839,22 @@ def view_transaction(request, transaction_id):
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
 def submit_transaction(request):
-    logger.info(f'USER ACCESS: submit_transaction() by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: submit_transaction() by {request.user.username}, {ip}')
     if request.method == 'POST':
         form = TransactionSubmitForm(request.POST)
         logger.debug("views.py, submit_transaction()")
         logger.debug(request.POST.get('photo','no_photo'))
         if form.is_valid():
             form.save()
-            obj = Transaction.objects.latest()
+            obj = Transaction.objects.order_by('id').last()
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
         initial_data = {'construct': construct_id,
                         'invoices': [request.GET.get('invoice', -1)],
                         'amount': request.GET.get('amount','').replace(',',''),
+                        'to_txt': request.GET.get('to', ''),
                         'transaction_type': request.GET.get('type',''),
                         'receipt_number': getConstructAndMaxId(construct_id, Transaction)
                        }
@@ -729,7 +865,8 @@ def submit_transaction(request):
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
 def submit_transaction_bunch(request):
-    logger.info(f'USER ACCESS: submit_transaction() by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: submit_transaction() by {request.user.username}, {ip}')
     lines_to_show = ""
     lines_added = []
     errors = []
@@ -781,12 +918,13 @@ def submit_transaction_bunch(request):
 @login_required
 @permission_required("list.add_invoice")
 def submit_invoice(request):
-    logger.info(f'USER ACCESS: submit_invoice() by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: submit_invoice() by {request.user.username}, {ip}')
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST)
         if form.is_valid():
             form.save()
-            obj = Invoice.objects.latest()
+            obj = Invoice.objects.order_by('id').last()
             logger.info(f"*action* Invoice submitted: {obj} for construct: {obj.construct.title_text}")
             return redirect(obj)
     else:
@@ -795,12 +933,14 @@ def submit_invoice(request):
         details = request.GET.get('details', '-')
         amount = request.GET.get('amount', '')
         initial_data = {'construct': construct_id,
-                        'seller': request.user.username,
+                        'seller': request.user.first_name + ' ' + request.user.last_name,
+                        'owner': request.user.id,
                         'amount': amount,
                         'invoice_type': invoice_type,
                         'number': getConstructAndMaxId(construct_id, Invoice),
                         'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
+        form.fields['owner'].widget = forms.HiddenInput()
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
             form.fields['invoice_type'].initial = 'OUT'
@@ -812,7 +952,7 @@ def submit_invoice(request):
 @permission_required("list.change_invoice")
 def modify_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
-    logger.info(f'USER ACCESS: modify_invoice({invoice.id}) by {request.user.username}')
+    logger.info(f'*action* USER ACCESS: modify_invoice({invoice.id}) by {request.user.username}')
     if request.method == 'POST':
         form = InvoiceSubmitForm(request.POST, instance=invoice)
         if form.is_valid():
@@ -821,6 +961,7 @@ def modify_invoice(request, invoice_id):
             return redirect(obj)
     else:
         form = InvoiceSubmitForm(instance=invoice)
+        form.fields['owner'].widget = forms.HiddenInput()
         form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()
         form.fields['status'].widget = forms.HiddenInput()
@@ -854,7 +995,8 @@ def getTotalAmount(transactions):
 @permission_required("list.add_construct")
 def flows(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'USER ACCESS: flows({construct.title_text}) by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: flows({construct.title_text}) by {request.user.username}, {ip}')
     incoming_transactions = construct.transaction_set.filter(transaction_type=Transaction.INCOMING).order_by('date')
     outgoing_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING).order_by('date')
     salary_transactions = construct.transaction_set.filter(transaction_type=Transaction.OUTGOING,
@@ -890,7 +1032,8 @@ def flows(request, construct_id):
 @permission_required("list.add_construct")
 def transactions(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
-    logger.info(f'USER ACCESS: transactions({construct.title_text}) by {request.user.username}')
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: transactions({construct.title_text}) by {request.user.username}, {ip}')
     context = {'construct_id': construct.id, 'construct_name': construct.title_text}
     transactions = []
     direction = 'all'
@@ -913,3 +1056,31 @@ def transactions(request, construct_id):
     context['transactions'] = transactions
     context['total'] = total
     return render(request, 'list/all_transactions.html', context)
+
+
+@login_required
+@permission_required("list.view_construct")
+@permission_required("list.change_construct")
+@permission_required("list.add_construct")
+def invoices(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: invoices({construct.title_text}) by {request.user.username}, {ip}')
+    context = {'construct_id': construct.id, 'construct_name': construct.title_text}
+    invoices = []
+    direction = 'all'
+    if request.method == "GET":
+        direction = request.GET.get('direction', 'all')
+        context['direction'] = direction
+        if   direction == 'in':
+            invoices = construct.invoice_set.filter(invoice_type=Transaction.INCOMING).order_by('issue_date')
+        elif direction == 'out':
+            invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING).order_by('issue_date')
+        elif direction == 'unpaid':
+            invoices = construct.invoice_set.filter(status=Invoice.UNPAID).order_by('issue_date')
+        else:
+            invoices = construct.invoice_set.all()
+    total = round(sum([inv.amount for inv in invoices]))
+    context['invoices'] = invoices
+    context['total'] = total
+    return render(request, 'list/all_invoices.html', context)

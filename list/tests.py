@@ -1,7 +1,8 @@
 from django.test import TestCase, Client
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 import numpy as np
 import datetime as dt
 import json
@@ -28,7 +29,9 @@ from list.models import Construct, \
                         HistoryRecord, \
                         getConstructAndMaxId, \
                         dump_all_constructs, \
-                        load_all_constructs
+                        load_all_constructs, \
+                        CLIENT_GROUP_NAME, \
+                        WORKER_GROUP_NAME
 import os
 
 
@@ -385,6 +388,16 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_foreman(self):
+        foreman = User(username='Foreman')
+        foreman.save()
+        con = Construct(title_text='construct')
+        con.save()
+        con.foreman = foreman
+        con.save()
+        foreman_cons = foreman.construct_set.all()
+        self.assertEqual(len(foreman_cons), 1)
+
     def test_categories(self):
         con1 = make_test_construct(construct_name="Number one")
         con2 = make_test_construct(construct_name="Number two")
@@ -537,7 +550,6 @@ class ModelTests(TestCase):
         progress(100.0)
         self.assertEqual(construct.left_to_pay, 26100)
         print_it()
-        # transaction(26435, "")
         transaction(26100, "")
         self.assertEqual(construct.left_to_pay, 0)
         print_it()
@@ -617,7 +629,6 @@ class ModelTests(TestCase):
         self.assertEqual(construct.left_to_pay, 86)
         print_it()
         progress(50.0)
-        self.assertEqual(construct.left_to_pay, 45215)
         print_it()
         transaction(45000, "")
         self.assertEqual(construct.left_to_pay, 215)
@@ -631,7 +642,6 @@ class ModelTests(TestCase):
         progress(100.0)
         self.assertEqual(construct.left_to_pay, 35430)
         print_it()
-        # transaction(26435, "")
         transaction(26100 + 9330, "")
         self.assertEqual(construct.left_to_pay, 0)
         print_it()
@@ -1135,7 +1145,11 @@ class ModelTests(TestCase):
         ta4 = Transaction.add(construct, 75.0, direction='out')
         construct.transaction_set.add(ta1, ta2, ta3, ta4)
         income = construct.income()
-        self.assertIs(230.0 - 1.e-10 < float(income) < 230.0 + 1.e-10, True)
+        self.assertEqual(round(income), 230)
+        ta5 = Transaction.add(construct, 15.0, direction='in')
+        construct.transaction_set.add(ta5)
+        income = construct.income()
+        self.assertEqual(round(income), 245)
 
     def test_construct_debt(self):
         construct = Construct()
@@ -1146,7 +1160,11 @@ class ModelTests(TestCase):
         iv4 = Invoice.add(construct, "Ringo", 75.0, direction='out')
         construct.invoice_set.add(iv1, iv2, iv3, iv4)
         debt = construct.debt()
-        self.assertIs(105.0 - 1.e-10 < float(debt) < 105.0 + 1.e-10, True)
+        self.assertEqual(round(debt), 105)
+        iv5 = Invoice.add(construct, "xxx", 15.0, direction='in')
+        construct.invoice_set.add(iv5)
+        debt = construct.debt()
+        self.assertEqual(round(debt), 120)
 
     def test_construct_balance(self):
         construct = Construct()
@@ -1157,7 +1175,7 @@ class ModelTests(TestCase):
         ta4 = Transaction.add(construct, 75.0, direction='out')
         construct.transaction_set.add(ta1, ta2, ta3, ta4)
         balance = construct.balance()
-        self.assertIs(105.0 - 1.e-10 < float(balance) < 105.0 + 1.e-10, True)
+        self.assertEqual(round(balance), 105)
 
     def test_add_invoice_to_transaction(self):
         construct = Construct()
@@ -1269,6 +1287,29 @@ class ViewTests(TestCase):
         permission = Permission.objects.get(codename='add_invoice')
         self.worker_user.user_permissions.add(permission)
 
+        # worker in the Workers group
+        workers_group, _ = Group.objects.get_or_create(name=WORKER_GROUP_NAME)
+        content_type = ContentType.objects.get_for_model(Invoice)
+        add_invoice_permission, _ = Permission.objects.get_or_create(
+            codename='add_invoice',
+            name='Can add invoice',
+            content_type=content_type,
+        )
+        view_invoice_permission, _ = Permission.objects.get_or_create(
+            codename='view_invoice',
+            name='Can view invoice',
+            content_type=content_type,
+        )
+        workers_group.permissions.add(add_invoice_permission, view_invoice_permission)
+        self.worker_user_2 = User.objects.create_user('worker2', 'worker@example.com', 'secret')
+        self.worker_user_2.groups.add(workers_group)
+
+        # client in the Clients group
+        clients_group, _ = Group.objects.get_or_create(name=CLIENT_GROUP_NAME)
+        content_type = ContentType.objects.get_for_model(Invoice)
+        self.client_user_2 = User.objects.create_user('client2', 'client@example.com', 'secret')
+        self.client_user_2.groups.add(clients_group)
+
     def test_session_extension_on_detail_page(self):
         c = Client()
         c.login(username="yuran", password="secret")
@@ -1291,10 +1332,83 @@ class ViewTests(TestCase):
         response = c.get("/list/actions/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
-    def test_session_extension_on_client_page(self):
+    def test_db_backup(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/backup/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find('File copied') > 0, True)
+
+
+    def test_db_backup_twice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/backup/")
+        response = c.get("/list/backup/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find('File already exists') > 0, True)
+
+
+    def test_transactions_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/transactions/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=all")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=in")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=out")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=salary")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/transactions/?direction=expenses")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_transactions_page_redirect(self):
         c = Client()
         c.login(username="client", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/transactions/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_invoice_ownership(self):
+        c = Client()
+        c.login(username="worker", password="secret")
+        construct = Construct(title_text='Original Construct')
+        construct.save()
+        invoice = Invoice.add(construct, "John Smith", 100.0, direction='in')
+        ta = Transaction.add(construct, 100.0, direction='in')
+        invoice.transactions.add(ta)
+        invoice.owner = self.worker_user
+        invoice.save()
+        worker_invoices = self.worker_user.invoice_set.all()
+        self.assertEqual(len(worker_invoices), 1)
+
+    def test_invoices_page_redirect(self):
+        c = Client()
+        c.login(username="client", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/invoices/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_invoices_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/list/" + str(cons.id) + "/invoices/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get("/list/" + str(cons.id) + "/invoices/?direction=in")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_session_extension_on_client_page(self):
         cons = make_test_construct('Test construct for the client session')
+        self.client_user_2.accessible_constructs.add(cons)
+        c = Client()
+        c.login(username="client2", password="secret")
         session = c.session
         session['key'] = 'value'
         one_hour = 60 * 60
@@ -1317,6 +1431,45 @@ class ViewTests(TestCase):
         c.login(username="yuran", password="secret")
         response = c.get('/list/account/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_account_page_worker(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_account_page_client(self):
+        c = Client()
+        c.login(username="client2", password="secret")
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_account_page_foreman(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the client session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_worker_page_foreman(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the client session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        response = c.get('/list/' + str(cons.id) + '/worker/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("price") > 0, True)
+
+    def test_worker_page(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the client session')
+        response = c.get('/list/' + str(cons.id) + '/worker/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("price") > 0, False)
 
     def test_empty_list(self):
         c = Client()
@@ -1365,6 +1518,86 @@ class ViewTests(TestCase):
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         response = c.get('/list/?category=' + str(cat1.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_combined_categories(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get('/list/?category=' + str(cat1.id) + ',' + str(cat2.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_combined_categories_and_foreman(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        foreman = User(username='foreman')
+        foreman.save()
+        con1.foreman = foreman
+        con3.foreman = foreman
+        con1.save()
+        con3.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        get_str = '/list/?category=' + str(cat1.id) + ',' + str(cat2.id) + '&foreman=' + str(foreman.id)
+        response = c.get(get_str)
+        # response = c.get('/list/?category=' + str(cat1.id) + ',' + str(cat2.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("Number one") > 0, True)
+        self.assertIs(str(response.content).find("Number two") > 0, False)
+        self.assertIs(str(response.content).find("Number three") > 0, True)
+
+    def test_empty_categories(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get('/list/?category=')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_update_construct_category(self):
@@ -1605,12 +1838,22 @@ class ViewTests(TestCase):
         self.assertEqual(len(tras), 1)
 
     def test_call_client_page_client(self):
-        c = Client()
-        c.login(username="client", password="secret")
         cons = Construct()
         cons.save()
+        self.client_user_2.accessible_constructs.add(cons)
+        c = Client()
+        c.login(username="client2", password="secret")
         response = c.get("/list/" + str(cons.id) + "/client/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("price") > 0, True)
+
+    def test_call_client_page_non_accessible(self):
+        cons = Construct()
+        cons.save()
+        c = Client()
+        c.login(username="client2", password="secret")
+        response = c.get("/list/" + str(cons.id) + "/client/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_flows_page_with_invoices(self):
         c = Client()
@@ -1622,7 +1865,7 @@ class ViewTests(TestCase):
         Invoice.add(cons, "George", 102.0, direction='out', status='paid')
         Invoice.add(cons, "Ringo", 123.0, direction='out', status='unpaid')
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_flows_page_with_transactions(self):
         c = Client()
@@ -1663,8 +1906,9 @@ class ViewTests(TestCase):
         construct.save()
         c = Client()
         c.login(username="yuran", password="secret")
-        response = c.get("/list/transaction/submit/?construct=1&amount=100&invoice=29&type=IN")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
 
     def test_login_transaction_submit_form(self):
         c = Client()
@@ -2060,7 +2304,6 @@ class ViewTests(TestCase):
 
 
     def test_update_choice_no_update(self):
-        print("test_update_choice_no_update()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',
@@ -2080,7 +2323,6 @@ class ViewTests(TestCase):
 
 
     def test_update_choice(self):
-        print("test_update_choice()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',
@@ -2100,8 +2342,31 @@ class ViewTests(TestCase):
         self.assertIs(ret == choice_id, True)
 
 
+    def test_update_choice_of_huge_id(self):
+        cells = {'class': '',
+                 'name': 'task_name_to_update',
+                 'notes_txt': 'no notes, actually',
+                 'quantity': '10.5',
+                 'units': 'nr',
+                 'price': '100',
+                 'assigned_to': 'Universe',
+                 'progress': '10%',
+                 'day_start': '2023-04-15',
+                 'days': '365'}      
+        cell_data = {'class': 'Choice', 'cells': cells}
+        construct = Construct()
+        construct.save()
+        choice_id = create_choice(cell_data, construct)
+        while choice_id < 1200:
+            choice_id = create_choice(cell_data, construct)
+        cells['units'] = 'sq. m.'
+        choice_id = '1,200'
+        print("big choice id:", choice_id)
+        ret = update_choice(choice_id, cell_data)
+        self.assertIs(ret == 1200, True)
+
+
     def test_update_choice_big_quantity(self):
-        print("test_update_choice()")
         cells = {'class': '',
                  'name': 'task_name_to_update',
                  'notes_txt': 'no notes, actually',
