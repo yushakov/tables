@@ -11,7 +11,11 @@
         <script defer="defer" src="{% static 'gantt/js/main.js' %}"></script>
         <link href="{% static 'gantt/css/main.css' %}" rel="stylesheet">
     </head>
-    <body><noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <body>
+        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <script>
+            window.construct_id = "{{ construct_id }}";
+        </script>
+        <div id="root"></div>
     </body>
 </html>
