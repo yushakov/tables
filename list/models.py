@@ -734,6 +734,10 @@ class Choice(models.Model):
     main_contract_choice = models.BooleanField(default=False)
 
     @property
+    def construct_name(self):
+        return self.construct.title_text
+
+    @property
     def plan_start_date_formatted(self):
         return self.plan_start_date.strftime("%b %d, %Y")
 

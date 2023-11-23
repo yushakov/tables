@@ -1,13 +1,13 @@
 #!/bin/bash
 ROOT=$(pwd)
 echo "Install in $(pwd)..."
-npm install
+#npm install
 cd node_modules/gantt-task-react
 echo "Install in $(pwd)..."
-npm install
+# npm install
 cd django_gantt
 echo "Install in $(pwd)..."
-npm install
+# npm install
 echo "Build in $(pwd)..."
 npm run build
 
