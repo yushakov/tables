@@ -1,0 +1,4 @@
+Got the content of this folder via npm install gantt-task-react
+Under node_modules/gantt-task-react there is the 'django_gantt' folder, which originally was a copy of 'example' from the following Git repo: https://github.com/MaTeMaTuK/gantt-task-react.git
+
+The new thing is deploy.sh. Run it to build and install the React app files inside the Django 'gantt' app.
