@@ -9,10 +9,10 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ChoiceSerializer
 
     def get_queryset(self):
-        queryset = Choice.objects.all()[:10]
+        queryset = Choice.objects.all()[:1]
         construct_id = int(self.request.GET.get('id', '-1'))
         if construct_id >= 0:
-            queryset = Choice.objects.filter(construct__id=construct_id)  # Adjust the filter to match your model's relation
+            queryset = Choice.objects.filter(construct__id=construct_id).order_by('plan_start_date')
         return queryset
 
 
