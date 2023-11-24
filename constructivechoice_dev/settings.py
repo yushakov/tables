@@ -42,6 +42,7 @@ def ip_addresses():
 
 #ALLOWED_HOSTS = ip_addresses()
 #ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
+PROTOCOL = 'http://'
 ALLOWED_HOSTS = ['127.0.0.1']
 PORT = ':8000'
 
