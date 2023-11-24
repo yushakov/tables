@@ -22,3 +22,7 @@ main_js=$(ls $ROOT/node_modules/gantt-task-react/django_gantt/build/static/js/*.
 main_js_map=$(ls $ROOT/node_modules/gantt-task-react/django_gantt/build/static/js/*.js.map)
 cp $main_js $ROOT/../static/gantt/js/main.js
 cp $main_js_map $ROOT/../static/gantt/js/main.js.map
+
+echo "Copying manifest.."
+manifest=$ROOT/node_modules/gantt-task-react/django_gantt/build/manifest.json
+cp $manifest $ROOT/../static/gantt/manifest.json
