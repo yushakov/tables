@@ -43,6 +43,7 @@ def ip_addresses():
 #ALLOWED_HOSTS = ip_addresses()
 #ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
 ALLOWED_HOSTS = ['127.0.0.1']
+PORT = ':8000'
 
 AUTH_USER_MODEL = "list.User"
 
