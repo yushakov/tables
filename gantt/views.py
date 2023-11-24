@@ -20,10 +20,12 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
 
 @login_required
 def index(request, construct_id):
+    protocol = settings.PROTOCOL
     host = settings.ALLOWED_HOSTS[0]
     port = settings.PORT
     return render(request, 'gantt/index.html',
                   {'construct_id': construct_id,
+                   'protocol': protocol,
                    'host': host,
                    'port': port
                   })

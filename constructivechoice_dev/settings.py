@@ -42,6 +42,7 @@ def ip_addresses():
 
 #ALLOWED_HOSTS = ip_addresses()
 #ALLOWED_HOSTS.append('projects.constructivechoice.co.uk')
+PROTOCOL = 'https://'
 ALLOWED_HOSTS = ['projects.yushakov.com']
 PORT = ''
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
