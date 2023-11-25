@@ -41,7 +41,9 @@ def ip_addresses():
     return ip_list
 
 #ALLOWED_HOSTS = ip_addresses()
+PROTOCOL = 'https://'
 ALLOWED_HOSTS = ['projects.constructivechoice.co.uk']
+PORT = ''
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -54,6 +56,8 @@ AUTH_USER_MODEL = "list.User"
 INSTALLED_APPS = [
     'django_template_maths',
     'list.apps.ListConfig',
+    'gantt.apps.GanttConfig',
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -143,6 +147,9 @@ USE_THOUSAND_SEPARATOR = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 STATIC_ROOT = BASE_DIR / 'static/'
 STATIC_URL = 'static/'
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'gantt/static'),
+# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
