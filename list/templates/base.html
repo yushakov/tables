@@ -13,7 +13,13 @@
 <body>
     <main>
         {% if user.is_authenticated %}
-            <p class="right-align">
+            <style>
+                .right-align {
+                    text-align: right;
+                    margin-bottom: 1rem;
+                }
+            </style>
+            <div class="right-align">
                 {% if session_expiration %}
                     Session expires on: {{ session_expiration }}&nbsp;&nbsp;
                 {% endif %}
@@ -21,12 +27,7 @@
                     <a href="{% url 'list:account' %}" id='account-link'>account</a>&nbsp;&nbsp
                     <a href="{% url 'logout' %}" id='logout-link'>LOGOUT</a>&nbsp;&nbsp
                 {% endif %}
-            </p>
-            <style>
-                .right-align {
-                    float: right;
-                }
-            </style>
+            </div>
         {% endif %}
         {% block content %}
         {% endblock %}
