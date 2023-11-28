@@ -26,7 +26,7 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
             construct = Construct.objects.get(pk=construct_id)
             choices = Choice.objects.filter(construct__id=construct_id).order_by('plan_start_date')
             project_struct = json.loads(construct.struct_json)
-            group_id = construct.title_text
+            group_id = ''
             project = {'id': group_id,
                     'construct_name': '',
                     'name_txt': group_id,
