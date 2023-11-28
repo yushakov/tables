@@ -1,5 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 from list.models import Choice, Construct
 from .serializers import TaskSerializer
 from django.contrib.auth.decorators import login_required
@@ -72,3 +75,30 @@ def index(request, construct_id):
                    'host': host,
                    'port': port
                   })
+
+
+@api_view(['POST'])
+@login_required
+def choices_update(request):
+    tasks_data = request.data.get('choices')
+    for task_data in tasks_data:
+        # Validate each task using the serializer
+        serializer = TaskSerializer(data=task_data)
+        if serializer.is_valid():
+            # If valid, manually update the corresponding Choice instance
+            task_validated_data = serializer.validated_data
+            try:
+                choice_id = int(task_validated_data.get('id'))
+            except:
+                continue
+            choice = Choice.objects.get(id=choice_id)
+            # Update the Choice instance with the validated data
+            choice.plan_start_date = task_validated_data.get('plan_start_date', choice.plan_start_date)
+            choice.plan_days_num = task_validated_data.get('plan_days_num', choice.plan_days_num)
+            choice.progress_percent_num = int(task_validated_data.get('progress_percent_num', choice.progress_percent_num))
+            choice.save()
+        else:
+            # Handle invalid data
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'status': 'success'}, status=status.HTTP_200_OK)
+
