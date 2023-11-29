@@ -17,7 +17,6 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         # TODO: refactor carefully
         # TODO: write tests
-        # TODO: fix the BUG: two consequtive headers on the top break the chart
         queryset = []
         if not self.request.user.is_authenticated:
             get_object_or_404(Construct, pk=-1)
