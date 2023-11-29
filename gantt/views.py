@@ -3,9 +3,10 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from list.models import Choice, Construct
 from .serializers import TaskSerializer
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
 from django.utils import timezone
 import json
@@ -13,6 +14,7 @@ from copy import deepcopy as copy
 
 class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TaskSerializer
+    permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         # TODO: refactor carefully
@@ -61,7 +63,7 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
         return out
 
 
-@login_required
+@user_passes_test(lambda user: user.is_staff)
 def index(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     protocol = settings.PROTOCOL
@@ -77,8 +79,9 @@ def index(request, construct_id):
 
 
 @api_view(['POST'])
-@login_required
+@user_passes_test(lambda user: user.is_staff)
 def choices_update(request):
+    # import pdb; pdb.set_trace()
     tasks_data = request.data.get('choices')
     for task_data in tasks_data:
         # Validate each task using the serializer
