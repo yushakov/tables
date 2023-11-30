@@ -2,6 +2,13 @@
 {% block title %}Submit an Invoice{% endblock %}
 {% block content %}
 {% load static %}
+<script>
+    // same is in modify_invoice.html
+    function add_tag(ths) {
+            var textarea = document.getElementById('id_details_txt');
+            textarea.value = textarea.value + '\n' + ths.innerText;
+    }
+</script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Submit an Invoice</h2>
 <form action="" method="post">
@@ -42,6 +49,11 @@
     <p>
         <b>{{ form.due_date.label_tag }}</b>
         {{ form.due_date }}
+    </p>
+    <p>
+        <a href='#' onclick="add_tag(this)">#salary</a>&nbsp;&nbsp;&nbsp;
+        <a href='#' onclick="add_tag(this)">#materials</a>&nbsp;&nbsp;&nbsp;
+        <a href='#' onclick="add_tag(this)">#labour</a>&nbsp;&nbsp;&nbsp;
     </p>
     <p>
         <b>{{ form.details_txt.label_tag }}</b>

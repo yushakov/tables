@@ -736,6 +736,7 @@ def get_printed_invoice_lines(details, amount=0):
     lines = details.split('\n')
     out = []
     for line_num, line in enumerate(lines):
+        if line.strip().startswith('#'): continue
         fields = [f.strip() for f in line.split(',')]
         time_now = datetime.now().strftime('%d.%m.%Y')
         item = {'quantity': 1, 'description': f'Work done by {time_now}.',
