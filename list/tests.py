@@ -1274,7 +1274,7 @@ class ModelTests(TestCase):
 class ViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
-        self.simple_user = User(username='simple', password='secret', email='simple@domain.com')
+        self.simple_user = User.objects.create_user(username='simple', password='secret', email='simple@domain.com')
         self.simple_user.save()
         self.client_user = User.objects.create_user(username='client',
                 password='secret',

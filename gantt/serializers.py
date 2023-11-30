@@ -2,12 +2,12 @@ from rest_framework import serializers
 from list.models import Choice 
 
 class TaskSerializer(serializers.Serializer):
-    id = serializers.CharField(read_only=True, max_length=500)
+    id = serializers.CharField(required=True, max_length=500)
     construct_name = serializers.CharField(required=False, allow_blank=True, max_length=500)
     name_txt = serializers.CharField(required=False, allow_blank=True, max_length=100)
-    plan_start_date = serializers.DateField()
-    plan_days_num = serializers.IntegerField()
-    progress_percent_num = serializers.IntegerField(read_only=True)
+    plan_start_date = serializers.DateField(required=True)
+    plan_days_num = serializers.IntegerField(required=False)
+    progress_percent_num = serializers.IntegerField(required=True)
     type = serializers.CharField(required=False, max_length=100)
     hide_children = serializers.IntegerField(read_only=True)
     display_order = serializers.IntegerField(read_only=True)

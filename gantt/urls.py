@@ -11,4 +11,5 @@ app_name = 'gantt'
 urlpatterns = [
     path('<int:construct_id>', views.index, name='index'),
     path('api/', include(router.urls)),
+    path('api/choices_update/', views.choices_update, name='choices_update'),
 ]
