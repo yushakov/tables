@@ -6,7 +6,7 @@
 <h2>Unpaid invoices</h2>
 <br>
 <br>
-<b>Total:</b> &#163; {{ total }}<br><br>
+{% comment %} <b>Total:</b> &#163; {{ total }}<br><br> {% endcomment %}
 <table id='construct_list'><tbody>
     {% for subset in subsets %}
         <tr>
@@ -38,6 +38,8 @@
                 <script>
                     function checkUncheck(box, invoice_id, user_id) {
                         const amount_field = document.getElementById('amount_' + invoice_id);
+                        const modified_field = document.getElementById('modified');
+                        modified_field.innerText = 'yes';
                         const amount = Number(amount_field.innerText.replace(/£/, '').trim());
                         const total_amount_field = document.getElementById('user-total-id-' + user_id);
                         const total_amount = Number(total_amount_field.innerText.replace(/£/, '').trim());
@@ -48,13 +50,20 @@
                             total_amount_field.innerText = String(total_amount - amount);
                         }
                     }
+                    window.addEventListener('beforeunload', function (e) {
+                        var modified_text = document.getElementById('modified').innerText;
+                        if(modified_text == 'yes') {
+                            e.preventDefault(); // If you prevent default behavior in Mozilla Firefox
+                            e.returnValue = ''; // Chrome requires returnValue to be set
+                        }
+                    });
                 </script>
                 <td>
                     <input id='box_{{ inv.id }}' type='checkbox' checked onchange="checkUncheck(this, '{{ inv.id }}', '{{ subset.user.id}}')" />
                 </td>
                 <td>
-                    {% if inv.vat %}
-                        (&minus;{{ inv.construct.vat_percent_num }}% VAT)
+                    {% if inv.was_amount %}
+                        (£ {{ inv.was_amount }} &minus; {{ inv.construct.vat_percent_num }}%)
                     {% endif %}
                 </td>
                 <td>
@@ -62,7 +71,7 @@
                 </td>
                 <td>
                 {% if inv.id %}
-                    <a href="{% url 'list:view_invoice' inv.id %}">view</a>
+                    <a href="{% url 'list:view_invoice' inv.id %}" target="_blank">view</a>
                 {% endif %}
                 </td>
                 <td>
@@ -79,8 +88,9 @@
             <td></td>
             <td></td>
             <td><b>Total:</b></td>
-            <td id='user-total-id-{{ subset.user.id }}'>£ {{ subset.amount }}</td>
+            <td>£ <b> <span id='user-total-id-{{ subset.user.id }}'>{{ subset.amount }}</span></b></td>
         </tr>
     {% endfor %}
 </tbody></table>
+<div style="display: none" id="modified">no</div>
 {% endblock %}

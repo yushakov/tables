@@ -1092,9 +1092,8 @@ def invoices_payall(request):
     logger.info(f'*action* USER ACCESS: invoices_payall() by {request.user.username}, {ip}')
     invoices = []
     context = {}
-    direction = 'all'
-    if request.method == "GET":
-        direction = request.GET.get('direction', 'all')
+    direction = 'sort_by_user'
+    if True:
         context['direction'] = direction
         invoices = Invoice.objects.filter(status=Invoice.UNPAID).filter(invoice_type=Transaction.OUTGOING)
         if direction == 'sort_by_user':
@@ -1111,13 +1110,13 @@ def invoices_payall(request):
                                       'due_date': inv.due_date,
                                       'number': inv.number,
                                       'amount': float(inv.amount),
-                                      'vat': None,
+                                      'was_amount': None,
                                       'status': inv.status,
                                       'id': inv.id,
                                       'details_txt': inv.details_txt,
                                       'construct': inv.construct}
                     if inv.details_txt.find('#materials') >= 0:
-                        subset_invoice['vat'] = inv.construct.vat_percent_num
+                        subset_invoice['was_amount'] = inv.amount
                         subset_invoice['amount'] *= 1. - inv.construct.vat_percent_num * 0.01
                     subset['invoices'].append(subset_invoice)
                 subset['amount'] = sum([inv['amount'] for inv in subset['invoices']])
