@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Unpaid invoices{% endblock %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<h2>Invoices for: {{ construct_name }}</h2>
+<br>
+<a href="{% url 'list:invoices_payall' %}?direction=sort_by_user">by users</a>&nbsp;&nbsp;
+<br>
+<b>Direction:</b> {{ direction|upper }}<br><br>
+<b>Total:</b> &#163; {{ total }}<br><br>
+<table id='construct_list'><tbody>
+    {% for inv in invoices %}
+        <tr>
+            <td>
+            {% if inv.id %}
+                <a href="{% url 'admin:list_invoice_change' inv.id%}">
+                    {{ inv.id }}
+                </a>
+            {% endif %}
+            </td>
+            <td>
+                {{ inv.issue_date }}
+            </td>
+            <td>
+            {% if inv.id %}
+                <b>due:</b>
+                {{ inv.due_date }}
+                {% endif %}
+            </td>
+            <td>
+                {{ inv.number }}
+            </td>
+            <td>
+                £ {{ inv.amount }}
+            </td>
+            <td>
+                {{ inv.invoice_type }}
+            </td>
+            <td>
+                {{ inv.status }}
+            </td>
+            <td>
+            {% if inv.id %}
+                <b>from</b> (seller): {{ inv.seller }}
+                {% endif %}
+            </td>
+            <td>
+            {% if inv.id %}
+                <a href="{% url 'list:view_invoice' inv.id %}">view</a>
+            {% endif %}
+            </td>
+            <td>
+                {{ inv.details_txt|truncatechars:25 }}
+            </td>
+        </tr>
+    {% endfor %}
+</tbody></table>
+{% endblock %}
