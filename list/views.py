@@ -1134,7 +1134,8 @@ def invoices_payall(request):
                                         f"{transaction.from_txt} -> " +
                                         f"{transaction.to_txt}, " +
                                         f"£ {transaction.amount}, " +
-                                        f"/{transaction.details_txt}/")
+                                        f"//{transaction.details_txt}// " +
+                                        f"[[ {transaction.construct.title_text} ]]")
     invoices = []
     context = {'new_transactions': new_transactions}
     direction = 'sort_by_user'
