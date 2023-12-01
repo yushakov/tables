@@ -3,7 +3,7 @@
 {% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
-<h2>Invoices for: {{ construct_name }}</h2>
+<h2>Unpaid invoices</h2>
 <br>
 <a href="{% url 'list:invoices_payall' %}?direction=sort_by_user">by users</a>&nbsp;&nbsp;
 <br>
@@ -12,13 +12,6 @@
 <table id='construct_list'><tbody>
     {% for inv in invoices %}
         <tr>
-            <td>
-            {% if inv.id %}
-                <a href="{% url 'admin:list_invoice_change' inv.id%}">
-                    {{ inv.id }}
-                </a>
-            {% endif %}
-            </td>
             <td>
                 {{ inv.issue_date }}
             </td>
@@ -32,18 +25,12 @@
                 {{ inv.number }}
             </td>
             <td>
+            {% if inv.number %}
                 £ {{ inv.amount }}
-            </td>
-            <td>
-                {{ inv.invoice_type }}
+            {% endif %}
             </td>
             <td>
                 {{ inv.status }}
-            </td>
-            <td>
-            {% if inv.id %}
-                <b>from</b> (seller): {{ inv.seller }}
-                {% endif %}
             </td>
             <td>
             {% if inv.id %}
@@ -52,6 +39,11 @@
             </td>
             <td>
                 {{ inv.details_txt|truncatechars:25 }}
+            </td>
+            <td>
+            {% if inv.id %}
+                [{{ inv.construct.title_text }}]
+            {% endif %}
             </td>
         </tr>
     {% endfor %}

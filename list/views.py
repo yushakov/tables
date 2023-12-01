@@ -1101,10 +1101,18 @@ def invoices_payall(request):
             users = [inv.owner for inv in invoices]
             users = sorted(list(set(users)), key=lambda u: u.first_name + u.last_name +u.username)
             subsets = []
-            # import pdb; pdb.set_trace()
             for user in users:
                 subset = [inv for inv in invoices if inv.owner.id == user.id]
                 subset_amount = sum([inv.amount for inv in subset])
+                user_name = {'id': '',
+                            'issue_date': user.first_name + ' ' + user.last_name,
+                            'due_date': user.username,
+                            'number': '',
+                            'amount': '',
+                            'invoices_type': '',
+                            'seller': '',
+                            'details_txt': ''}
+                subsets.append(user_name)
                 subsets += subset
                 user_amount = {'id': '',
                                'issue_date': '',
@@ -1117,7 +1125,7 @@ def invoices_payall(request):
                 subsets.append(user_amount)
             invoices = subsets
             
-    total = 0  # round(sum([inv.amount for inv in invoices]))
+    total = round(sum([inv.amount for inv in invoices if type(inv) != dict]))
     context['invoices'] = invoices
     context['total'] = total
     return render(request, 'list/invoices_payall.html', context)
