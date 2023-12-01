@@ -1106,7 +1106,6 @@ def invoices_payall(request):
             user = User.objects.get(pk=int(uid))
             amounts = {invoice_id: float(request.POST['amount_' + invoice_id].replace(',', '')) for invoice_id in invoice_ids}
             user_total = sum(amounts.values())
-            print(user.first_name, user.last_name, user_total)
             for invoice_id in invoice_ids:
                 invoice = Invoice.objects.get(pk=invoice_id)
                 if invoice.status == Invoice.PAID:
