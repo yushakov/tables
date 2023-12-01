@@ -736,6 +736,7 @@ def get_printed_invoice_lines(details, amount=0):
     lines = details.split('\n')
     out = []
     for line_num, line in enumerate(lines):
+        if line.strip().startswith('#'): continue
         fields = [f.strip() for f in line.split(',')]
         time_now = datetime.now().strftime('%d.%m.%Y')
         item = {'quantity': 1, 'description': f'Work done by {time_now}.',
@@ -1059,9 +1060,7 @@ def transactions(request, construct_id):
 
 
 @login_required
-@permission_required("list.view_construct")
-@permission_required("list.change_construct")
-@permission_required("list.add_construct")
+@user_passes_test(lambda user: user.is_superuser)
 def invoices(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     ip = get_client_ip_address(request)
@@ -1084,3 +1083,41 @@ def invoices(request, construct_id):
     context['invoices'] = invoices
     context['total'] = total
     return render(request, 'list/all_invoices.html', context)
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def invoices_payall(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: invoices_payall() by {request.user.username}, {ip}')
+    invoices = []
+    context = {}
+    direction = 'all'
+    if request.method == "GET":
+        direction = request.GET.get('direction', 'all')
+        context['direction'] = direction
+        invoices = Invoice.objects.filter(status=Invoice.UNPAID).filter(invoice_type=Transaction.OUTGOING)
+        if direction == 'sort_by_user':
+            users = [inv.owner for inv in invoices]
+            users = sorted(list(set(users)), key=lambda u: u.first_name + u.last_name +u.username)
+            subsets = []
+            # import pdb; pdb.set_trace()
+            for user in users:
+                subset = [inv for inv in invoices if inv.owner.id == user.id]
+                subset_amount = sum([inv.amount for inv in subset])
+                subsets += subset
+                user_amount = {'id': '',
+                               'issue_date': '',
+                               'due_date': '',
+                               'number': 'Total:',
+                               'amount': subset_amount,
+                               'invoices_type': '',
+                               'seller': '',
+                               'details_txt': ''}
+                subsets.append(user_amount)
+            invoices = subsets
+            
+    total = 0  # round(sum([inv.amount for inv in invoices]))
+    context['invoices'] = invoices
+    context['total'] = total
+    return render(request, 'list/invoices_payall.html', context)
