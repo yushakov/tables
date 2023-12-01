@@ -5,46 +5,81 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Unpaid invoices</h2>
 <br>
-<a href="{% url 'list:invoices_payall' %}?direction=sort_by_user">by users</a>&nbsp;&nbsp;
 <br>
-<b>Direction:</b> {{ direction|upper }}<br><br>
 <b>Total:</b> &#163; {{ total }}<br><br>
 <table id='construct_list'><tbody>
-    {% for inv in invoices %}
+    {% for subset in subsets %}
         <tr>
             <td>
-                {{ inv.issue_date }}
+                <b>{{ subset.user.first_name }} {{ subset.user.last_name }}</b>
             </td>
-            <td>
-            {% if inv.id %}
-                <b>due:</b>
-                {{ inv.due_date }}
+            <td></td>
+            <td></td>
+            <td></td>
+            <td><b>Pay</b></td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% for inv in subset.invoices %}
+            <tr id='tr_{{ inv.id }}'>
+                <td>
+                    {{ inv.issue_date }}
+                </td>
+                <td>
+                    <b>due:</b>
+                    {{ inv.due_date }}
+                </td>
+                <td>
+                    {{ inv.number }}
+                </td>
+                <td id='amount_{{ inv.id }}'>
+                    £ {{ inv.amount }}
+                </td>
+                <script>
+                    function checkUncheck(box, invoice_id, user_id) {
+                        const amount_field = document.getElementById('amount_' + invoice_id);
+                        const amount = Number(amount_field.innerText.replace(/£/, '').trim());
+                        const total_amount_field = document.getElementById('user-total-id-' + user_id);
+                        const total_amount = Number(total_amount_field.innerText.replace(/£/, '').trim());
+                        if (box.checked) {
+                            total_amount_field.innerText = String(total_amount + amount);
+                        }
+                        else {
+                            total_amount_field.innerText = String(total_amount - amount);
+                        }
+                    }
+                </script>
+                <td>
+                    <input id='box_{{ inv.id }}' type='checkbox' checked onchange="checkUncheck(this, '{{ inv.id }}', '{{ subset.user.id}}')" />
+                </td>
+                <td>
+                    {% if inv.vat %}
+                        (&minus;{{ inv.construct.vat_percent_num }}% VAT)
+                    {% endif %}
+                </td>
+                <td>
+                    {{ inv.status }}
+                </td>
+                <td>
+                {% if inv.id %}
+                    <a href="{% url 'list:view_invoice' inv.id %}">view</a>
                 {% endif %}
-            </td>
-            <td>
-                {{ inv.number }}
-            </td>
-            <td>
-            {% if inv.number %}
-                £ {{ inv.amount }}
-            {% endif %}
-            </td>
-            <td>
-                {{ inv.status }}
-            </td>
-            <td>
-            {% if inv.id %}
-                <a href="{% url 'list:view_invoice' inv.id %}">view</a>
-            {% endif %}
-            </td>
-            <td>
-                {{ inv.details_txt|truncatechars:25 }}
-            </td>
-            <td>
-            {% if inv.id %}
-                [{{ inv.construct.title_text }}]
-            {% endif %}
-            </td>
+                </td>
+                <td>
+                    {{ inv.details_txt|truncatechars:25 }}
+                </td>
+                <td>
+                {% if inv.id %}
+                    [{{ inv.construct.title_text }}]
+                {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td><b>Total:</b></td>
+            <td id='user-total-id-{{ subset.user.id }}'>£ {{ subset.amount }}</td>
         </tr>
     {% endfor %}
 </tbody></table>
