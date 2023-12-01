@@ -7,6 +7,10 @@
 <a href="{% url 'admin:list_construct_add' %}">add a project</a>
 &nbsp;&nbsp;
 <a href="{% url 'admin:index' %}">admin home page</a>
+{% if total.invoices_to_pay > 0 %}
+    &nbsp;&nbsp;
+    <a href="{% url 'list:invoices_payall' %}">Pay Invoices</a> &rarr;
+{% endif %}
 <br><br>
 <b>Categories:</b>&nbsp;
 <a href="{% url 'list:index' %}">all</a>&nbsp;

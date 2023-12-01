@@ -3,10 +3,53 @@
 {% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
-<h2>Unpaid invoices</h2>
+{% if subsets %}
+    <h2>Unpaid invoices</h2>
+{% else %}
+    <h2>No unpaid invoices</h2>
+{% endif %}
+<br>
+&larr; <a href="{% url 'list:index' %}"> Project List</a>
 <br>
 <br>
 {% comment %} <b>Total:</b> &#163; {{ total }}<br><br> {% endcomment %}
+<script>
+    function checkUncheck(box, invoice_id, user_id) {
+        const amount_field = document.getElementById('amount_' + invoice_id);
+        const modified_field = document.getElementById('modified');
+        modified_field.innerText = 'yes';
+        const amount = Number(amount_field.innerText
+                                          .replace(/£/, '')
+                                          .replace(/,/, '')
+                                          .trim());
+        const total_amount_field = document.getElementById('user-total-id-' + user_id);
+        const total_amount = Number(total_amount_field.innerText
+                                                      .replace(/£/, '')
+                                                      .replace(/,/, '')
+                                                      .trim());
+        if (box.checked) {
+            total_amount_field.innerText = String(total_amount + amount);
+        }
+        else {
+            total_amount_field.innerText = String(total_amount - amount);
+        }
+    }
+    window.addEventListener('beforeunload', function (e) {
+        var modified_text = document.getElementById('modified').innerText;
+        if(modified_text == 'yes') {
+            e.preventDefault(); // If you prevent default behavior in Mozilla Firefox
+            e.returnValue = ''; // Chrome requires returnValue to be set
+        }
+    });
+</script>
+{% if new_transactions %}
+    <b>New transactions:</b>
+    {% for tra in new_transactions %}
+        <p>{{ tra }}</p>
+    {% endfor %}
+{% endif %}
+<form action="{% url 'list:invoices_payall' %}" method='POST'>
+{% csrf_token %}
 <table id='construct_list'><tbody>
     {% for subset in subsets %}
         <tr>
@@ -23,6 +66,7 @@
         {% for inv in subset.invoices %}
             <tr id='tr_{{ inv.id }}'>
                 <td>
+                    <input type='hidden' name='invoice_id_{{ inv.id }}' value='{{ inv.id }}' />
                     {{ inv.issue_date }}
                 </td>
                 <td>
@@ -34,32 +78,10 @@
                 </td>
                 <td id='amount_{{ inv.id }}'>
                     £ {{ inv.amount }}
+                    <input type='hidden' name='amount_{{ inv.id }}' value='{{ inv.amount }}' />
                 </td>
-                <script>
-                    function checkUncheck(box, invoice_id, user_id) {
-                        const amount_field = document.getElementById('amount_' + invoice_id);
-                        const modified_field = document.getElementById('modified');
-                        modified_field.innerText = 'yes';
-                        const amount = Number(amount_field.innerText.replace(/£/, '').trim());
-                        const total_amount_field = document.getElementById('user-total-id-' + user_id);
-                        const total_amount = Number(total_amount_field.innerText.replace(/£/, '').trim());
-                        if (box.checked) {
-                            total_amount_field.innerText = String(total_amount + amount);
-                        }
-                        else {
-                            total_amount_field.innerText = String(total_amount - amount);
-                        }
-                    }
-                    window.addEventListener('beforeunload', function (e) {
-                        var modified_text = document.getElementById('modified').innerText;
-                        if(modified_text == 'yes') {
-                            e.preventDefault(); // If you prevent default behavior in Mozilla Firefox
-                            e.returnValue = ''; // Chrome requires returnValue to be set
-                        }
-                    });
-                </script>
                 <td>
-                    <input id='box_{{ inv.id }}' type='checkbox' checked onchange="checkUncheck(this, '{{ inv.id }}', '{{ subset.user.id}}')" />
+                    <input id='box_{{ inv.id }}' name='box_{{ subset.user.id }}_{{ inv.id }}' type='checkbox' value='on' checked onchange="checkUncheck(this, '{{ inv.id }}', '{{ subset.user.id}}')" />
                 </td>
                 <td>
                     {% if inv.was_amount %}
@@ -91,6 +113,12 @@
             <td>£ <b> <span id='user-total-id-{{ subset.user.id }}'>{{ subset.amount }}</span></b></td>
         </tr>
     {% endfor %}
+    <tr>
+    {% if subsets %}
+        <td><input type='submit' value='submit'></td>
+    {% endif %}
+    </tr>
 </tbody></table>
+</form>
 <div style="display: none" id="modified">no</div>
 {% endblock %}
