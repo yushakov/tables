@@ -3,12 +3,30 @@
 {% block content %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
+<script>
+    // same is in submit_invoice.html
+    function add_tag(ths) {
+            var textarea = document.getElementById('id_details_txt');
+            textarea.value = textarea.value + '\n' + ths.innerText;
+    }
+</script>
 <h2>Modify an Invoice</h2>
 <form action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Submit changes">
 </form>
+<div style="display: none" id="hidden-tags">
+    <a href='#' onclick='add_tag(this)'>#salary</a>&nbsp;&nbsp;&nbsp;
+    <a href='#' onclick='add_tag(this)'>#materials</a>&nbsp;&nbsp;&nbsp;
+</div>
+<script>
+    var due_date_element = document.getElementById('id_due_date');
+    const hidden_tags = document.getElementById('hidden-tags');
+    const tags = document.createElement('p');
+    tags.innerHTML = hidden_tags.innerHTML;
+    due_date_element.parentNode.appendChild(tags);
+</script>
 <script>
     // same is in submit_invoice.html
     {% if 'is_staff' in perms %}
@@ -28,11 +46,12 @@
             var lines = Array.from(text.split('\n'));
             var amount = 0.0;
             lines.forEach(function(line) {
-                    var fields = line.split(',');
-                    var quantity = get_number(fields[0]);
-                    var price = get_number(fields[2]);
-                    amount += quantity * price;
-                });
+                if (line.trim()[0] == '#') return;
+                var fields = line.split(',');
+                var quantity = get_number(fields[0]);
+                var price = get_number(fields[2]);
+                amount += quantity * price;
+            });
             return amount;
     }
 

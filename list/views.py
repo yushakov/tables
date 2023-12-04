@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
+from .models import User
 from .models import Category, CLIENT_GROUP_NAME, WORKER_GROUP_NAME
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
@@ -736,6 +737,7 @@ def get_printed_invoice_lines(details, amount=0):
     lines = details.split('\n')
     out = []
     for line_num, line in enumerate(lines):
+        if line.strip().startswith('#'): continue
         fields = [f.strip() for f in line.split(',')]
         time_now = datetime.now().strftime('%d.%m.%Y')
         item = {'quantity': 1, 'description': f'Work done by {time_now}.',
@@ -1059,9 +1061,7 @@ def transactions(request, construct_id):
 
 
 @login_required
-@permission_required("list.view_construct")
-@permission_required("list.change_construct")
-@permission_required("list.add_construct")
+@user_passes_test(lambda user: user.is_superuser)
 def invoices(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     ip = get_client_ip_address(request)
@@ -1084,3 +1084,89 @@ def invoices(request, construct_id):
     context['invoices'] = invoices
     context['total'] = total
     return render(request, 'list/all_invoices.html', context)
+
+
+@login_required
+@user_passes_test(lambda user: user.is_superuser)
+def invoices_payall(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: invoices_payall() by {request.user.username}, {ip}')
+    new_transactions = []
+    if request.method == 'POST':
+        invoice_user_ids = [k.replace('box_', '') for k in request.POST.keys() if k.startswith('box_')]
+        user_dict = {}
+        for uid_iid in invoice_user_ids:
+            user_id, inv_id = uid_iid.split('_')
+            if user_id in user_dict:
+                user_dict[user_id].append(inv_id)
+            else:
+                user_dict[user_id] = [inv_id]
+        amounts = {}
+        for uid, invoice_ids in user_dict.items():
+            user = User.objects.get(pk=int(uid))
+            amounts = {invoice_id: float(request.POST['amount_' + invoice_id].replace(',', '')) for invoice_id in invoice_ids}
+            user_total = sum(amounts.values())
+            for invoice_id in invoice_ids:
+                invoice = Invoice.objects.get(pk=invoice_id)
+                if invoice.status == Invoice.PAID:
+                    continue
+                construct_id = invoice.construct.id
+                receipt_number = getConstructAndMaxId(construct_id, Transaction)
+                date = timezone.now().strftime("%Y-%m-%d")
+                transaction = Transaction(construct=invoice.construct,
+                                          from_txt="Constructive Choice Ltd",  # request.user.company,
+                                          to_txt=user.first_name + user.last_name,
+                                          amount=amounts[invoice_id],
+                                          transaction_type=Transaction.OUTGOING,
+                                          date=date,
+                                          receipt_number=receipt_number,
+                                          details_txt=invoice.details_txt + '\n' + \
+                                                      "#partof " + str(user_total) + \
+                                                      ", " + date)
+                transaction.save()
+                invoice.status = Invoice.PAID
+                invoice.transactions.add(transaction)
+                invoice.save()
+                invtra = transaction.invoicetransaction_set.last()
+                invtra.construct = invoice.construct
+                invtra.save()
+                new_transactions.append(f"{transaction.receipt_number}, " +
+                                        f"{transaction.from_txt} -> " +
+                                        f"{transaction.to_txt}, " +
+                                        f"£ {transaction.amount}, " +
+                                        f"//{transaction.details_txt}// " +
+                                        f"[[ {transaction.construct.title_text} ]]")
+    invoices = []
+    context = {'new_transactions': new_transactions}
+    direction = 'sort_by_user'
+    context['direction'] = direction
+    invoices = Invoice.objects.filter(status=Invoice.UNPAID).filter(invoice_type=Transaction.OUTGOING)
+    if direction == 'sort_by_user':
+        users = [inv.owner for inv in invoices]
+        users = sorted(list(set(users)), key=lambda u: u.first_name + u.last_name +u.username)
+        subsets = []
+        for user in users:
+            subset = {'user': user}
+            subset['invoices'] = []
+            for inv in invoices:
+                if inv.owner.id != user.id:
+                    continue
+                subset_invoice = {'issue_date': inv.issue_date,
+                                    'due_date': inv.due_date,
+                                    'number': inv.number,
+                                    'amount': float(inv.amount),
+                                    'was_amount': None,
+                                    'status': inv.status,
+                                    'id': inv.id,
+                                    'details_txt': inv.details_txt,
+                                    'construct': inv.construct}
+                if inv.details_txt.find('#materials') >= 0:
+                    subset_invoice['was_amount'] = inv.amount
+                    subset_invoice['amount'] *= 1. - inv.construct.vat_percent_num * 0.01
+                subset['invoices'].append(subset_invoice)
+            subset['amount'] = sum([inv['amount'] for inv in subset['invoices']])
+            subsets.append(subset)
+    total = round(sum([s['amount'] for s in subsets]))
+    context['subsets'] = subsets
+    context['total'] = total
+    return render(request, 'list/invoices_payall.html', context)

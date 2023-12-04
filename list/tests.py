@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 import numpy as np
+import re
 import datetime as dt
 import json
 from list.views import check_integrity,   \
@@ -1271,10 +1272,121 @@ class ModelTests(TestCase):
         self.assertIs(invoice.id > 0, True)
 
 
+class PayInvoicesTests(TestCase):
+    def test_page_access(self):
+        User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
+        c = Client()
+        c.login(username="admin", password="secret")
+        response = c.get("/list/invoices/payall/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+    
+    def test_page_access_redirect(self):
+        User.objects.create_user(username='user', password='secret', email='admin@domain.com')
+        c = Client()
+        c.login(username="user", password="secret")
+        response = c.get("/list/invoices/payall/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+    
+    def test_view(self):
+        con1 = make_test_construct("Derby")
+        con1.vat_percent_num = 5
+        con1.save()
+        con2 = make_test_construct("Nottingham")
+        con2.vat_percent_num = 15
+        con2.save()
+        con3 = make_test_construct("Loughborough")
+        con3.vat_percent_num = 20
+        con3.save()
+        con4 = make_test_construct("Southampton")
+        con4.vat_percent_num = 5
+        con4.save()
+        vasya = User.objects.create_user(username="vasya", password="secret")
+        kolya = User.objects.create_user(username="kolya", password="secret")
+        petya = User.objects.create_user(username="petya", password="secret")
+        invoices = {}
+        invoices[1] = Invoice(construct=con1, number='0000', amount=300,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Vasya', owner=vasya, details_txt='#salary')
+        invoices[2] = Invoice(construct=con1, number='0001', amount=3000,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Vasya', owner=vasya, details_txt='bla-bla\n#materials')
+        invoices[3] = Invoice(construct=con2, number='0000', amount=1300,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Vasya', owner=vasya, details_txt='#salary')
+        invoices[4] = Invoice(construct=con3, number='0000', amount=500,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Vasya', owner=vasya, details_txt='#salary')
+        invoices[5] = Invoice(construct=con2, number='0001', amount=400,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Kolya', owner=kolya, details_txt='hey\n#salary')
+        invoices[6] = Invoice(construct=con2, number='0002', amount=4000,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Kolya', owner=kolya, details_txt='hey\n#salary')
+        invoices[7] = Invoice(construct=con3, number='0001', amount=1000,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Kolya', owner=kolya, details_txt='hey\n#materials')
+        invoices[8] = Invoice(construct=con4, number='0001', amount=20000,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Kolya', owner=kolya, details_txt='hey\n#materials')
+        invoices[9] = Invoice(construct=con3, number='0001', amount=700,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Petya', owner=petya, details_txt='hey\n#salary')
+        invoices[10] = Invoice(construct=con3, number='0002', amount=100,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Petya', owner=petya, details_txt='hey\n#salary')
+        invoices[11] = Invoice(construct=con4, number='0001', amount=11700,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Petya', owner=petya, details_txt='hey\n#materials')
+        invoices[12] = Invoice(construct=con3, number='0001', amount=7700.345,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Petya', owner=petya, details_txt='hey\n#salary')
+        for v in invoices.values():
+            v.save()
+        User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
+        c = Client()
+        c.login(username="admin", password="secret")
+        response = c.get("/list/invoices/payall/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(str(response.content).find('4,950') >= 0)
+        self.assertTrue(str(response.content).find('24,200') >= 0)
+        self.assertTrue(str(response.content).find('19,615') >= 0)
+    
+    def test_submit(self):
+        con1 = make_test_construct("Derby")
+        con1.vat_percent_num = 5
+        con1.save()
+        vasya = User.objects.create_user(username="vasya", password="secret")
+        invoices = {}
+        inv1 = Invoice(construct=con1, number='0000', amount=300,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Vasya', owner=vasya, details_txt='#salary')
+        inv2 = Invoice(construct=con1, number='0001', amount=3000,
+                       invoice_type=Transaction.OUTGOING,
+                       seller='Vasya', owner=vasya, details_txt='bla-bla\n#materials')
+        inv1.save(); inv2.save()
+        post_data = {f'invoice_id_{inv1.id}': [f'inv1.id'],
+                     f'amount_{inv1.id}': [f'{inv1.amount}'],
+                     f'box_{vasya.id}_{inv1.id}': ['on'],
+                     f'invoice_id_{inv2.id}': [f'inv2.id'],
+                     f'amount_{inv2.id}': [f'{inv2.amount}'],
+                     f'box_{vasya.id}_{inv2.id}': ['on']}
+        User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
+        c = Client()
+        c.login(username="admin", password="secret")
+        tra_count1 = len(Transaction.objects.all())
+        invtra_count1 = len(InvoiceTransaction.objects.all())
+        response = c.post("/list/invoices/payall/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        tra_count2 = len(Transaction.objects.all())
+        invtra_count2 = len(InvoiceTransaction.objects.all())
+        self.assertEqual(tra_count2, tra_count1 + 2)
+        self.assertEqual(invtra_count2, invtra_count1 + 2)
+
+
 class ViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
-        self.simple_user = User(username='simple', password='secret', email='simple@domain.com')
+        self.simple_user = User.objects.create_user(username='simple', password='secret', email='simple@domain.com')
         self.simple_user.save()
         self.client_user = User.objects.create_user(username='client',
                 password='secret',
