@@ -721,6 +721,7 @@ def gantt(request, construct_id):
 
 def getTransactions(invoice):
     out = list()
+    total = 0
     if invoice.status == 'Paid':
         transactions = invoice.transactions.all()
         for tra in transactions:
@@ -729,8 +730,9 @@ def getTransactions(invoice):
             tra_dict['number'] = tra.receipt_number
             tra_dict['from']   = tra.from_txt
             tra_dict['amount'] = str(tra.amount)
+            total += float(tra.amount)
             out.append(tra_dict)
-    return out
+    return out, total
 
 
 def get_printed_invoice_lines(details, amount=0):
@@ -809,13 +811,20 @@ def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: view_invoice({invoice.id}) by {request.user.username}, {ip}')
-    tra_list = getTransactions(invoice)
+    tra_list, tra_total = getTransactions(invoice)
+    payment_mismatch = False
+    mismatch_delta = 3.0  # pounds
+    if abs(round(invoice.amount) - round(tra_total)) > mismatch_delta:
+        payment_mismatch = True
     user_is_owner = True
     user_invoices = request.user.invoice_set.filter(id=invoice_id)
     if len(user_invoices) == 0:
         user_is_owner = False
     context = {'invoice': invoice,
                'transactions': tra_list,
+               'pay_more': float(invoice.amount) - tra_total,
+               'total_paid': tra_total,
+               'mismatch': payment_mismatch,
                'user_is_owner': user_is_owner,
                'username': request.user.username}
     return render(request, 'list/view_invoice.html', context)

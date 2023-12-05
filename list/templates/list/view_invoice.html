@@ -44,7 +44,13 @@ Please, report to administrators, if you think this is an issue.
 </p>
 <p>
     <label for='id_amount'><b>Amount:</b></label>
-    <span id='id_amount'>&#163; {{ invoice.amount }}</span>
+    <span id='id_amount' style='font-size: larger'>£ {{ invoice.amount }}</span>
+    {% if mismatch %}
+        <script>
+            const amount_field = document.getElementById('id_amount');
+            amount_field.style.color = 'red';
+        </script>
+    {% endif %}
 </p>
 <p>
     <label for='id_inout'><b>In/Out:</b></label>
@@ -68,9 +74,19 @@ Please, report to administrators, if you think this is an issue.
         <span id='id_paid_by'>
             {% for tra in transactions %}
                 <a href="{% url 'list:view_transaction' tra.id %}">{{ tra.number }}</a>:
-                &#163; {{ tra.amount }}. From: {{ tra.from }}.<br />
+                    £ {{ tra.amount }}. From: {{ tra.from }}.<br />
             {% endfor %}
         </span>
+        {% if mismatch %}
+            <label for='id_total_paid'><b>total paid:</b>
+            <span style='color: red; font-weight: bold'>
+                £ {{ total_paid }}</span>.
+            <span id='id_link_to_pay_more'>
+                <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&to={{ invoice.seller }}&amount={{ pay_more }}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">
+                    pay more
+                </a>
+            </span>
+        {% endif %}
     {% else %}
         {% if 'is_staff' in perms %}
             <label for='id_link_to_pay'><b>Link to pay:</b></label>
