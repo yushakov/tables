@@ -1086,6 +1086,11 @@ def invoices(request, construct_id):
             invoices = construct.invoice_set.filter(invoice_type=Transaction.OUTGOING).order_by('issue_date')
         elif direction == 'unpaid':
             invoices = construct.invoice_set.filter(status=Invoice.UNPAID).order_by('issue_date')
+        elif direction == 'mismatch':
+            invoices = construct.invoice_set.all()
+            for inv in invoices:
+                inv.check_mismatch(save=True)
+            invoices = construct.invoice_set.filter(payment_mismatch=True).order_by('issue_date')
         else:
             invoices = construct.invoice_set.all()
     total = round(sum([inv.amount for inv in invoices]))

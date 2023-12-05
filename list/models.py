@@ -1030,16 +1030,28 @@ class Invoice(models.Model):
         invoice.save()
         return invoice
 
-    def save(self, *args, **kwargs):
+    def check_mismatch(self, save=False):
+        ''' Be careful, this function can save to DB'''
         if self.id is not None:
             transactions_total = 0.0
+            payment_mismatch = self.payment_mismatch
             for ta in self.transactions.all():
                 transactions_total += float(ta.amount)
-                if f"{ta.transaction_type}" != f"{self.invoice_type}":
-                    raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
             if self.status == Invoice.PAID:
                 if abs(round(self.amount) - round(transactions_total)) > Invoice.mismatch_delta:
-                    self.payment_mismatch = True
+                    payment_mismatch = True
+                else:
+                    payment_mismatch = False
+            if save and self.payment_mismatch != payment_mismatch:
+                self.save()
+        return self.payment_mismatch
+
+    def save(self, *args, **kwargs):
+        if self.id is not None:
+            for ta in self.transactions.all():
+                if f"{ta.transaction_type}" != f"{self.invoice_type}":
+                    raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
+        self.check_mismatch()
         logger.info(f'*action* Invoice.save(): {self} -::- {self.construct.title_text}')
         self.construct.numbers = {}
         super(Invoice, self).save(*args, **kwargs)
