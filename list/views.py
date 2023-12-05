@@ -813,8 +813,7 @@ def view_invoice(request, invoice_id):
     logger.info(f'*action* USER ACCESS: view_invoice({invoice.id}) by {request.user.username}, {ip}')
     tra_list, tra_total = getTransactions(invoice)
     payment_mismatch = False
-    mismatch_delta = 3.0  # pounds
-    if abs(round(invoice.amount) - round(tra_total)) > mismatch_delta:
+    if abs(round(invoice.amount) - round(tra_total)) > Invoice.mismatch_delta:
         payment_mismatch = True
     user_is_owner = True
     user_invoices = request.user.invoice_set.filter(id=invoice_id)

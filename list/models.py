@@ -946,6 +946,7 @@ class Invoice(models.Model):
         (PAID, 'Paid'),
         (UNPAID, 'Unpaid')
     ]
+    mismatch_delta = 3.0  # pounds (£)
 
     def get_id():
         return get_id(Invoice)
@@ -954,6 +955,7 @@ class Invoice(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     invoice_type = models.CharField(max_length=3, choices=Transaction.TYPES, default=Transaction.INCOMING)
     status = models.CharField(max_length=6, choices=STATUS, default=UNPAID)
+    payment_mismatch = models.BooleanField(default=False)
     issue_date = models.DateField(default=timezone.now)
     due_date = models.DateField(default=timezone.now)
     seller = models.CharField(max_length=100)
@@ -1030,9 +1032,14 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         if self.id is not None:
+            transactions_total = 0.0
             for ta in self.transactions.all():
+                transactions_total += float(ta.amount)
                 if f"{ta.transaction_type}" != f"{self.invoice_type}":
                     raise Exception("ERROR: transactions must be of the same type (IN or OUT) as the corresponding invoice.")
+            if self.status == Invoice.PAID:
+                if abs(round(self.amount) - round(transactions_total)) > Invoice.mismatch_delta:
+                    self.payment_mismatch = True
         logger.info(f'*action* Invoice.save(): {self} -::- {self.construct.title_text}')
         self.construct.numbers = {}
         super(Invoice, self).save(*args, **kwargs)
