@@ -1042,7 +1042,8 @@ class Invoice(models.Model):
                     payment_mismatch = True
                 else:
                     payment_mismatch = False
-            if save and self.payment_mismatch != payment_mismatch:
+            self.payment_mismatch = payment_mismatch
+            if save:
                 self.save()
         return self.payment_mismatch
 

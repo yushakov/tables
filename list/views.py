@@ -812,9 +812,7 @@ def view_invoice(request, invoice_id):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: view_invoice({invoice.id}) by {request.user.username}, {ip}')
     tra_list, tra_total = getTransactions(invoice)
-    payment_mismatch = False
-    if abs(round(invoice.amount) - round(tra_total)) > Invoice.mismatch_delta:
-        payment_mismatch = True
+    payment_mismatch = invoice.check_mismatch(save=True)
     user_is_owner = True
     user_invoices = request.user.invoice_set.filter(id=invoice_id)
     if len(user_invoices) == 0:
