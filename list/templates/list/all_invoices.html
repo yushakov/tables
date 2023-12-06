@@ -9,6 +9,7 @@
 <a href="{% url 'list:invoices' construct_id %}?direction=in">incoming</a>&nbsp;&nbsp;
 <a href="{% url 'list:invoices' construct_id %}?direction=out">outgoing</a>&nbsp;&nbsp;
 <a href="{% url 'list:invoices' construct_id %}?direction=unpaid">unpaid</a>&nbsp;&nbsp;
+<a href="{% url 'list:invoices' construct_id %}?direction=mismatch">payment mismatch</a>&nbsp;&nbsp;
 &nbsp; &nbsp; &nbsp;
 <a href="{% url 'list:submit_invoice' %}?construct={{ construct_id }}">add an invoice</a>
 <br>
