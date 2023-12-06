@@ -1,6 +1,7 @@
 from django.forms import ModelForm, ModelMultipleChoiceField
 from .models import Transaction, Invoice
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
 
 
 class InvoiceSubmitForm(ModelForm):
@@ -24,7 +25,7 @@ class InvoiceSubmitForm(ModelForm):
 
 
 class TransactionSubmitForm(ModelForm):
-    invoice_objects = Invoice.objects.filter(status=Invoice.UNPAID)
+    invoice_objects = Invoice.objects.filter(Q(status=Invoice.UNPAID) | Q(payment_mismatch=True))
     invoices = ModelMultipleChoiceField(queryset=invoice_objects, required=False)
     class Meta:
         model = Transaction

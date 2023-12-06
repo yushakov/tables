@@ -2022,6 +2022,58 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
 
+    def test_transaction_pay_mismatch(self):
+            construct = make_test_construct()
+            construct.save()
+            invoice = Invoice.add(construct, "John Smith", 100.0, direction='out')
+            transac = Transaction.add(construct, 90, direction='out')
+            invoice.transactions.add(transac.id)
+            invoice.status = Invoice.PAID
+            invoice.save()
+            c = Client()
+            c.login(username="yuran", password="secret")
+            request = f"/list/invoice/{str(invoice.id)}/"
+            response = c.get(request)
+            self.assertEqual(response.status_code, STATUS_CODE_OK)
+            self.assertTrue(str(response.content).find('Paid By') >= 0)
+            self.assertTrue(str(response.content).find('pay more') >= 0)
+
+    def test_transaction_pay_match(self):
+            construct = make_test_construct()
+            construct.save()
+            invoice = Invoice.add(construct, "John Smith", 100.0, direction='out')
+            transac1 = Transaction.add(construct, 90, direction='out')
+            transac2 = Transaction.add(construct, 10, direction='out')
+            invoice.transactions.add(transac1.id)
+            invoice.transactions.add(transac2.id)
+            invoice.status = Invoice.PAID
+            invoice.save()
+            c = Client()
+            c.login(username="yuran", password="secret")
+            request = f"/list/invoice/{str(invoice.id)}/"
+            response = c.get(request)
+            self.assertEqual(response.status_code, STATUS_CODE_OK)
+            self.assertTrue(str(response.content).find('Paid By') >= 0)
+            self.assertTrue(str(response.content).find('pay more') < 0)
+
+    def test_transaction_multpay_mismatch(self):
+            construct = make_test_construct()
+            construct.save()
+            invoice = Invoice.add(construct, "John Smith", 100.0, direction='out')
+            transac1 = Transaction.add(construct, 80, direction='out')
+            transac2 = Transaction.add(construct, 10, direction='out')
+            invoice.transactions.add(transac1.id)
+            invoice.transactions.add(transac2.id)
+            invoice.status = Invoice.PAID
+            invoice.save()
+            c = Client()
+            c.login(username="yuran", password="secret")
+            request = f"/list/invoice/{str(invoice.id)}/"
+            response = c.get(request)
+            self.assertEqual(response.status_code, STATUS_CODE_OK)
+            self.assertTrue(str(response.content).find('Paid By') >= 0)
+            self.assertTrue(str(response.content).find('pay more') >= 0)
+
     def test_login_transaction_submit_form(self):
         c = Client()
         response = c.get("/list/transaction/submit/")

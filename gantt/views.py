@@ -11,6 +11,10 @@ from django.conf import settings
 from django.utils import timezone
 import json
 from copy import deepcopy as copy
+import logging
+from list.views import get_client_ip_address
+
+logger = logging.getLogger('django')
 
 class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TaskSerializer
@@ -65,6 +69,8 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
 
 @user_passes_test(lambda user: user.is_staff)
 def index(request, construct_id):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: gantt.index(construct.id={construct_id}) by {request.user.username} --::-- ip: {ip}')
     construct = get_object_or_404(Construct, pk=construct_id)
     protocol = settings.PROTOCOL
     host = settings.ALLOWED_HOSTS[0]
