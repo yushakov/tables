@@ -2037,6 +2037,7 @@ class ViewTests(TestCase):
             self.assertEqual(response.status_code, STATUS_CODE_OK)
             self.assertTrue(str(response.content).find('Paid By') >= 0)
             self.assertTrue(str(response.content).find('pay more') >= 0)
+            self.assertTrue(invoice.payment_mismatch)
 
     def test_transaction_pay_match(self):
             construct = make_test_construct()
