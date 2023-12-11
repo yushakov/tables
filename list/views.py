@@ -1154,7 +1154,7 @@ def invoices_payall(request):
     invoices = Invoice.objects.filter(status=Invoice.UNPAID).filter(invoice_type=Transaction.OUTGOING)
     if direction == 'sort_by_user':
         users = [inv.owner for inv in invoices]
-        users = sorted(list(set(users)), key=lambda u: u.first_name + u.last_name +u.username)
+        users = sorted(list(set(users)), key=lambda u: u.first_name + u.last_name + u.username)
         subsets = []
         for user in users:
             subset = {'user': user}
