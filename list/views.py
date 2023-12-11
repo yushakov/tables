@@ -1166,16 +1166,18 @@ def invoices_payall(request):
                                     'due_date': inv.due_date,
                                     'number': inv.number,
                                     'amount': float(inv.amount),
-                                    'was_amount': None,
+                                    'was_amount': float(inv.amount),
+                                    'cis_percent': Invoice.cis_percent,
                                     'status': inv.status,
                                     'id': inv.id,
                                     'details_txt': inv.details_txt,
                                     'construct': inv.construct}
-                if inv.details_txt.find('#materials') >= 0:
-                    subset_invoice['was_amount'] = inv.amount
-                    subset_invoice['amount'] *= 1. - inv.construct.vat_percent_num * 0.01
+                if inv.details_txt.find('#materials') < 0:
+                    subset_invoice['amount'] *= 1. - Invoice.cis_percent * 0.01
                 subset['invoices'].append(subset_invoice)
-            subset['amount'] = sum([inv['amount'] for inv in subset['invoices']])
+            subset['amount'] = round(sum([inv['amount'] for inv in subset['invoices']]))
+            subset['total'] = round(sum([inv['was_amount'] for inv in subset['invoices']]))
+            subset['cis'] = round(sum([float(inv['was_amount']) - float(inv['amount']) for inv in subset['invoices']]))
             subsets.append(subset)
     total = round(sum([s['amount'] for s in subsets]))
     context['subsets'] = subsets

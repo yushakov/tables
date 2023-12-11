@@ -84,8 +84,8 @@
                     <input id='box_{{ inv.id }}' name='box_{{ subset.user.id }}_{{ inv.id }}' type='checkbox' value='on' checked onchange="checkUncheck(this, '{{ inv.id }}', '{{ subset.user.id}}')" />
                 </td>
                 <td>
-                    {% if inv.was_amount %}
-                        (£ {{ inv.was_amount }} &minus; {{ inv.construct.vat_percent_num }}%)
+                    {% if inv.was_amount > inv.amount %}
+                        (£ {{ inv.was_amount }} &minus; {{ inv.cis_percent }}%)
                     {% endif %}
                 </td>
                 <td>
@@ -110,6 +110,18 @@
             <td></td>
             <td></td>
             <td><b>Total:</b></td>
+            <td>£ {{ subset.total }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td><b>CIS:</b></td>
+            <td>£ {{ subset.cis }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td><b>To pay:</b></td>
             <td>£ <b> <span id='user-total-id-{{ subset.user.id }}'>{{ subset.amount }}</span></b></td>
         </tr>
     {% endfor %}

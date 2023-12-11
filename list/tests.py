@@ -1341,15 +1341,16 @@ class PayInvoicesTests(TestCase):
                        invoice_type=Transaction.OUTGOING,
                        seller='Petya', owner=petya, details_txt='hey\n#salary')
         for v in invoices.values():
+            print(v, v.details_txt)
             v.save()
         User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
         c = Client()
         c.login(username="admin", password="secret")
         response = c.get("/list/invoices/payall/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
-        self.assertTrue(str(response.content).find('4,950') >= 0)
-        self.assertTrue(str(response.content).find('24,200') >= 0)
-        self.assertTrue(str(response.content).find('19,615') >= 0)
+        self.assertTrue(str(response.content).find('4,680') >= 0)
+        self.assertTrue(str(response.content).find('24,520') >= 0)
+        self.assertTrue(str(response.content).find('18,500') >= 0)
     
     def test_submit(self):
         con1 = make_test_construct("Derby")
