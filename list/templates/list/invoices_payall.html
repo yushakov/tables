@@ -28,10 +28,10 @@
                                                       .replace(/,/, '')
                                                       .trim());
         if (box.checked) {
-            total_amount_field.innerText = String(total_amount + amount);
+            total_amount_field.innerText = (total_amount + amount).toFixed(2);
         }
         else {
-            total_amount_field.innerText = String(total_amount - amount);
+            total_amount_field.innerText = (total_amount - amount).toFixed(2);
         }
     }
     window.addEventListener('beforeunload', function (e) {
