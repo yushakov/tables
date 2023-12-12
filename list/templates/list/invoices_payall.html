@@ -14,6 +14,17 @@
 <br>
 {% comment %} <b>Total:</b> &#163; {{ total }}<br><br> {% endcomment %}
 <script>
+    function switchAll(check) {
+        const boxes = document.querySelectorAll('input[type="checkbox"]');
+        boxes.forEach(function (box) {
+            if (box.checked === check) return;
+            const [prefix, user_id, invoice_id] = box.name.split('_');
+            console.log(user_id, invoice_id);
+            box.checked = check;
+            checkUncheck(box, invoice_id, user_id);
+        });
+    }
+
     function checkUncheck(box, invoice_id, user_id) {
         const amount_field = document.getElementById('amount_' + invoice_id);
         const modified_field = document.getElementById('modified');
@@ -48,6 +59,11 @@
         <p>{{ tra }}</p>
     {% endfor %}
 {% endif %}
+<center>
+    <a href='#' onclick='switchAll(false); return false'>Uncheck All</a>&nbsp;|&nbsp;
+    <a href='#' onclick='switchAll(true); return false'>Check All</a>
+</center>
+<br /><br />
 <form action="{% url 'list:invoices_payall' %}" method='POST'>
 {% csrf_token %}
 <table id='construct_list'><tbody>
