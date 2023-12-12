@@ -1117,7 +1117,7 @@ def invoices_payall(request):
         amounts = {}
         for uid, invoice_ids in user_dict.items():
             user = User.objects.get(pk=int(uid))
-            amounts = {invoice_id: float(request.POST['amount_' + invoice_id].replace(',', '')) for invoice_id in invoice_ids}
+            amounts = {invoice_id: float(request.POST['full_amount_' + invoice_id].replace(',', '')) for invoice_id in invoice_ids}
             user_total = sum(amounts.values())
             for invoice_id in invoice_ids:
                 invoice = Invoice.objects.get(pk=invoice_id)

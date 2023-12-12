@@ -1355,8 +1355,10 @@ class PayInvoicesTests(TestCase):
         con1 = make_test_construct("Derby")
         con1.vat_percent_num = 5
         con1.save()
+        User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
+        c = Client()
+        c.login(username="admin", password="secret")
         vasya = User.objects.create_user(username="vasya", password="secret")
-        invoices = {}
         inv1 = Invoice(construct=con1, number='0000', amount=300,
                        invoice_type=Transaction.OUTGOING,
                        seller='Vasya', owner=vasya, details_txt='#salary')
@@ -1364,15 +1366,19 @@ class PayInvoicesTests(TestCase):
                        invoice_type=Transaction.OUTGOING,
                        seller='Vasya', owner=vasya, details_txt='bla-bla\n#materials')
         inv1.save(); inv2.save()
-        post_data = {f'invoice_id_{inv1.id}': [f'inv1.id'],
-                     f'amount_{inv1.id}': [f'{inv1.amount}'],
-                     f'box_{vasya.id}_{inv1.id}': ['on'],
-                     f'invoice_id_{inv2.id}': [f'inv2.id'],
-                     f'amount_{inv2.id}': [f'{inv2.amount}'],
-                     f'box_{vasya.id}_{inv2.id}': ['on']}
-        User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
-        c = Client()
-        c.login(username="admin", password="secret")
+        response = c.get("/list/invoices/payall/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        # import pdb; pdb.set_trace()
+        context_inv1 = response.context['subsets'][0]['invoices'][0]
+        context_inv2 = response.context['subsets'][0]['invoices'][1]
+        post_data = {f'invoice_id_{context_inv1["id"]}': [f'{context_inv1["id"]}'],
+                     f'amount_{context_inv1["id"]}': [f'{context_inv1["amount"]}'],
+                     f'full_amount_{context_inv1["id"]}': [f'{context_inv1["was_amount"]}'],
+                     f'box_{vasya.id}_{context_inv1["id"]}': ['on'],
+                     f'invoice_id_{context_inv2["id"]}': [f'{context_inv2["id"]}'],
+                     f'amount_{context_inv2["id"]}': [f'{context_inv2["amount"]}'],
+                     f'full_amount_{context_inv2["id"]}': [f'{context_inv2["was_amount"]}'],
+                     f'box_{vasya.id}_{context_inv2["id"]}': ['on']}
         tra_count1 = len(Transaction.objects.all())
         invtra_count1 = len(InvoiceTransaction.objects.all())
         outcome1 = con1.outcome()
