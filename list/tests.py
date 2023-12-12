@@ -1375,12 +1375,16 @@ class PayInvoicesTests(TestCase):
         c.login(username="admin", password="secret")
         tra_count1 = len(Transaction.objects.all())
         invtra_count1 = len(InvoiceTransaction.objects.all())
+        outcome1 = con1.outcome()
         response = c.post("/list/invoices/payall/", post_data)
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         tra_count2 = len(Transaction.objects.all())
         invtra_count2 = len(InvoiceTransaction.objects.all())
+        con1.numbers = {}
+        outcome2 = con1.outcome()
         self.assertEqual(tra_count2, tra_count1 + 2)
         self.assertEqual(invtra_count2, invtra_count1 + 2)
+        self.assertEqual(outcome2 - outcome1, 3300)
 
 
 class ViewTests(TestCase):
