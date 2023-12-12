@@ -1341,7 +1341,6 @@ class PayInvoicesTests(TestCase):
                        invoice_type=Transaction.OUTGOING,
                        seller='Petya', owner=petya, details_txt='hey\n#salary')
         for v in invoices.values():
-            print(v, v.details_txt)
             v.save()
         User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
         c = Client()
@@ -1435,7 +1434,7 @@ class ViewTests(TestCase):
         response = c.get("/list/" + str(cons.id) + '/')
         session = c.session
         updated_date = session.get_expiry_date()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
 
     def test_actions_page(self):
@@ -1530,7 +1529,7 @@ class ViewTests(TestCase):
         response = c.get("/list/" + str(cons.id) + '/client/')
         session = c.session
         updated_date = session.get_expiry_date()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
 
     def test_login_page_list(self):
@@ -1684,7 +1683,6 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         get_str = '/list/?category=' + str(cat1.id) + ',' + str(cat2.id) + '&foreman=' + str(foreman.id)
         response = c.get(get_str)
-        # response = c.get('/list/?category=' + str(cat1.id) + ',' + str(cat2.id))
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertIs(str(response.content).find("Number one") > 0, True)
         self.assertIs(str(response.content).find("Number two") > 0, False)
@@ -1780,7 +1778,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/client/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_login_page_flows(self):
         c = Client()
@@ -1788,7 +1786,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/flows/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_login_page_transactions(self):
         c = Client()
@@ -1796,7 +1794,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/transactions/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_transactions_page_accessed(self):
         c = Client()
@@ -1804,7 +1802,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/transactions/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_transactions_page_no_access(self):
         c = Client()
@@ -1812,7 +1810,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/transactions/')
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_login_page_gantt(self):
         c = Client()
@@ -1820,7 +1818,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/gantt/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_call_flows_page(self):
         c = Client()
@@ -1828,7 +1826,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_call_flows_page_simple_user(self):
         c = Client()
@@ -1836,7 +1834,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_call_gantt_page_simple_user(self):
         c = Client()
@@ -1844,7 +1842,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/gantt/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_call_client_page_simple_user(self):
         c = Client()
@@ -1852,7 +1850,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/client/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_view_invoice(self):
         c = Client()
@@ -1863,7 +1861,7 @@ class ViewTests(TestCase):
         inv.details_txt = 'Description on this invoice'
         inv.save()
         response = c.get("/list/invoice/" + str(inv.id) + "/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_view_transaction(self):
         c = Client()
@@ -1874,7 +1872,7 @@ class ViewTests(TestCase):
         ta.details_txt = 'Description on this transaction'
         ta.save()
         response = c.get("/list/transaction/" + str(ta.id) + "/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_transaction_bunch_page_access(self):
         c = Client()
@@ -1990,7 +1988,7 @@ class ViewTests(TestCase):
         Transaction.add(cons, 102.0, direction='out', details='-')
         Transaction.add(cons, 123.0, direction='out', details='SalAry')
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_flows_page_with_invoices_and_transactions(self):
         c = Client()
@@ -2006,13 +2004,13 @@ class ViewTests(TestCase):
         Transaction.add(cons, 102.0, direction='out', details='-')
         Transaction.add(cons, 123.0, direction='out', details='SalAry')
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_open_transaction_submit_form(self):
         c = Client()
         c.login(username="yuran", password="secret")
         response = c.get("/list/transaction/submit/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_open_transaction_submit_form_populated(self):
         construct = Construct()
@@ -2020,7 +2018,7 @@ class ViewTests(TestCase):
         c = Client()
         c.login(username="yuran", password="secret")
         response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
 
     def test_transaction_pay_mismatch(self):
@@ -2079,7 +2077,7 @@ class ViewTests(TestCase):
     def test_login_transaction_submit_form(self):
         c = Client()
         response = c.get("/list/transaction/submit/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_submit_transaction_form(self):
         c = Client()
@@ -2092,7 +2090,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
         
     def test_login_submit_transaction_form(self):
         c = Client()
@@ -2104,7 +2102,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
         
     def test_submit_transaction_form_with_invoice(self):
         c = Client()
@@ -2119,7 +2117,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_submit_transaction_form_with_invoice_and_get_InvoiceTransaction_object(self):
         c = Client()
@@ -2148,7 +2146,7 @@ class ViewTests(TestCase):
                 'invoices': [str(invoice.id)],
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_submit_transaction_form_with_two_invoices(self):
         c = Client()
@@ -2164,7 +2162,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_submit_transaction_form_with_two_invoices_and_get_two_InvoiceTransaction_objects(self):
         c = Client()
