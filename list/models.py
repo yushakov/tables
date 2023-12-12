@@ -1038,8 +1038,6 @@ class Invoice(models.Model):
             payment_mismatch = self.payment_mismatch
             for ta in self.transactions.all():
                 transactions_total += float(ta.amount)
-            if self.details_txt.find('#salary') >= 0:
-                transactions_total /= (1.0 - Invoice.cis_percent * 0.01)
             if self.status == Invoice.PAID:
                 if abs(round(self.amount) - round(transactions_total)) > Invoice.mismatch_delta:
                     payment_mismatch = True
