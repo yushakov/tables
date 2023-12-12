@@ -947,6 +947,7 @@ class Invoice(models.Model):
         (UNPAID, 'Unpaid')
     ]
     mismatch_delta = 3.0  # pounds (£)
+    cis_percent = 20.0
 
     def get_id():
         return get_id(Invoice)

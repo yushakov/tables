@@ -14,26 +14,53 @@
 <br>
 {% comment %} <b>Total:</b> &#163; {{ total }}<br><br> {% endcomment %}
 <script>
+    window.cis_percent = "{{ cis_percent }}";
+
+    function switchAll(check) {
+        const boxes = document.querySelectorAll('input[type="checkbox"]');
+        boxes.forEach(function (box) {
+            if (box.checked === check) return;
+            const [prefix, user_id, invoice_id] = box.name.split('_');
+            box.checked = check;
+            checkUncheck(box, invoice_id, user_id);
+        });
+    }
+
+    function getNumber(pound_str) {
+        return Number(pound_str.replace(/£/, '')
+                               .replace(/,/, '')
+                               .trim())
+    }
+
     function checkUncheck(box, invoice_id, user_id) {
-        const amount_field = document.getElementById('amount_' + invoice_id);
         const modified_field = document.getElementById('modified');
         modified_field.innerText = 'yes';
-        const amount = Number(amount_field.innerText
-                                          .replace(/£/, '')
-                                          .replace(/,/, '')
-                                          .trim());
+        const amount_field = document.getElementById('amount_' + invoice_id);
+        const amount = getNumber(amount_field.innerText);
+        const topay_amount_field = document.getElementById('user-topay-id-' + user_id);
+        const topay_amount = getNumber(topay_amount_field.innerText);
+        const full_amount_field = document.getElementById('full_amount_' + invoice_id);
+        const full_amount = getNumber(full_amount_field.value);
         const total_amount_field = document.getElementById('user-total-id-' + user_id);
-        const total_amount = Number(total_amount_field.innerText
-                                                      .replace(/£/, '')
-                                                      .replace(/,/, '')
-                                                      .trim());
+        const total_amount = getNumber(total_amount_field.innerText);
+        const cis_percent = getNumber(window.cis_percent);
+        const cis_total_field = document.getElementById('user-cis-id-' + user_id);
+        const cis_total_amount = getNumber(cis_total_field.innerText);
+        const cis_invoice_amount_field = document.getElementById('cis_amount_' + invoice_id);
+        const cis_invoice_amount = getNumber(cis_invoice_amount_field.value);
+
         if (box.checked) {
-            total_amount_field.innerText = String(total_amount + amount);
+            topay_amount_field.innerText = (topay_amount + amount).toFixed(2);
+            total_amount_field.innerText = (total_amount + full_amount).toFixed(2);
+            cis_total_field.innerText = (cis_total_amount + cis_invoice_amount).toFixed(2);
         }
         else {
-            total_amount_field.innerText = String(total_amount - amount);
+            topay_amount_field.innerText = (topay_amount - amount).toFixed(2);
+            total_amount_field.innerText = (total_amount - full_amount).toFixed(2);
+            cis_total_field.innerText = (cis_total_amount - cis_invoice_amount).toFixed(2);
         }
     }
+
     window.addEventListener('beforeunload', function (e) {
         var modified_text = document.getElementById('modified').innerText;
         if(modified_text == 'yes') {
@@ -48,6 +75,11 @@
         <p>{{ tra }}</p>
     {% endfor %}
 {% endif %}
+<center>
+    <a href='#' onclick='switchAll(false); return false'>Uncheck All</a>&nbsp;&nbsp;|&nbsp;
+    <a href='#' onclick='switchAll(true); return false'>Check All</a>
+</center>
+<br /><br />
 <form action="{% url 'list:invoices_payall' %}" method='POST'>
 {% csrf_token %}
 <table id='construct_list'><tbody>
@@ -84,9 +116,11 @@
                     <input id='box_{{ inv.id }}' name='box_{{ subset.user.id }}_{{ inv.id }}' type='checkbox' value='on' checked onchange="checkUncheck(this, '{{ inv.id }}', '{{ subset.user.id}}')" />
                 </td>
                 <td>
-                    {% if inv.was_amount %}
-                        (£ {{ inv.was_amount }} &minus; {{ inv.construct.vat_percent_num }}%)
+                    {% if inv.was_amount > inv.amount %}
+                        (£ {{ inv.was_amount }} &minus; {{ cis_percent }}%)
                     {% endif %}
+                    <input type='hidden' id='full_amount_{{ inv.id }}' name='full_amount_{{ inv.id }}' value='{{ inv.was_amount }}' />
+                    <input type='hidden' id='cis_amount_{{ inv.id }}' name='cis_amount_{{ inv.id }}' value='{{ inv.cis_amount }}' />
                 </td>
                 <td>
                     {{ inv.status }}
@@ -110,7 +144,19 @@
             <td></td>
             <td></td>
             <td><b>Total:</b></td>
-            <td>£ <b> <span id='user-total-id-{{ subset.user.id }}'>{{ subset.amount }}</span></b></td>
+            <td>£ <span id='user-total-id-{{ subset.user.id }}'>{{ subset.total }}</span></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td><b>CIS:</b></td>
+            <td>£ <span id='user-cis-id-{{ subset.user.id }}'>{{ subset.cis }}</span></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td><b>To pay:</b></td>
+            <td>£ <b> <span id='user-topay-id-{{ subset.user.id }}'>{{ subset.amount }}</span></b></td>
         </tr>
     {% endfor %}
     <tr>

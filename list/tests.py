@@ -1347,16 +1347,18 @@ class PayInvoicesTests(TestCase):
         c.login(username="admin", password="secret")
         response = c.get("/list/invoices/payall/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
-        self.assertTrue(str(response.content).find('4,950') >= 0)
-        self.assertTrue(str(response.content).find('24,200') >= 0)
-        self.assertTrue(str(response.content).find('19,615') >= 0)
+        self.assertTrue(str(response.content).find('4,680') >= 0)
+        self.assertTrue(str(response.content).find('24,520') >= 0)
+        self.assertTrue(str(response.content).find('18,500') >= 0)
     
     def test_submit(self):
         con1 = make_test_construct("Derby")
         con1.vat_percent_num = 5
         con1.save()
+        User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
+        c = Client()
+        c.login(username="admin", password="secret")
         vasya = User.objects.create_user(username="vasya", password="secret")
-        invoices = {}
         inv1 = Invoice(construct=con1, number='0000', amount=300,
                        invoice_type=Transaction.OUTGOING,
                        seller='Vasya', owner=vasya, details_txt='#salary')
@@ -1364,23 +1366,31 @@ class PayInvoicesTests(TestCase):
                        invoice_type=Transaction.OUTGOING,
                        seller='Vasya', owner=vasya, details_txt='bla-bla\n#materials')
         inv1.save(); inv2.save()
-        post_data = {f'invoice_id_{inv1.id}': [f'inv1.id'],
-                     f'amount_{inv1.id}': [f'{inv1.amount}'],
-                     f'box_{vasya.id}_{inv1.id}': ['on'],
-                     f'invoice_id_{inv2.id}': [f'inv2.id'],
-                     f'amount_{inv2.id}': [f'{inv2.amount}'],
-                     f'box_{vasya.id}_{inv2.id}': ['on']}
-        User.objects.create_superuser(username='admin', password='secret', email='admin@domain.com')
-        c = Client()
-        c.login(username="admin", password="secret")
+        response = c.get("/list/invoices/payall/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        # import pdb; pdb.set_trace()
+        context_inv1 = response.context['subsets'][0]['invoices'][0]
+        context_inv2 = response.context['subsets'][0]['invoices'][1]
+        post_data = {f'invoice_id_{context_inv1["id"]}': [f'{context_inv1["id"]}'],
+                     f'amount_{context_inv1["id"]}': [f'{context_inv1["amount"]}'],
+                     f'full_amount_{context_inv1["id"]}': [f'{context_inv1["was_amount"]}'],
+                     f'box_{vasya.id}_{context_inv1["id"]}': ['on'],
+                     f'invoice_id_{context_inv2["id"]}': [f'{context_inv2["id"]}'],
+                     f'amount_{context_inv2["id"]}': [f'{context_inv2["amount"]}'],
+                     f'full_amount_{context_inv2["id"]}': [f'{context_inv2["was_amount"]}'],
+                     f'box_{vasya.id}_{context_inv2["id"]}': ['on']}
         tra_count1 = len(Transaction.objects.all())
         invtra_count1 = len(InvoiceTransaction.objects.all())
+        outcome1 = con1.outcome()
         response = c.post("/list/invoices/payall/", post_data)
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         tra_count2 = len(Transaction.objects.all())
         invtra_count2 = len(InvoiceTransaction.objects.all())
+        con1.numbers = {}
+        outcome2 = con1.outcome()
         self.assertEqual(tra_count2, tra_count1 + 2)
         self.assertEqual(invtra_count2, invtra_count1 + 2)
+        self.assertEqual(outcome2 - outcome1, 3300)
 
 
 class ViewTests(TestCase):
@@ -1434,7 +1444,7 @@ class ViewTests(TestCase):
         response = c.get("/list/" + str(cons.id) + '/')
         session = c.session
         updated_date = session.get_expiry_date()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
 
     def test_actions_page(self):
@@ -1529,7 +1539,7 @@ class ViewTests(TestCase):
         response = c.get("/list/" + str(cons.id) + '/client/')
         session = c.session
         updated_date = session.get_expiry_date()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertAlmostEqual(updated_date - timezone.now(), timedelta(days=1), delta=timedelta(seconds=5))
 
     def test_login_page_list(self):
@@ -1559,11 +1569,41 @@ class ViewTests(TestCase):
     def test_account_page_foreman(self):
         c = Client()
         c.login(username="worker2", password="secret")
-        cons = make_test_construct('Test construct for the client session')
+        cons = make_test_construct('Test construct for the foreman session')
         cons.foreman = self.worker_user_2
         cons.save()
+        cat = Category(name='active', priority=1)
+        cat.save(0)
+        cat.constructs.add(cons.id)
         response = c.get('/list/account/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
+
+    def test_account_page_foreman_2(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the foreman session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        cat = Category(name='Windows (Active)', priority=1)
+        cat.save(0)
+        cat.constructs.add(cons.id)
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
+
+    def test_account_page_foreman_3(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the foreman session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        cat = Category(name='Windows (Done)', priority=1)
+        cat.save(0)
+        cat.constructs.add(cons.id)
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
 
     def test_worker_page_foreman(self):
         c = Client()
@@ -1683,7 +1723,6 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         get_str = '/list/?category=' + str(cat1.id) + ',' + str(cat2.id) + '&foreman=' + str(foreman.id)
         response = c.get(get_str)
-        # response = c.get('/list/?category=' + str(cat1.id) + ',' + str(cat2.id))
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertIs(str(response.content).find("Number one") > 0, True)
         self.assertIs(str(response.content).find("Number two") > 0, False)
@@ -1779,7 +1818,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/client/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_login_page_flows(self):
         c = Client()
@@ -1787,7 +1826,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/flows/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_login_page_transactions(self):
         c = Client()
@@ -1795,7 +1834,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/transactions/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_transactions_page_accessed(self):
         c = Client()
@@ -1803,7 +1842,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/transactions/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_transactions_page_no_access(self):
         c = Client()
@@ -1811,7 +1850,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/transactions/')
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_login_page_gantt(self):
         c = Client()
@@ -1819,7 +1858,7 @@ class ViewTests(TestCase):
         cons.save()
         response = c.get('/list/' + str(cons.id) +'/gantt/')
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_call_flows_page(self):
         c = Client()
@@ -1827,7 +1866,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_call_flows_page_simple_user(self):
         c = Client()
@@ -1835,7 +1874,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_call_gantt_page_simple_user(self):
         c = Client()
@@ -1843,7 +1882,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/gantt/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_call_client_page_simple_user(self):
         c = Client()
@@ -1851,7 +1890,7 @@ class ViewTests(TestCase):
         cons = Construct()
         cons.save()
         response = c.get("/list/" + str(cons.id) + "/client/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_view_invoice(self):
         c = Client()
@@ -1862,7 +1901,7 @@ class ViewTests(TestCase):
         inv.details_txt = 'Description on this invoice'
         inv.save()
         response = c.get("/list/invoice/" + str(inv.id) + "/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_view_transaction(self):
         c = Client()
@@ -1873,7 +1912,7 @@ class ViewTests(TestCase):
         ta.details_txt = 'Description on this transaction'
         ta.save()
         response = c.get("/list/transaction/" + str(ta.id) + "/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_transaction_bunch_page_access(self):
         c = Client()
@@ -1989,7 +2028,7 @@ class ViewTests(TestCase):
         Transaction.add(cons, 102.0, direction='out', details='-')
         Transaction.add(cons, 123.0, direction='out', details='SalAry')
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_flows_page_with_invoices_and_transactions(self):
         c = Client()
@@ -2005,22 +2044,53 @@ class ViewTests(TestCase):
         Transaction.add(cons, 102.0, direction='out', details='-')
         Transaction.add(cons, 123.0, direction='out', details='SalAry')
         response = c.get("/list/" + str(cons.id) + "/flows/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_open_transaction_submit_form(self):
         c = Client()
         c.login(username="yuran", password="secret")
         response = c.get("/list/transaction/submit/")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_open_transaction_submit_form_populated(self):
         construct = Construct()
         construct.save()
         c = Client()
         c.login(username="yuran", password="secret")
-        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
-        self.assertEqual(response.status_code, 200)
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN&from=Petr Petrov")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
+        self.assertEqual(response.context['form']['from_txt'].initial, 'Petr Petrov')
+
+    def test_open_transaction_submit_form_populated_2(self):
+        construct = Construct()
+        construct.save()
+        self.user.first_name = "Petr"
+        self.user.last_name = "Petrov"
+        self.user.save()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
+        self.user.first_name = ""
+        self.user.last_name = ""
+        self.user.save()
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
+        self.assertEqual(response.context['form']['from_txt'].initial, 'Petr Petrov')
+
+    def test_open_transaction_submit_form_populated_3(self):
+        construct = Construct()
+        construct.save()
+        self.user.company = "Company Ltd"
+        self.user.save()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
+        self.user.company = ""
+        self.user.save()
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
+        self.assertEqual(response.context['form']['from_txt'].initial, 'Company Ltd')
 
     def test_transaction_pay_mismatch(self):
             construct = make_test_construct()
@@ -2078,7 +2148,7 @@ class ViewTests(TestCase):
     def test_login_transaction_submit_form(self):
         c = Client()
         response = c.get("/list/transaction/submit/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_submit_transaction_form(self):
         c = Client()
@@ -2091,7 +2161,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
         
     def test_login_submit_transaction_form(self):
         c = Client()
@@ -2103,7 +2173,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, True)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
         
     def test_submit_transaction_form_with_invoice(self):
         c = Client()
@@ -2118,7 +2188,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_submit_transaction_form_with_invoice_and_get_InvoiceTransaction_object(self):
         c = Client()
@@ -2147,7 +2217,7 @@ class ViewTests(TestCase):
                 'invoices': [str(invoice.id)],
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_submit_transaction_form_with_two_invoices(self):
         c = Client()
@@ -2163,7 +2233,7 @@ class ViewTests(TestCase):
                 'details_txt': ['note'], 'photo': [''], 'initial-photo': ['Raw content']}
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
     def test_submit_transaction_form_with_two_invoices_and_get_two_InvoiceTransaction_objects(self):
         c = Client()
