@@ -1150,7 +1150,7 @@ def invoices_payall(request):
                                         f"//{transaction.details_txt}// " +
                                         f"[[ {transaction.construct.title_text} ]]")
     invoices = []
-    context = {'new_transactions': new_transactions}
+    context = {'new_transactions': new_transactions, 'cis_percent': Invoice.cis_percent}
     direction = 'sort_by_user'
     context['direction'] = direction
     invoices = Invoice.objects.filter(status=Invoice.UNPAID).filter(invoice_type=Transaction.OUTGOING)
@@ -1169,13 +1169,14 @@ def invoices_payall(request):
                                     'number': inv.number,
                                     'amount': float(inv.amount),
                                     'was_amount': float(inv.amount),
-                                    'cis_percent': Invoice.cis_percent,
+                                    'cis_amount': 0,
                                     'status': inv.status,
                                     'id': inv.id,
                                     'details_txt': inv.details_txt,
                                     'construct': inv.construct}
                 if inv.details_txt.find('#materials') < 0:
                     subset_invoice['amount'] *= 1. - Invoice.cis_percent * 0.01
+                    subset_invoice['cis_amount'] = subset_invoice['was_amount'] - subset_invoice['amount']
                 subset['invoices'].append(subset_invoice)
             subset['amount'] = round(sum([inv['amount'] for inv in subset['invoices']]))
             subset['total'] = round(sum([inv['was_amount'] for inv in subset['invoices']]))
