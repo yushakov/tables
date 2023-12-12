@@ -1559,11 +1559,41 @@ class ViewTests(TestCase):
     def test_account_page_foreman(self):
         c = Client()
         c.login(username="worker2", password="secret")
-        cons = make_test_construct('Test construct for the client session')
+        cons = make_test_construct('Test construct for the foreman session')
         cons.foreman = self.worker_user_2
         cons.save()
+        cat = Category(name='active', priority=1)
+        cat.save(0)
+        cat.constructs.add(cons.id)
         response = c.get('/list/account/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
+
+    def test_account_page_foreman_2(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the foreman session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        cat = Category(name='Windows (Active)', priority=1)
+        cat.save(0)
+        cat.constructs.add(cons.id)
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
+
+    def test_account_page_foreman_3(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct('Test construct for the foreman session')
+        cons.foreman = self.worker_user_2
+        cons.save()
+        cat = Category(name='Windows (Done)', priority=1)
+        cat.save(0)
+        cat.constructs.add(cons.id)
+        response = c.get('/list/account/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
 
     def test_worker_page_foreman(self):
         c = Client()

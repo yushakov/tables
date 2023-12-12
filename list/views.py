@@ -178,9 +178,11 @@ def get_active_done_constructs():
     active_cats = cats.filter(name__icontains='active')
     done_cats = cats.filter(name__icontains='done')
     if len(active_cats) > 0:
-        active = [con for con in active_cats[0].constructs.all()]
+        for ac in active_cats:
+            active += [con for con in ac.constructs.all()]
     if len(done_cats) > 0:
-        done = [con for con in done_cats[0].constructs.all()]
+        for dc in done_cats:
+            done += [con for con in dc.constructs.all()]
     return active + done
 
 def get_user_invoices(user):
