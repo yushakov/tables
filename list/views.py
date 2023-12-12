@@ -861,9 +861,13 @@ def submit_transaction(request):
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
+        from_txt = str(request.user.company)
+        if request.user.company is None or len(from_txt.strip()) < 3:
+            from_txt = str(request.user.first_name).strip() + " " + str(request.user.last_name).strip()
         initial_data = {'construct': construct_id,
                         'invoices': [request.GET.get('invoice', -1)],
                         'amount': request.GET.get('amount','').replace(',',''),
+                        'from_txt': request.GET.get('from', from_txt),
                         'to_txt': request.GET.get('to', ''),
                         'transaction_type': request.GET.get('type',''),
                         'receipt_number': getConstructAndMaxId(construct_id, Transaction)

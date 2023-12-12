@@ -2057,9 +2057,40 @@ class ViewTests(TestCase):
         construct.save()
         c = Client()
         c.login(username="yuran", password="secret")
-        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN&from=Petr Petrov")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
+        self.assertEqual(response.context['form']['from_txt'].initial, 'Petr Petrov')
+
+    def test_open_transaction_submit_form_populated_2(self):
+        construct = Construct()
+        construct.save()
+        self.user.first_name = "Petr"
+        self.user.last_name = "Petrov"
+        self.user.save()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
+        self.user.first_name = ""
+        self.user.last_name = ""
+        self.user.save()
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
+        self.assertEqual(response.context['form']['from_txt'].initial, 'Petr Petrov')
+
+    def test_open_transaction_submit_form_populated_3(self):
+        construct = Construct()
+        construct.save()
+        self.user.company = "Company Ltd"
+        self.user.save()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=29&type=IN")
+        self.user.company = ""
+        self.user.save()
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
+        self.assertEqual(response.context['form']['from_txt'].initial, 'Company Ltd')
 
     def test_transaction_pay_mismatch(self):
             construct = make_test_construct()
