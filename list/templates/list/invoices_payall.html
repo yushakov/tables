@@ -109,7 +109,7 @@
                     {{ inv.number }}
                 </td>
                 <td id='amount_{{ inv.id }}'>
-                    £ {{ inv.amount }}
+                    £ {{ inv.amount|floatformat:2 }}
                     <input type='hidden' name='amount_{{ inv.id }}' value='{{ inv.amount }}' />
                 </td>
                 <td>
