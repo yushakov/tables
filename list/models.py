@@ -903,6 +903,8 @@ class Transaction(models.Model):
         return f"{self.transaction_type}"
 
     def add_as_on_page(construct, _from, _to, amount, inout, date, number, details):
+        if inout != 'IN' and inout != 'OUT':
+            raise Exception(f"Wrong transaction type: '{inout}'")
         tra = Transaction(construct = construct,
                 from_txt = _from,
                 to_txt = _to,

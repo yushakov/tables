@@ -1920,6 +1920,12 @@ class ViewTests(TestCase):
         response = c.get("/list/transaction/bunch/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
+    def test_transaction_bunch_page_no_access(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        response = c.get("/list/transaction/bunch/")
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
     def test_transaction_bunch(self):
         c = Client()
         c.login(username="yuran", password="secret")
@@ -1984,9 +1990,21 @@ class ViewTests(TestCase):
                                'Marcos, Yury, 7000, IN, 30/08/2023, 77777, profit sharing']}
         response = c.post("/list/transaction/bunch/", post_data)
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(len(response.context['errors']) > 0)
         self.assertEqual(response.context['errors'][0].find('getting the construct') >= 0, True)
         tras = construct.transaction_set.all()
         self.assertEqual(len(tras), 1)
+
+    def test_transaction_bunch_bad_type(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        construct = make_test_construct('Test construct')
+        post_data = {'construct_id': [str(construct.id)], 'delimiter': ['2'], 'field_nums': ['1,2,3,4,5,6,7'],
+                     'lines': ['Sergey, Yury, 5000,   , 26/08/2023, 012341200, money for good life\r\n' + \
+                               'Marcos, Yury, 7000, INO, 30/08/2023, 77777, profit sharing']}
+        response = c.post("/list/transaction/bunch/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(len(response.context['errors']), 2)
 
     def test_call_client_page_client(self):
         cons = Construct()
