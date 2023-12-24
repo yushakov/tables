@@ -138,6 +138,19 @@ class FunctionTests(TestCase):
         _id = getConstructAndMaxId(construct.id, Invoice)
         self.assertEqual(_id, '1-2-2')
 
+    def test_getConstructAndMaxId_wrong_construct(self):
+        construct = make_test_construct()
+        _id = getConstructAndMaxId(100, Invoice)
+        self.assertEqual(_id, '100-1-2')
+
+    def test_getConstructAndMaxId_global(self):
+        construct = make_test_construct()
+        _id = getConstructAndMaxId(construct.id, Invoice)
+        construct2 = make_test_construct()
+        _id2 = getConstructAndMaxId(construct2.id, Invoice)
+        self.assertEqual(_id, '1-2-2')
+        self.assertEqual(_id2, '2-2-3')
+
 
 class MyFixChoice:
     def __init__(self):
