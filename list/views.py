@@ -954,7 +954,8 @@ def submit_invoice(request):
                         'number': getConstructAndMaxId(construct_id, Invoice),
                         'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
-        form.fields['owner'].widget = forms.HiddenInput()
+        if not request.user.is_superuser:
+            form.fields['owner'].widget = forms.HiddenInput()
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
             form.fields['invoice_type'].initial = 'OUT'
@@ -975,7 +976,8 @@ def modify_invoice(request, invoice_id):
             return redirect(obj)
     else:
         form = InvoiceSubmitForm(instance=invoice)
-        form.fields['owner'].widget = forms.HiddenInput()
+        if not request.user.is_superuser:
+            form.fields['owner'].widget = forms.HiddenInput()
         form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()
         form.fields['status'].widget = forms.HiddenInput()

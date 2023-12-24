@@ -3,6 +3,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.forms.widgets import HiddenInput, Select
 import numpy as np
 import re
 import datetime as dt
@@ -1435,7 +1436,12 @@ class ViewTests(TestCase):
             name='Can view invoice',
             content_type=content_type,
         )
-        workers_group.permissions.add(add_invoice_permission, view_invoice_permission)
+        change_invoice_permission, _ = Permission.objects.get_or_create(
+            codename='change_invoice',
+            name='Can change invoice',
+            content_type=content_type,
+        )
+        workers_group.permissions.add(add_invoice_permission, view_invoice_permission, change_invoice_permission)
         self.worker_user_2 = User.objects.create_user('worker2', 'worker@example.com', 'secret')
         self.worker_user_2.groups.add(workers_group)
 
@@ -2302,7 +2308,7 @@ class ViewTests(TestCase):
         c.login(username="yuran", password="secret")
         cons = Construct()
         cons.save()
-        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+        post_data = {'seller': ['Vasya'], 'owner': [str(self.user.id)], 'amount': ['100'],
                 'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
                 'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
                 'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
@@ -2314,6 +2320,26 @@ class ViewTests(TestCase):
         invoice = Invoice.objects.latest()
         response = c.get(f"/list/invoice/{invoice.id}/modify/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(type(response.context['form'].fields['owner'].widget), Select)
+
+    def test_modify_invoice_get_worker2(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'owner': [str(self.worker_user_2.id)], 'amount': ['100'],
+                'invoice_type': ['OUT'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/modify/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(type(response.context['form'].fields['owner'].widget), HiddenInput)
 
     def test_get_printed_invoice_lines(self):
         details = '1, a, b, c'
@@ -2535,7 +2561,28 @@ class ViewTests(TestCase):
         response = c.get("/list/invoice/submit/?construct_id=" +
                 str(cons.id) + "&worker")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
-        
+        self.assertEqual(type(response.context['form'].fields['owner'].widget),
+                         HiddenInput)
+
+    def test_worker2_login_to_submit_invoice(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/invoice/submit/?construct_id=" +
+                str(cons.id) + "&worker")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(type(response.context['form'].fields['owner'].widget), HiddenInput)
+
+    def test_superuser_login_to_submit_invoice(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        response = c.get("/list/invoice/submit/?construct_id=" + str(cons.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(type(response.context['form'].fields['owner'].widget), Select)
+
     def test_get_fields_submit_invoice(self):
         c = Client()
         c.login(username="worker", password="secret")
