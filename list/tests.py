@@ -2561,8 +2561,7 @@ class ViewTests(TestCase):
         response = c.get("/list/invoice/submit/?construct_id=" +
                 str(cons.id) + "&worker")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
-        self.assertEqual(type(response.context['form'].fields['owner'].widget),
-                         HiddenInput)
+        self.assertEqual(type(response.context['form'].fields['owner'].widget), HiddenInput)
 
     def test_worker2_login_to_submit_invoice(self):
         c = Client()
@@ -2573,6 +2572,7 @@ class ViewTests(TestCase):
                 str(cons.id) + "&worker")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertEqual(type(response.context['form'].fields['owner'].widget), HiddenInput)
+        self.assertTrue(str(response.content).find('Owner') < 0)
 
     def test_superuser_login_to_submit_invoice(self):
         c = Client()
@@ -2582,6 +2582,7 @@ class ViewTests(TestCase):
         response = c.get("/list/invoice/submit/?construct_id=" + str(cons.id))
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertEqual(type(response.context['form'].fields['owner'].widget), Select)
+        self.assertTrue(str(response.content).find('Owner') >= 0)
 
     def test_get_fields_submit_invoice(self):
         c = Client()

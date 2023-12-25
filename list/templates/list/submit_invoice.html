@@ -17,7 +17,12 @@
         <b>{{ form.construct.label_tag }}</b>
         {{ form.construct }}
     </p>
-    <p><b>{{ form.owner.label_tag }}</b> {{ form.owner }}</p>
+    <p>
+        {% if not hide_owner_label %}
+            <b>{{ form.owner.label_tag }}</b>
+        {% endif %}
+        {{ form.owner }}
+    </p>
     <p>
         <b>{{ form.seller.label_tag }}</b>
         {{ form.seller }}

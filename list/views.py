@@ -954,14 +954,17 @@ def submit_invoice(request):
                         'number': getConstructAndMaxId(construct_id, Invoice),
                         'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
+        hide_owner_label = False
         if not request.user.is_superuser:
             form.fields['owner'].widget = forms.HiddenInput()
+            hide_owner_label = True
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
             form.fields['invoice_type'].initial = 'OUT'
             form.fields['status'].widget = forms.HiddenInput()
             form.fields['status'].initial = 'Unpaid'
-    return render(request, 'list/submit_invoice.html', {'form': form})
+        context = {'form': form, 'hide_owner_label': hide_owner_label}
+    return render(request, 'list/submit_invoice.html', context)
 
 @login_required
 @permission_required("list.change_invoice")
