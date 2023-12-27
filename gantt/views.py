@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.http import Http404
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -90,6 +91,45 @@ def index(request, construct_id):
                                                 "/gantt/api/choices/?id=",
                                                 str(construct_id)]),
                     'interactive': 'true'
+                  })
+
+
+class SlugChoiceViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        # TODO: write tests
+        slug = str(self.request.GET.get('slug', ''))
+        constructs = Construct.objects.filter(slug_name = slug)
+        if len(constructs) == 0:
+            raise Http404("Project not found")
+        construct = constructs[0]
+        return get_formatted_choices(construct.id)
+
+
+def slug(request, slug):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: gantt.slug("{slug}") from ip: {ip}')
+    constructs = Construct.objects.filter(slug_name = slug)
+    if len(constructs) == 0:
+        raise Http404("Project not found")
+    construct = constructs[0]
+    protocol = settings.PROTOCOL
+    host = settings.ALLOWED_HOSTS[0]
+    port = settings.PORT
+    return render(request, 'gantt/index.html',
+                  {'construct_id': -1,
+                   'title': construct.title_text,
+                   'protocol': '',
+                   'host': '',
+                   'port': '',
+                   'get_choices_link': ''.join([protocol,
+                                                host,
+                                                port,
+                                                "/gantt/api/slug_choices/?slug=",
+                                                str(slug)]),
+                    'interactive': 'false',
+                    'slug_name': slug
                   })
 
 

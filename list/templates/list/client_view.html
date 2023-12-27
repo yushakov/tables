@@ -26,6 +26,9 @@
 
 {% elif is_client and has_access %}
 
+<a href="{% url 'gantt:slug' construct.slug_name %}">Gantt Chart</a> &rarr;
+<br /><br />
+
 <table id='choices_head'>
 <tbody>
 <tr>
