@@ -72,6 +72,18 @@ class ViewTests(TestCase):
         response = c.get("/gantt/" + str(cons.id))
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
 
+    def test_slug_access_anonymous(self):
+        c = Client()
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/gantt/slug/" + str(cons.slug_name))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_slug_access_anonymous_wrong_slug(self):
+        c = Client()
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/gantt/slug/zzzz")
+        self.assertEqual(response.status_code, 404)
+
     def test_index_access_worker(self):
         c = Client()
         logged_in = c.login(username="worker2", password="secret")
@@ -93,6 +105,25 @@ class ViewTests(TestCase):
         cons = make_test_construct('Test construct for session')
         response = c.get("/gantt/api/choices/?id=" + str(cons.id))
         self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_get_choices_superuser_wrong_id(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/gantt/api/choices/?id=555")
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_slug_choices_anonymous(self):
+        c = Client()
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/gantt/api/slug_choices/?slug=" + cons.slug_name)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_get_slug_choices_anonymous_wrong_slug(self):
+        c = Client()
+        cons = make_test_construct('Test construct for session')
+        response = c.get("/gantt/api/slug_choices/?slug=zzz")
+        self.assertEqual(response.status_code, 404)
 
     def test_get_choices_worker(self):
         c = Client()
