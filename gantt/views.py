@@ -80,7 +80,12 @@ def index(request, construct_id):
                    'title': construct.title_text,
                    'protocol': protocol,
                    'host': host,
-                   'port': port
+                   'port': port,
+                   'get_choices_link': ''.join([protocol,
+                                                host,
+                                                port,
+                                                "/gantt/api/choices/?id=",
+                                                str(construct_id)])
                   })
 
 
