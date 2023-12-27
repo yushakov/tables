@@ -27,6 +27,7 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
         if not self.request.user.is_authenticated:
             get_object_or_404(Construct, pk=-1)
         construct_id = int(self.request.GET.get('id', '-1'))
+        out = []
         if construct_id >= 0:
             construct = Construct.objects.get(pk=construct_id)
             choices = Choice.objects.filter(construct__id=construct_id).order_by('plan_start_date')
@@ -60,7 +61,6 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
                     project['display_order'] = int(key.replace('line_', ''))
                     queryset.append(copy(project))
             queryset += sorted(tmp_set, key=lambda x: x['plan_start_date'])
-            out = []
             for i, q in enumerate(queryset):
                 q['display_order'] = i + 1
                 out.append(q)
@@ -87,7 +87,6 @@ def index(request, construct_id):
 @api_view(['POST'])
 @user_passes_test(lambda user: user.is_staff)
 def choices_update(request):
-    # import pdb; pdb.set_trace()
     tasks_data = request.data.get('choices')
     for task_data in tasks_data:
         # Validate each task using the serializer
