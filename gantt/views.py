@@ -21,7 +21,10 @@ logger = logging.getLogger('django')
 def get_formatted_choices(construct_id):
     out, queryset = [], []
     if construct_id >= 0:
-        construct = Construct.objects.get(pk=construct_id)
+        try:
+            construct = Construct.objects.get(pk=construct_id)
+        except:
+            raise Http404("Project not found")
         choices = Choice.objects.filter(construct__id=construct_id).order_by('plan_start_date')
         project_struct = json.loads(construct.struct_json)
         group_id = ''
