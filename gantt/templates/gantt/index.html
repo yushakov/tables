@@ -19,13 +19,19 @@
         window.host = "{{ host }}";
         window.port = "{{ port }}";
         window.csrf = "{{ csrf_token }}";
+        window.interactive = {{ interactive }};
+        window.getChoicesLink = "{{ get_choices_link }}";
     </script>
     <div>
         <h1>{{ title }}</h1>
-        &nbsp;&nbsp;
-        &larr; <a href="{% url 'list:detail' construct_id %}">to the project</a>
-        &nbsp;&nbsp;
-        <a href="{% url 'list:index' %}">Project List</a>
+            &nbsp;&nbsp;
+    {% if construct_id > 0 %}
+            &larr; <a href="{% url 'list:detail' construct_id %}">to the project</a>
+            &nbsp;&nbsp;
+            <a href="{% url 'list:index' %}">Project List</a>
+    {% else %}
+            &larr; <a href="{% url 'list:client_slug' slug_name %}">to the project</a>
+    {% endif %}
     </div>
     <br><br>
     <div id="root"></div>
