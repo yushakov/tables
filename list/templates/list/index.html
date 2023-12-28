@@ -197,14 +197,14 @@
         if (div.children.length > 0) {
             divHeader.innerHTML = "<b>Hidden Columns:</b>";
         } else {
-            divHeader.innerHTML = "";
+            divHeader.innerHTML = "<i>Click column headers to hide columns.</i>";
         }
     }
 
     function show(element) {
-        element.parentNode.removeChild(element);
         const className = element.classList[0];
         const columnElements = document.querySelectorAll("." + className);
+        element.parentNode.removeChild(element);
         columnElements.forEach(function(el) {
             el.style.display = "table-cell";
         });
@@ -212,7 +212,7 @@
         if (hiddenCols) {
             var hiddenColsList = JSON.parse(hiddenCols);
             if (hiddenColsList.indexOf(className) >= 0) {
-                hiddenColsList.pop(className);
+                hiddenColsList = hiddenColsList.filter((e) => { return e != className; });
                 localStorage.setItem(HiddenColsKey, JSON.stringify(hiddenColsList));
             }
         }
@@ -270,6 +270,7 @@
             });
         });
     }
+    check_div();
 </script>
 
 {% else %}
