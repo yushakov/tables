@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Construct, Worker, Choice, Invoice, Transaction, InvoiceTransaction, Category
+from .models import Construct, Choice, Invoice, Transaction, InvoiceTransaction, Category
 from django.contrib.auth.admin import UserAdmin
 from .models import User
 

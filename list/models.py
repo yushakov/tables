@@ -65,14 +65,6 @@ def load_all_constructs(folder, prefix='Imported: '):
         Construct.safe_import_from_json(fname, prefix)
 
 
-class Client(models.Model):
-    name = models.CharField(max_length=100)
-    contact_info = models.TextField()
-
-    def __str__(self):
-        return self.name
-
-
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
     listed_date = models.DateTimeField('date listed', default=timezone.now)
@@ -696,15 +688,6 @@ class HistoryRecord(models.Model):
         return out
 
 
-class Worker(models.Model):
-    name = models.CharField(max_length=200)
-    email = models.EmailField()
-    phone = models.CharField(max_length=200, validators=phone_valid)
-    
-    def __str__(self):
-        return self.name
-
-
 def instances_are_equal(instance1, instance2, fields=None):
     if fields is None:
         fields = [f.name for f in instance1._meta.fields]
@@ -803,15 +786,6 @@ class Choice(models.Model):
         self.construct.save()
         self.construct.numbers = {}
         super(Choice, self).save(*args, **kwargs)
-
-
-class Project(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
 
 
 def get_id(model_class):
