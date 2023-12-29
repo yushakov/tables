@@ -1,15 +1,12 @@
 #!/bin/bash
 ROOT=$(pwd)
-echo "Install in $(pwd)..."
-#npm install
-cd node_modules/gantt-task-react
-echo "Install in $(pwd)..."
-# npm install
-cd django_gantt
-echo "Install in $(pwd)..."
-# npm install
-echo "Build in $(pwd)..."
-npm run build
+cd node_modules/gantt-task-react/django_gantt
+
+echo "Removing build folder..."
+rm -rvf build
+
+echo "Extracting the build archive..."
+tar -xzvf build.tar.gz
 
 echo "Copying css files.."
 main_css=$(ls $ROOT/node_modules/gantt-task-react/django_gantt/build/static/css/*.css)
@@ -27,5 +24,6 @@ echo "Copying manifest.."
 manifest=$ROOT/node_modules/gantt-task-react/django_gantt/build/manifest.json
 cp $manifest $ROOT/../static/gantt/manifest.json
 
-echo "Making an archive..."
-tar -czvf build.tar.gz build
+cd $ROOT/../..
+echo "Collect Django static files..."
+python3 manage.py collectstatic

@@ -827,10 +827,9 @@ def get_id(model_class):
 
 def getConstructAndMaxId(construct_id, model_class):
     if construct_id <= 0: return '0-0-0'
+    obj_with_max_id = model_class.objects.order_by('id').last()
     objects = model_class.objects.filter(construct__id=construct_id)
-    max_id, obj_count = 0, 0
-    if len(objects) > 0:
-        max_id, obj_count = max([obj.id for obj in objects]), len(objects)
+    max_id, obj_count = obj_with_max_id.id if obj_with_max_id else 0, len(objects)
     return f'{construct_id}-{obj_count+1}-{max_id+1}'
 
 
@@ -903,6 +902,8 @@ class Transaction(models.Model):
         return f"{self.transaction_type}"
 
     def add_as_on_page(construct, _from, _to, amount, inout, date, number, details):
+        if inout != 'IN' and inout != 'OUT':
+            raise Exception(f"Wrong transaction type: '{inout}'")
         tra = Transaction(construct = construct,
                 from_txt = _from,
                 to_txt = _to,
@@ -947,6 +948,7 @@ class Invoice(models.Model):
         (UNPAID, 'Unpaid')
     ]
     mismatch_delta = 3.0  # pounds (£)
+    cis_percent = 20.0
 
     def get_id():
         return get_id(Invoice)
@@ -1042,7 +1044,8 @@ class Invoice(models.Model):
                     payment_mismatch = True
                 else:
                     payment_mismatch = False
-            if save and self.payment_mismatch != payment_mismatch:
+            self.payment_mismatch = payment_mismatch
+            if save:
                 self.save()
         return self.payment_mismatch
 

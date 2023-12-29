@@ -178,9 +178,11 @@ def get_active_done_constructs():
     active_cats = cats.filter(name__icontains='active')
     done_cats = cats.filter(name__icontains='done')
     if len(active_cats) > 0:
-        active = [con for con in active_cats[0].constructs.all()]
+        for ac in active_cats:
+            active += [con for con in ac.constructs.all()]
     if len(done_cats) > 0:
-        done = [con for con in done_cats[0].constructs.all()]
+        for dc in done_cats:
+            done += [con for con in dc.constructs.all()]
     return active + done
 
 def get_user_invoices(user):
@@ -812,9 +814,7 @@ def view_invoice(request, invoice_id):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: view_invoice({invoice.id}) by {request.user.username}, {ip}')
     tra_list, tra_total = getTransactions(invoice)
-    payment_mismatch = False
-    if abs(round(invoice.amount) - round(tra_total)) > Invoice.mismatch_delta:
-        payment_mismatch = True
+    payment_mismatch = invoice.check_mismatch(save=True)
     user_is_owner = True
     user_invoices = request.user.invoice_set.filter(id=invoice_id)
     if len(user_invoices) == 0:
@@ -861,9 +861,13 @@ def submit_transaction(request):
             return redirect(obj)
     else:
         construct_id = int(request.GET.get('construct', '-1'))
+        from_txt = str(request.user.company)
+        if request.user.company is None or len(from_txt.strip()) < 3:
+            from_txt = str(request.user.first_name).strip() + " " + str(request.user.last_name).strip()
         initial_data = {'construct': construct_id,
                         'invoices': [request.GET.get('invoice', -1)],
                         'amount': request.GET.get('amount','').replace(',',''),
+                        'from_txt': request.GET.get('from', from_txt),
                         'to_txt': request.GET.get('to', ''),
                         'transaction_type': request.GET.get('type',''),
                         'receipt_number': getConstructAndMaxId(construct_id, Transaction)
@@ -931,7 +935,7 @@ def submit_invoice(request):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_invoice() by {request.user.username}, {ip}')
     if request.method == 'POST':
-        form = InvoiceSubmitForm(request.POST)
+        form = InvoiceSubmitForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             obj = Invoice.objects.order_by('id').last()
@@ -950,13 +954,17 @@ def submit_invoice(request):
                         'number': getConstructAndMaxId(construct_id, Invoice),
                         'details_txt': details}
         form = InvoiceSubmitForm(initial=initial_data)
-        form.fields['owner'].widget = forms.HiddenInput()
+        hide_owner_label = False
+        if not request.user.is_superuser:
+            form.fields['owner'].widget = forms.HiddenInput()
+            hide_owner_label = True
         if 'worker' in request.GET:
             form.fields['invoice_type'].widget = forms.HiddenInput()
             form.fields['invoice_type'].initial = 'OUT'
             form.fields['status'].widget = forms.HiddenInput()
             form.fields['status'].initial = 'Unpaid'
-    return render(request, 'list/submit_invoice.html', {'form': form})
+        context = {'form': form, 'hide_owner_label': hide_owner_label}
+    return render(request, 'list/submit_invoice.html', context)
 
 @login_required
 @permission_required("list.change_invoice")
@@ -964,15 +972,16 @@ def modify_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'*action* USER ACCESS: modify_invoice({invoice.id}) by {request.user.username}')
     if request.method == 'POST':
-        form = InvoiceSubmitForm(request.POST, instance=invoice)
+        form = InvoiceSubmitForm(request.POST, request.FILES, instance=invoice)
         if form.is_valid():
             form.save()
             obj = Invoice.objects.get(pk=invoice_id)
             return redirect(obj)
     else:
         form = InvoiceSubmitForm(instance=invoice)
-        form.fields['owner'].widget = forms.HiddenInput()
-        form.fields['photo'].widget = forms.HiddenInput()
+        if not request.user.is_superuser:
+            form.fields['owner'].widget = forms.HiddenInput()
+        # form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()
         form.fields['status'].widget = forms.HiddenInput()
         form.fields['invoice_type'].widget = forms.HiddenInput()
@@ -1117,7 +1126,7 @@ def invoices_payall(request):
         amounts = {}
         for uid, invoice_ids in user_dict.items():
             user = User.objects.get(pk=int(uid))
-            amounts = {invoice_id: float(request.POST['amount_' + invoice_id].replace(',', '')) for invoice_id in invoice_ids}
+            amounts = {invoice_id: float(request.POST['full_amount_' + invoice_id].replace(',', '')) for invoice_id in invoice_ids}
             user_total = sum(amounts.values())
             for invoice_id in invoice_ids:
                 invoice = Invoice.objects.get(pk=invoice_id)
@@ -1150,13 +1159,13 @@ def invoices_payall(request):
                                         f"//{transaction.details_txt}// " +
                                         f"[[ {transaction.construct.title_text} ]]")
     invoices = []
-    context = {'new_transactions': new_transactions}
+    context = {'new_transactions': new_transactions, 'cis_percent': Invoice.cis_percent}
     direction = 'sort_by_user'
     context['direction'] = direction
     invoices = Invoice.objects.filter(status=Invoice.UNPAID).filter(invoice_type=Transaction.OUTGOING)
     if direction == 'sort_by_user':
         users = [inv.owner for inv in invoices]
-        users = sorted(list(set(users)), key=lambda u: u.first_name + u.last_name +u.username)
+        users = sorted(list(set(users)), key=lambda u: u.first_name + u.last_name + u.username)
         subsets = []
         for user in users:
             subset = {'user': user}
@@ -1168,16 +1177,19 @@ def invoices_payall(request):
                                     'due_date': inv.due_date,
                                     'number': inv.number,
                                     'amount': float(inv.amount),
-                                    'was_amount': None,
+                                    'was_amount': float(inv.amount),
+                                    'cis_amount': 0,
                                     'status': inv.status,
                                     'id': inv.id,
                                     'details_txt': inv.details_txt,
                                     'construct': inv.construct}
-                if inv.details_txt.find('#materials') >= 0:
-                    subset_invoice['was_amount'] = inv.amount
-                    subset_invoice['amount'] *= 1. - inv.construct.vat_percent_num * 0.01
+                if inv.details_txt.find('#materials') < 0:
+                    subset_invoice['amount'] *= 1. - Invoice.cis_percent * 0.01
+                    subset_invoice['cis_amount'] = subset_invoice['was_amount'] - subset_invoice['amount']
                 subset['invoices'].append(subset_invoice)
-            subset['amount'] = sum([inv['amount'] for inv in subset['invoices']])
+            subset['amount'] = round(sum([inv['amount'] for inv in subset['invoices']]))
+            subset['total'] = round(sum([inv['was_amount'] for inv in subset['invoices']]))
+            subset['cis'] = round(sum([float(inv['was_amount']) - float(inv['amount']) for inv in subset['invoices']]))
             subsets.append(subset)
     total = round(sum([s['amount'] for s in subsets]))
     context['subsets'] = subsets

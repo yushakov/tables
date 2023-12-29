@@ -12,7 +12,7 @@ class InvoiceSubmitForm(ModelForm):
                   'due_date', 'photo', 'details_txt']
         labels = {
                     'construct': _('Project:'),
-                    'seller': _('From:'),
+                    'seller': _('From (seller):'),
                     'amount': _('Amount:'),
                     'number': _('Number:'),
                     'invoice_type': _('In or Out'),

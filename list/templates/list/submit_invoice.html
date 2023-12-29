@@ -11,13 +11,18 @@
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 <h2>Submit an Invoice</h2>
-<form action="" method="post">
+<form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <p>
         <b>{{ form.construct.label_tag }}</b>
         {{ form.construct }}
     </p>
-    <p>{{ form.owner }}</p>
+    <p>
+        {% if not hide_owner_label %}
+            <b>{{ form.owner.label_tag }}</b>
+        {% endif %}
+        {{ form.owner }}
+    </p>
     <p>
         <b>{{ form.seller.label_tag }}</b>
         {{ form.seller }}
@@ -58,12 +63,10 @@
         <b>{{ form.details_txt.label_tag }}</b>
         {{ form.details_txt }}
     </p>
-    {% comment %}
     <p>
         <b>{{ form.photo.label_tag }}</b>
         {{ form.photo }}
     </p>
-    {% endcomment %}
     <input type="submit" value="Submit">
 </form>
 <script>

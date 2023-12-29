@@ -12,6 +12,8 @@
     <a href="{% url 'list:invoices_payall' %}">Pay Invoices</a> &rarr;
 {% endif %}
 <br><br>
+<div id="hidden-cols-header"></div>
+<div id="hidden-cols"></div><br /><br />
 <b>Categories:</b>&nbsp;
 <a href="{% url 'list:index' %}">all</a>&nbsp;
 {% if active_done_inds %}
@@ -31,22 +33,22 @@
         <th>Progress</th>
         <th>Chart</th>
         <th>Foreman</th>
-        <th title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
-        <th title="VAT from actual Income, not the full cost.">VAT<sup>?</sup></th>
-        <th style="display: none">Main<br>cost</th>
-        <th>Paid<br>deposit</th>
-        <th title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
-        <th style="display: none" title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
-        <th title="Current income according to incoming transactions including the deposit.">Income<sup>?</sup></th>
-        <th title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
-        <th>Expenses +</th>
-        <th>Salaries<br>paid</th>
-        <th title="Income - Outcome">Company<br>Profit<sup>?</sup></th>
-        <th title="(Income &minus; VAT) * 0.13">Owner<sup>?</sup><br>Profit</th>
-        <th title="Income &minus; VAT &minus; Owner Profit &minus; Outcome.">Salaries<sup>?</sup><br>Part</th>
-        <th title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
-        <th title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
-        <th title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
+        <th class="cols full-cost" title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
+        <th class="cols vat" title="VAT from actual Income, not the full cost.">VAT<sup>?</sup></th>
+        <th class="cols main-cost" style="display: none">Main<br>cost</th>
+        <th class="cols paid-deposit">Paid<br>deposit</th>
+        <th class="cols full-progress" title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
+        <th class="cols deposit-aware-progress" style="display: none" title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
+        <th class="cols income" title="Current income according to incoming transactions including the deposit.">Income<sup>?</sup></th>
+        <th class="cols outcome" title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
+        <th class="cols expenses">Expenses +</th>
+        <th class="cols salaries-paid">Salaries<br>paid</th>
+        <th class="cols company-profit" title="Income - Outcome">Company<br>Profit<sup>?</sup></th>
+        <th class="cols owner-profit" title="(Income &minus; VAT) * 0.13">Owner<sup>?</sup><br>Profit</th>
+        <th class="cols salaries-part" title="Income &minus; VAT &minus; Owner Profit &minus; Outcome.">Salaries<sup>?</sup><br>Part</th>
+        <th class="cols left-to-pay" title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
+        <th class="cols invoices-to-pay" title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
+        <th class="cols requested-payments" title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
     </thead>
     <tbody>
     {% for construct in active_construct_list %}
@@ -67,59 +69,59 @@
                 {{ construct.foreman.username }}
             </a>
         </td>
-        <td align ='right'>
+        <td class="cols full-cost" align ='right'>
             {{ construct.full_cost }}
         </td>
-        <td align ='right'>
+        <td class="cols vat" align ='right'>
             {{ construct.vat_from_income }}<br>
             ({{ construct.vat_percent_num }}%)
         </td>
-        <td align ='right' style="display: none">{{ construct.main_cost }}</td>
-        <td align ='right'>{{ construct.deposit|floatformat:2 }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
-        <td align ='right'>
+        <td class="cols main-cost" align ='right' style="display: none">{{ construct.main_cost }}</td>
+        <td class="cols paid-deposit" align ='right'>{{ construct.deposit|floatformat:2 }}<br>({{ construct.deposit_percent|floatformat:2 }}%)</td>
+        <td class="cols full-progress" align ='right'>
             {{ construct.full_progress_cost }}
         </td>
-        <td align ='right' style="display: none">
+        <td class="cols deposit-aware-progress" align ='right' style="display: none">
             {{ construct.no_deposit_progress_cost }} +<br>
             {{ construct.full_side_progress_cost }}
         </td>
-        <td align ='right'>
+        <td class="cols income" align ='right'>
             <a href="{% url 'list:flows' construct.id %}#incoming-transactions">
             {{ construct.round_income }}
             </a>
         </td>
-        <td align ='right'>
+        <td class="cols outcome" align ='right'>
             <a href="{% url 'list:flows' construct.id %}#outgoing-transactions">
             {{ construct.round_outcome }}
             </a>
         </td>
-        <td align ='right'>
+        <td class="cols expenses" align ='right'>
             {{ construct.round_expenses }}
         </td>
-        <td align ='right'>
+        <td class="cols salaries-paid" align ='right'>
             <a href="{% url 'list:flows' construct.id %}#salary-transactions">
             {{ construct.round_salaries }}
             </a>
         </td>
-        <td align ='right'>
+        <td class="cols company-profit" align ='right'>
             {{ construct.company_profit }}<br>
             ({{ construct.company_profit_percent|floatformat:1 }}%)
         </td>
-        <td align ='right'>
+        <td class="cols owner-profit" align ='right'>
             {{ construct.owner_profit }}
         </td>
-        <td align ='right'>
+        <td class="cols salaries-part" align ='right'>
             {{ construct.salaries_part }}
         </td>
-        <td align ='right'>
+        <td class="cols left-to-pay" align ='right'>
             {{ construct.left_to_pay }}
         </td>
-        <td align ='right'>
+        <td class="cols invoices-to-pay" align ='right'>
             <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
             {{ construct.invoices_to_pay }}
             </a>
         </td>
-        <td align ='right'>
+        <td class="cols requested-payments" align ='right'>
             <a href="{% url 'list:invoices' construct.id %}?direction=unpaid">
             {{ construct.invoices_pending_pay }}
             </a>
@@ -138,51 +140,138 @@
         </td>
         <td></td>
         <td></td>
-        <td align ='right'>
+        <td class="cols full-cost" align ='right'>
             <b>{{ total.full_cost }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols vat" align ='right'>
             <b>{{ total.vat_from_income }}</b>
         </td>
-        <td align ='right'><b>{{ total.deposit }}</b></td>
-        <td align ='right'>
+        <td class="cols main-cost" style="display: none"></td>
+        <td class="cols paid-deposit" align ='right'><b>{{ total.deposit }}</b></td>
+        <td class="cols full-progress" align ='right'>
             <b>{{ total.full_progress_cost }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols deposit-aware-progress" style="display: none"></td>
+        <td class="cols income" align ='right'>
             <b>{{ total.round_income }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols outcome" align ='right'>
             <b>{{ total.round_outcome }}</b>
             </a>
         </td>
-        <td align ='right'>
+        <td class="cols expenses" align ='right'>
             <b>{{ total.round_expenses }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols salaries-paid" align ='right'>
             <b>{{ total.round_salaries }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols company-profit" align ='right'>
             <b>{{ total.company_profit }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols owner-profit" align ='right'>
             <b>{{ total.owner_profit }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols salaries-part" align ='right'>
             <b>{{ total.salaries_part }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols left-to-pay" align ='right'>
             <b>{{ total.left_to_pay }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols invoices-to-pay" align ='right'>
             <b>{{ total.invoices_to_pay }}</b>
         </td>
-        <td align ='right'>
+        <td class="cols requested-payments" align ='right'>
             <b>{{ total.invoices_pending_pay }}</b>
         </td>
         </tr>
     {% endif %}
     </tbody>
 </table>
+
+<script>
+    const HiddenColsKey = "HiddenCols";
+
+    function check_div() {
+        const div = document.getElementById("hidden-cols");
+        const divHeader = document.getElementById("hidden-cols-header");
+        if (div.children.length > 0) {
+            divHeader.innerHTML = "<b>Hidden Columns:</b>";
+        } else {
+            divHeader.innerHTML = "<i>Click column headers to hide columns.</i>";
+        }
+    }
+
+    function show(element) {
+        const className = element.classList[0];
+        const columnElements = document.querySelectorAll("." + className);
+        element.parentNode.removeChild(element);
+        columnElements.forEach(function(el) {
+            el.style.display = "table-cell";
+        });
+        let hiddenCols = localStorage.getItem(HiddenColsKey);
+        if (hiddenCols) {
+            var hiddenColsList = JSON.parse(hiddenCols);
+            if (hiddenColsList.indexOf(className) >= 0) {
+                hiddenColsList = hiddenColsList.filter((e) => { return e != className; });
+                localStorage.setItem(HiddenColsKey, JSON.stringify(hiddenColsList));
+            }
+        }
+        check_div();
+    }
+
+    function hide(element, updateStorage=false) {
+        const hiddenColsDiv = document.getElementById("hidden-cols");
+        const className = element.classList[1];
+        const newSpan = document.createElement("span");
+        newSpan.classList.add(className);
+        newSpan.innerText = element.innerText.replace("?", "")
+                                             .replace("\n", " ");
+        hiddenColsDiv.appendChild(newSpan);
+        const elementsToHide = document.querySelectorAll("." + className);
+        elementsToHide.forEach(function (element) {
+            element.style.display = "none";
+        });
+        newSpan.style.display = "block";
+        newSpan.addEventListener("click", function (e) {
+            show(this);
+        });
+        if (updateStorage) {
+            var hiddenColsList = [className];
+            let hiddenCols = localStorage.getItem(HiddenColsKey);
+            if (hiddenCols) {
+                hiddenColsList = JSON.parse(hiddenCols);
+                if (hiddenColsList.indexOf(className) < 0) {
+                    hiddenColsList.push(className);
+                }
+            }
+            localStorage.setItem(HiddenColsKey, JSON.stringify(hiddenColsList));
+        }
+        check_div();
+    }
+
+    const columnThTdTotalNodes = document.querySelectorAll(".cols");
+    columnThTdTotalNodes.forEach(function (node) {
+        if (node.nodeName == "TH") {
+            node.addEventListener("click", function (e) {
+                hide(this, updateStorage=true);
+            });
+        }
+    });
+
+    let hiddenCols = localStorage.getItem(HiddenColsKey);
+    if (hiddenCols) {
+        let hiddenColsList = JSON.parse(hiddenCols);
+        hiddenColsList.forEach(function (colName) {
+            const allTh = document.querySelectorAll("th");
+            allTh.forEach(function (th) {
+                if (th.classList.contains(colName)) {
+                    hide(th, updateStorage=false);
+                }
+            });
+        });
+    }
+    check_div();
+</script>
 
 {% else %}
     <p>No projects are available.</p>
