@@ -852,9 +852,7 @@ def submit_transaction(request):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_transaction() by {request.user.username}, {ip}')
     if request.method == 'POST':
-        form = TransactionSubmitForm(request.POST)
-        logger.debug("views.py, submit_transaction()")
-        logger.debug(request.POST.get('photo','no_photo'))
+        form = TransactionSubmitForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             obj = Transaction.objects.order_by('id').last()
@@ -935,7 +933,7 @@ def submit_invoice(request):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_invoice() by {request.user.username}, {ip}')
     if request.method == 'POST':
-        form = InvoiceSubmitForm(request.POST)
+        form = InvoiceSubmitForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             obj = Invoice.objects.order_by('id').last()
@@ -972,7 +970,7 @@ def modify_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     logger.info(f'*action* USER ACCESS: modify_invoice({invoice.id}) by {request.user.username}')
     if request.method == 'POST':
-        form = InvoiceSubmitForm(request.POST, instance=invoice)
+        form = InvoiceSubmitForm(request.POST, request.FILES, instance=invoice)
         if form.is_valid():
             form.save()
             obj = Invoice.objects.get(pk=invoice_id)
@@ -981,7 +979,7 @@ def modify_invoice(request, invoice_id):
         form = InvoiceSubmitForm(instance=invoice)
         if not request.user.is_superuser:
             form.fields['owner'].widget = forms.HiddenInput()
-        form.fields['photo'].widget = forms.HiddenInput()
+        # form.fields['photo'].widget = forms.HiddenInput()
         form.fields['number'].widget = forms.HiddenInput()
         form.fields['status'].widget = forms.HiddenInput()
         form.fields['invoice_type'].widget = forms.HiddenInput()

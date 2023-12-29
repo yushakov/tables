@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.forms.widgets import HiddenInput, Select
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+import io
 import numpy as np
 import re
 import datetime as dt
@@ -39,6 +42,15 @@ import os
 
 STATUS_CODE_OK = 200
 STATUS_CODE_REDIRECT = 302
+
+def get_dummy_image():
+    image = Image.new('RGB', (10, 10), color = 'red')
+    image_file = io.BytesIO()
+    image.save(image_file, format='JPEG')
+    image_file.name = 'test_receipt.jpg'
+    image_file.seek(0)
+    dummy_file = SimpleUploadedFile('test_receipt.jpg', image_file.read(), content_type='image/jpeg')
+    return dummy_file
 
 def make_test_choice(construct, name='Some new choice'):
     choice = Choice(construct=construct,
@@ -2199,6 +2211,21 @@ class ViewTests(TestCase):
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_submit_transaction_with_photo(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        dummy_file = get_dummy_image()
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'details_txt': ['note'], 'photo': [dummy_file], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        response = c.get(response.url + "/")
+        self.assertEqual(response.context['transaction'].photo.size, dummy_file.size)
         
     def test_login_submit_transaction_form(self):
         c = Client()
@@ -2302,6 +2329,23 @@ class ViewTests(TestCase):
         response = c.post("/list/invoice/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_submit_invoice_with_photo(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        dummy_file = get_dummy_image()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': [dummy_file]}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        response = c.get(response.url + "/")
+        self.assertEqual(response.context['invoice'].photo.size, dummy_file.size)
 
     def test_modify_invoice_get(self):
         c = Client()

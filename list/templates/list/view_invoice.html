@@ -100,7 +100,6 @@ Please, report to administrators, if you think this is an issue.
     <label for='id_details'><b>Details:</b></label>
     <div id='id_details' style='max-width: 400px'>{{ invoice.details_txt|linebreaks }}</div>
 </p>
-{% comment %}
 {% if invoice.photo %}
     <br />
     <a href="{{ invoice.photo.url }}">
@@ -111,7 +110,6 @@ Please, report to administrators, if you think this is an issue.
         {% endif %}
     </a>
 {% endif %}
-{% endcomment %}
 
 {% endif %}
 {% endblock %}
