@@ -422,8 +422,24 @@ class ModelTests(TestCase):
         con.save()
         con.foreman = foreman
         con.save()
-        foreman_cons = foreman.construct_set.all()
+        foreman_cons = foreman.foreman_constructs.all()
         self.assertEqual(len(foreman_cons), 1)
+
+    def test_client_user_field(self):
+        client = User(username='Client')
+        client.save()
+        con1 = Construct(title_text='construct1')
+        con1.save()
+        con1.client_user = client
+        con1.save()
+        con2 = Construct(title_text='construct2')
+        con2.save()
+        con2.client_user = client
+        con2.save()
+        con3 = Construct(title_text='construct3')
+        con3.save()
+        client_cons = client.client_constructs.all()
+        self.assertEqual(len(client_cons), 2)
 
     def test_categories(self):
         con1 = make_test_construct(construct_name="Number one")
