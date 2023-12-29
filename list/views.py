@@ -852,9 +852,7 @@ def submit_transaction(request):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_transaction() by {request.user.username}, {ip}')
     if request.method == 'POST':
-        form = TransactionSubmitForm(request.POST)
-        logger.debug("views.py, submit_transaction()")
-        logger.debug(request.POST.get('photo','no_photo'))
+        form = TransactionSubmitForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             obj = Transaction.objects.order_by('id').last()
