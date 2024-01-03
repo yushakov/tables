@@ -424,18 +424,19 @@ class Construct(models.Model):
 
     @property
     def company_profit(self):
+        ## TODO: rename to Real Profit ##
         return round(self.income() - self.outcome() - self.vat_from_income)
 
     @property
     def owner_profit(self):
-        ## Ongoing profit, actually ##
+        ## TODO: rename to Ongoing Profit ##
         part_cost = self.income() / (1. + self.company_profit_percent_num * 0.01) / (1. + self.vat_percent_num * 0.01)
         return round(part_cost * self.company_profit_percent_num * 0.01)
 
     @property
     def salaries_part(self):
-        # Income - VAT - Owner Profit - Outcome
-        return round(self.withOutVat(self.income()) - self.owner_profit - self.outcome())
+        # Income - Outcome - VAT - Ongoing Profit 
+        return round(self.company_profit - self.owner_profit)
 
     @property
     def company_profit_percent(self):

@@ -43,9 +43,9 @@
         <th class="cols outcome" title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
         <th class="cols expenses">Expenses +</th>
         <th class="cols salaries-paid">Salaries<br>paid</th>
-        <th class="cols company-profit" title="Income - Outcome">Company<br>Profit<sup>?</sup></th>
-        <th class="cols owner-profit" title="(Income &minus; VAT) * 0.13">Owner<sup>?</sup><br>Profit</th>
-        <th class="cols salaries-part" title="Income &minus; VAT &minus; Owner Profit &minus; Outcome.">Salaries<sup>?</sup><br>Part</th>
+        <th class="cols company-profit" title="Income &minus; Outcome &minus; VAT">Real<br>Profit<sup>?</sup></th>
+        <th class="cols owner-profit" title="We have Income = PartCost&middot;(1+Profit)&middot;(1+VAT), therefore PartCost = Income / [(1 + Profit)&middot;(1 + VAT)]. Hence, OngoingProfit = PartCost &middot; Profit.">Ongoing<sup>?</sup><br>Profit</th>
+        <th class="cols salaries-part" title="Real Profit &minus; Ongoing Profit.">Salaries<sup>?</sup><br>Part</th>
         <th class="cols left-to-pay" title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
         <th class="cols invoices-to-pay" title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
         <th class="cols requested-payments" title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
