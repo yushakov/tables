@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% block title %}{{ construct.title_text }}{% endblock %}
+{% block content %}
+{% load static %}
+{% load app_filters %}
+<script src="{% static 'list/detail.js' %}">
+</script>
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+
+<h1>{{ construct.title_text }} (maintenance)</h1>
+<br>
+{% if 'list.change_construct' in perms %}
+    &larr; <a href="{% url 'list:detail' construct.id %}">back to the full view</a>
+    <br>
+    <br>
+{% endif %}
+
+{% if is_foreman %}
+
+<p>
+    <b>Address</b>: {{ construct.address_text }}<br>
+</p>
+<p>
+    <b>Money left</b>: £ {{ construct.salaries_part }}<br>
+</p>
+
+{% elif is_client and has_access %}
+
+<table id='choices_head'>
+<tbody>
+<tr>
+    <td><b>Address:</b></td>
+    <td>{{ construct.address_text }}</td>
+    <td></td>
+    <td></td>
+    <td></td>
+</tr>
+<tr>
+    <td><b>Email:</b></td>
+    <td>{{ construct.email_text }}</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td style='display:none'><b>Total:</b></td>
+    <td id='project_total' style='display:none'>&#163; {{ construct_total }}</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+</tr>
+<tr>
+    <td><b>Phone:</b></td>
+    <td>{{ construct.phone_text }}</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td style='display:none'><b>+ {{ construct.company_profit_percent_num }}% profit:</b></td>
+    <td id='project_total_profit' style='display:none'>&#163; {{ total_and_profit|floatformat:2 }}</td>
+    <td style='display:none'><b>Full progress<br>(with profit + VAT):</b></td>
+    <td id='progress_vat' style='display:none'>&#163; updating...</td>
+</tr>
+<tr>
+    <td><b>Owner:</b></td>
+    <td>{{ construct.owner_name_text }}</td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td style='display:none'><b>VAT:</b></td>
+    <td id='project_vat' style='display:none'>{{ construct.vat_percent_num }}%</td>
+    <td style='display:none'><b>Main contract<br>progress:</b></td>
+    <td style='display:none'>&#163; {{ construct.no_deposit_progress_cost }}</td>
+</tr>
+<tr>
+    <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
+    <td></td>
+    <td></td>
+    <td><b>Total:</b></td>
+    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat }}</td>
+    <td style='display:none'><b>Other works<br>progress:</b></td>
+    <td style='display:none'>£ {{ construct.full_side_progress_cost }}</td>
+</tr>
+<tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td style='display:none'><b>Deposit:</b></td>
+    <td style='display:none'>£ {{ construct.deposit }}</td>
+    <td style='display:none'><b>Income w/o deposit:</b></td>
+    <td id='paid' style='display:none'>&#163; {{ construct.income_wo_deposit }}</td>
+</tr>
+<tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td style='display:none'><b>To be paid:</b></td>
+    <td style='display:none'>£ {{ construct.left_to_pay }}</td>
+</tr>
+</tbody>
+</table>
+
+{% endif %}
+
+<br><br>
+<div id='project_last_save_date'>
+<b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
+</div>
+<br>
+<form id='choices_form' action="{% url 'list:client_slug' construct.slug_name %}" method='POST'>
+{% csrf_token %}
+<table id='choices'>
+<thead><tr>
+    <td></td>
+    <th class="name_cell">Task name</th>
+    {% if not is_worker %}<th>Unit price</th>{% endif %}
+    <th>Quantity</th>
+    <th><!--Units--></th>
+    {% if not is_worker %}<th>Total price</th>{% endif %}
+    <th style='display:none'></th>
+    <th style='display:none'>Date start</th>
+    <th style='display:none'>Planned days</th>
+    <th>Progress</th>
+    <th style='display:none'></th>
+</tr></thead>
+<tbody>
+{% for items in ch_list %}
+    {% if items.type == 'Choice' %}
+        <tr id='tr_{{ items.choice.id }}' class='{{ items.type }}'>
+    {% else %}
+        <tr id='hd_{{ items.choice.id }}' class='{{ items.type }}'>
+    {% endif %}
+        <td align='right'>{{ forloop.counter }}</td>
+    {% if items.type == 'Choice' %}
+        {% autoescape off %}
+        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        {% endautoescape %}
+        {% if not is_worker %}<td align='right'>&#163;{{ items.item_price_prft_vat|floatformat:2 }}</td>{% endif %}
+        <td align='right'>{{ items.choice.quantity_num }}</td>
+        <td align='left'>{{ items.choice.units_of_measure_text }}</td>
+        {% if not is_worker %}
+            <td align='right' class='choice_total_price'>&#163;{{ items.price_prft_vat|floatformat:2 }}</td>
+        {% endif %}
+        <td style='display:none'></td>
+        <td style='display:none'>{{ items.choice.plan_start_date }}</td>
+        <td align='center' style='display:none'>{{ items.choice.plan_days_num }}</td>
+        <td class="progress-cell">
+            <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
+                <div class='choice_progress_percent'>
+                    {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
+                </div>
+            </div>
+        </td>
+        <td style='display:none'>
+            <div class='notes-form'>
+                <form></form>
+                <form action="#">
+                    <button type="button" onclick="hideNotesForm(this)">Hide Notes</button><br><br>
+                    {{ items.choice.name_txt }}<br><br>
+                    <p style="font-weight: bold">Constructive notes</p>
+                    <p style='font-style: italic'>At this page, you can modify "Client notes" only (below)!</p>
+                    <textarea class='constructive_notes' name='con-notes' rows='10' cols='45'>
+{{ items.choice.constructive_notes }}</textarea><br><br>
+                    <p style="font-weight: bold">Client notes</p>
+                    <textarea class='client_notes' name='cli-notes' rows='10' cols='45'>
+{{ items.choice.client_notes }}</textarea>
+                </form>
+            </div>
+            <div class='notes-link'>
+                <a href='#' title="<<<Constructive>>>: &quot;{{ items.choice.constructive_notes }}&quot;
+<<<Client>>>: &quot;{{ items.choice.client_notes}}&quot;"
+                {% if items.choice.constructive_notes|length > 2 or items.choice.client_notes|length > 2 %}
+                            class="link-txt" onclick="return showNotesForm(this, {{ is_client|lower }});">NOTES</a>
+                {% else %}
+                    class="link-txt" onclick="return showNotesForm(this, {{ is_client|lower }});">notes</a>
+                {% endif %}
+            </div>
+            <div class='constructive-notes'>{{ items.choice.constructive_notes }}</div>
+            <div class='client-notes'>{{ items.choice.client_notes}}</div>
+        </td>
+    {% else %}
+        <td class='td_header_2' colspan='5'>{{ items.choice.name_txt }}</td>
+        <td></td>
+        <td style='display:none'></td>
+        <td style='display:none'></td>
+        <td style='display:none'></td>
+        <td style='display:none'></td>
+    {% endif %}
+        </tr>
+{% endfor %}
+</tbody>
+</table>
+<script>
+    setForm();
+    {% if is_client %}
+    document.querySelectorAll('textarea[name="con-notes"]').forEach(function(textarea) {
+        textarea.addEventListener('focus', function() {
+            // Find the next textarea in the sequence
+            var nextTextarea = this;
+            while (nextTextarea = nextTextarea.nextElementSibling) {
+                if (nextTextarea.tagName.toLowerCase() === 'textarea') {
+                    nextTextarea.focus();
+                    break;
+                }
+            }
+        });
+    });
+    {% endif %}
+</script>
+<br>
+{% comment %}
+{% if is_client %}
+<table id='choices_footer'>
+<tr>
+    <td>
+        <input type='hidden' id='json_input' name='json_value' value=''>
+    </td>
+    <td><input type='submit' value='Save modifications'></td>
+</tr>
+</table>
+{% endif %}
+{% endcomment %}
+</form>
+<div style='display:none' id='active_row'>-1</div>
+<div style='display:none' id='modified'>no</div>
+{% if not is_worker %}
+<script>updateHeaders();</script>
+{% endif %}
+{% endblock %}

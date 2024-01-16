@@ -21,6 +21,7 @@ urlpatterns = [
     path('<int:construct_id>/client/', views.client, name='client'),
     path('<int:construct_id>/worker/', views.client, name='worker'),
     path('client/<str:slug>', views.client_slug, name='client_slug'),
+    path('mntn/<str:slug>', views.client2_slug, name='client2_slug'),
     path('<int:construct_id>/gantt/', views.gantt, name='gantt'),
     path('<int:construct_id>/flows/', views.flows, name='flows'),
     path('<int:construct_id>/transactions/', views.transactions, name='transactions'),
