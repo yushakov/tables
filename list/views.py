@@ -487,12 +487,19 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
     construct_total_price = 0.0
     construct_progress = 0.0
     choice, choice_price = None, None
+    price_prft_vat = None
+    item_price_prft_vat = None
     for idx, line_x in enumerate(struc_dict.values()):
         if line_x['type'].startswith('Choice'):
             choice = choice_dict[line_x['id']]
             choice_price = choice.price_num * choice.quantity_num
             construct_progress += choice_price * 0.01 * choice.progress_percent_num
             construct_total_price += choice_price
+            prcnt_coeff = (1. + 0.01 * choice.construct.company_profit_percent_num) \
+                        * (1. + 0.01 * choice.construct.ontop_profit_percent_num) \
+                        * (1. + 0.01 * choice.construct.vat_percent_num)
+            item_price_prft_vat = choice.price_num * prcnt_coeff
+            price_prft_vat = choice_price * prcnt_coeff
         else:
             choice = FakeChoice(idx, line_x['id'])
         main_contract = ''
@@ -500,6 +507,8 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
             main_contract = 'main-contract'
         ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice,
                         'choice_total_price': choice_price,
+                        'item_price_prft_vat': item_price_prft_vat,
+                        'price_prft_vat': price_prft_vat,
                         'main_contract': main_contract})
     return ch_list, construct_progress, construct_total_price
 
@@ -644,7 +653,7 @@ def client(request, construct_id):
     return render(request, 'list/client_view.html', context)
 
 
-def client_slug(request, slug):
+def client_slug(request, slug, version=1):
     construct = Construct.objects.filter(slug_name=slug).first()
     if construct is None:
         raise Http404("Project not found")
@@ -654,7 +663,6 @@ def client_slug(request, slug):
         process_post(request, construct, client=True)
         construct.history_dump(-1)
         logger.info(f"*action* client (slug) submission for construct '{construct.title_text}'.")
-    # extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
     ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
@@ -672,7 +680,14 @@ def client_slug(request, slug):
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
                'construct_paid': construct.income()}
-    return render(request, 'list/client_view.html', context)
+    if version == 1:
+        return render(request, 'list/client_view.html', context)
+    if version == 2:
+        return render(request, 'list/client2_view.html', context)
+
+
+def client2_slug(request, slug):
+    return client_slug(request, slug, version=2)
 
 
 @login_required

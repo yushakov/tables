@@ -86,6 +86,8 @@ class Construct(models.Model):
                                 blank=True, null=True, related_name='foreman_constructs')
     client_user = models.ForeignKey("User", on_delete=models.DO_NOTHING,
                                     blank=True, null=True, related_name='client_constructs')
+    ontop_profit_percent_num = models.FloatField(validators=percent_valid, default=20)
+    notes_txt = models.TextField(default='', blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         self.numbers = {}
