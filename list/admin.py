@@ -1,7 +1,10 @@
+from django import forms
 from django.contrib import admin
 from .models import Construct, Choice, Invoice, Transaction, InvoiceTransaction, Category
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 from .models import User
+from django.contrib.auth.forms import UserCreationForm
 
 '''
 Customization tricks: https://realpython.com/customize-django-admin-python 
@@ -72,6 +75,29 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_filter = ["construct"]
 
 
+class CustomUserCreationForm(UserCreationForm):
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        # Specify the fields you want on the add form.
+        # It should include all necessary fields that are required for creating a user.
+        fields = ("username", "email", "first_name", "last_name", "business_address",
+                  "company", "additional_info", "invoice_footer", "groups")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            # Assigning the selected groups to the user
+            user.groups.set(self.cleaned_data["groups"])
+        return user
+
+
 class MyUserAdmin(UserAdmin):
     """
     add your custom fields to fieldsets (for fields to be used in editing users)
@@ -80,8 +106,17 @@ class MyUserAdmin(UserAdmin):
     """
     # fieldsets = UserAdmin.fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
     # add_fieldsets = UserAdmin.add_fieldsets + (("Access", {"fields": ["accessible_constructs"]}),)
+    add_form = CustomUserCreationForm
     list_display = ["username", "email", "first_name", "last_name", "is_staff"]
     filter_horizontal = ["accessible_constructs", "groups", "user_permissions"]
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'first_name',
+                       'last_name', 'business_address', 'company',
+                       'additional_info', 'invoice_footer', 'groups'),
+        }),
+    )
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'business_address',
@@ -91,10 +126,10 @@ class MyUserAdmin(UserAdmin):
         (('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
 
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
-# admin.site.register(Worker)
 admin.site.register(Choice, ChoiceAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Transaction, TransactionAdmin)
