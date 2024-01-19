@@ -105,7 +105,7 @@
     <td></td>
     {% if construct.deposit <= 0 %}
         <td style="vertical-align: top"><b>Expected deposit:</b></td>
-        <td>
+        <td id="id_expected_deposit">
             £ {{ construct.expected_deposit }}<br>
             ({{ construct.deposit_percent_expect }}%)<br>
             <a href="{% url 'list:submit_invoice' %}?construct={{ construct.id }}&details=1,deposit,{{ construct.expected_deposit_str }}&amount={{ construct.expected_deposit_str }}&type=IN">request</a>
@@ -154,10 +154,10 @@
 {% csrf_token %}
 <table id='choices'>
 <thead><tr>
-    <td>
+    <th>
         <a href="#" onclick="return addRow(0, 'Choice');">task</a> |
         <a href="#" onclick="return addRow(0, 'Header2');">head</a>
-    </td>
+    </th>
     <th class="name_cell">Task name</th>
     <th>Unit price</th>
     <th>Quantity</th>
