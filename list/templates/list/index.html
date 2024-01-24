@@ -141,47 +141,47 @@
         <td></td>
         <td></td>
         <td class="cols full-cost" align ='right'>
-            <b>{{ total.full_cost }}</b>
+            <b>{{ total.full_cost|floatformat:2 }}</b>
         </td>
         <td class="cols vat" align ='right'>
-            <b>{{ total.vat_from_income }}</b>
+            <b>{{ total.vat_from_income|floatformat:2 }}</b>
         </td>
         <td class="cols main-cost" style="display: none"></td>
-        <td class="cols paid-deposit" align ='right'><b>{{ total.deposit }}</b></td>
+        <td class="cols paid-deposit" align ='right'><b>{{ total.deposit|floatformat:2 }}</b></td>
         <td class="cols full-progress" align ='right'>
-            <b>{{ total.full_progress_cost }}</b>
+            <b>{{ total.full_progress_cost|floatformat:2 }}</b>
         </td>
         <td class="cols deposit-aware-progress" style="display: none"></td>
         <td class="cols income" align ='right'>
-            <b>{{ total.round_income }}</b>
+            <b>{{ total.round_income|floatformat:2 }}</b>
         </td>
         <td class="cols outcome" align ='right'>
-            <b>{{ total.round_outcome }}</b>
+            <b>{{ total.round_outcome|floatformat:2 }}</b>
             </a>
         </td>
         <td class="cols expenses" align ='right'>
-            <b>{{ total.round_expenses }}</b>
+            <b>{{ total.round_expenses|floatformat:2 }}</b>
         </td>
         <td class="cols salaries-paid" align ='right'>
-            <b>{{ total.round_salaries }}</b>
+            <b>{{ total.round_salaries|floatformat:2 }}</b>
         </td>
         <td class="cols company-profit" align ='right'>
-            <b>{{ total.company_profit }}</b>
+            <b>{{ total.company_profit|floatformat:2 }}</b>
         </td>
         <td class="cols owner-profit" align ='right'>
-            <b>{{ total.owner_profit }}</b>
+            <b>{{ total.owner_profit|floatformat:2 }}</b>
         </td>
         <td class="cols salaries-part" align ='right'>
-            <b>{{ total.salaries_part }}</b>
+            <b>{{ total.salaries_part|floatformat:2 }}</b>
         </td>
         <td class="cols left-to-pay" align ='right'>
-            <b>{{ total.left_to_pay }}</b>
+            <b>{{ total.left_to_pay|floatformat:2 }}</b>
         </td>
         <td class="cols invoices-to-pay" align ='right'>
-            <b>{{ total.invoices_to_pay }}</b>
+            <b>{{ total.invoices_to_pay|floatformat:2 }}</b>
         </td>
         <td class="cols requested-payments" align ='right'>
-            <b>{{ total.invoices_pending_pay }}</b>
+            <b>{{ total.invoices_pending_pay|floatformat:2 }}</b>
         </td>
         </tr>
     {% endif %}
