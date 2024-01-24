@@ -511,7 +511,7 @@ class ModelTests(TestCase):
         choice1.save()
         # (work price + VAT + company profit) * 15%
         expected = 25000 * 1.15 * 1.14 * 0.15
-        self.assertEqual(construct.expected_deposit, round(expected))
+        self.assertEqual(construct.expected_deposit, round(expected, 2))
 
     def test_deposit_main_only(self):
         construct = Construct(title_text="Deposit holder",
@@ -677,10 +677,10 @@ class ModelTests(TestCase):
         self.assertEqual(construct.left_to_pay, 215)
         print_it()
         progress(75.0)
-        self.assertEqual(construct.left_to_pay, 37823)
+        self.assertEqual(construct.left_to_pay, 37822.5)
         print_it()
         transaction(40000, "")
-        self.assertEqual(construct.left_to_pay, -2177)
+        self.assertEqual(construct.left_to_pay, -2177.5)
         print_it()
         progress(100.0)
         self.assertEqual(construct.left_to_pay, 35430)
