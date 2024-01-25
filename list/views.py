@@ -569,15 +569,21 @@ def detail(request, construct_id):
     if construct.overall_progress_percent_num != construct_progress:
         construct.overall_progress_percent_num = construct_progress
         construct.save()
-    total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    total_and_profit = construct_total_price * (1. + 0.01 * construct.company_profit_percent_num)
+    profit = construct_total_price * 0.01 * construct.company_profit_percent_num
+    on_top_profit = total_and_profit * 0.01 * construct.ontop_profit_percent_num
+    on_top_profit_and_vat = (total_and_profit + on_top_profit) * 0.01 * construct.vat_percent_num
     history = get_history_records(construct)
     session_expiration = request.session.get_expiry_date()
     context = {'construct': construct,
-            'session_expiration': f"{session_expiration.strftime('%H:%M, %d.%m.%Y')}",
+               'session_expiration': f"{session_expiration.strftime('%H:%M, %d.%m.%Y')}",
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
-               'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'total_profit_vat': total_and_profit * (1. + 0.01 * construct.vat_percent_num),
+               'on_top_profit': on_top_profit,
+               'on_top_profit_and_vat': on_top_profit_and_vat,
+               'total_total': (construct_total_price + profit + on_top_profit) * (1. + 0.01 * construct.vat_percent_num),
                'construct_paid': round(construct.income()),
                'noscale': True,
                'history': history}
