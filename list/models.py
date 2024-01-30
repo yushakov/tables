@@ -88,6 +88,11 @@ class Construct(models.Model):
                                     blank=True, null=True, related_name='client_constructs')
     ontop_profit_percent_num = models.FloatField(validators=percent_valid, default=0)
     notes_txt = models.TextField(default='', blank=True, null=True)
+    header_default = ("**QUOTE**\n"
+                      "*(this quotation will be valid until Month Day, Year)*")
+    footer_default = ("**Additional information:** goes here.")
+    header_txt = models.TextField(default=header_default, blank=True, null=True)
+    footer_txt = models.TextField(default=footer_default, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         self.numbers = {}
