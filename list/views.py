@@ -679,7 +679,11 @@ def client_slug(request, slug, version=1):
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    deposit = construct.expected_deposit
+    if construct.deposit > 0.0:
+        deposit = construct.deposit
     context = {'construct': construct,
+               'deposit': deposit,
                'ch_list': ch_list,
                'is_client': True,
                'has_access': True,
