@@ -852,13 +852,17 @@ def view_invoice(request, invoice_id):
     user_invoices = request.user.invoice_set.filter(id=invoice_id)
     if len(user_invoices) == 0:
         user_is_owner = False
+    staff_users = []
+    if request.user.is_staff:
+        staff_users = list(User.objects.filter(is_staff=True))
     context = {'invoice': invoice,
                'transactions': tra_list,
                'pay_more': float(invoice.amount) - tra_total,
                'total_paid': tra_total,
                'mismatch': payment_mismatch,
                'user_is_owner': user_is_owner,
-               'username': request.user.username}
+               'username': request.user.username,
+               'staff_users': staff_users}
     return render(request, 'list/view_invoice.html', context)
 
 
