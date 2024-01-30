@@ -1438,18 +1438,29 @@ class PayInvoicesTests(TestCase):
 class ViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
+        self.user.first_name = "Mega"
+        self.user.last_name = "Test"
+        self.user.save()
         self.simple_user = User.objects.create_user(username='simple', password='secret', email='simple@domain.com')
+        self.simple_user.first_name = "Simple"
+        self.simple_user.last_name = "Testik"
         self.simple_user.save()
         self.client_user = User.objects.create_user(username='client',
                 password='secret',
                 email='client@domain.com')
         permission = Permission.objects.get(codename='view_construct')
         self.client_user.user_permissions.add(permission)
+        self.client_user.first_name = "Client"
+        self.client_user.last_name = "Ivanovich"
+        self.client_user.save()
         self.worker_user = User.objects.create_user(username='worker',
                 password='secret',
                 email='worker@domain.com')
         permission = Permission.objects.get(codename='add_invoice')
         self.worker_user.user_permissions.add(permission)
+        self.worker_user.first_name = "Worker"
+        self.worker_user.last_name = "Petrovich"
+        self.worker_user.save()
 
         # worker in the Workers group
         workers_group, _ = Group.objects.get_or_create(name=WORKER_GROUP_NAME)
@@ -1472,12 +1483,18 @@ class ViewTests(TestCase):
         workers_group.permissions.add(add_invoice_permission, view_invoice_permission, change_invoice_permission)
         self.worker_user_2 = User.objects.create_user('worker2', 'worker@example.com', 'secret')
         self.worker_user_2.groups.add(workers_group)
+        self.worker_user_2.first_name = "Worker2"
+        self.worker_user_2.last_name = "Petrovich2"
+        self.worker_user_2.save()
 
         # client in the Clients group
         clients_group, _ = Group.objects.get_or_create(name=CLIENT_GROUP_NAME)
         content_type = ContentType.objects.get_for_model(Invoice)
         self.client_user_2 = User.objects.create_user('client2', 'client@example.com', 'secret')
         self.client_user_2.groups.add(clients_group)
+        self.client_user_2.first_name = "Client2"
+        self.client_user_2.last_name = "Ivanovich2"
+        self.client_user_2.save()
 
     def test_session_extension_on_detail_page(self):
         c = Client()
@@ -2578,6 +2595,33 @@ class ViewTests(TestCase):
         response = c.get(f"/list/invoice/{invoice.id}/print/")
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
         self.assertIs(response.url.find('accounts/login') >= 0, True)
+
+    def test_print_invoice_as_another_user(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct("Test print invoice")
+        invoice_id = cons.invoice_set.all()[0].id
+        users = User.objects.all()
+        # import pdb; pdb.set_trace()
+        for u in users:
+            response = c.get(f"/list/invoice/{invoice_id}/print/?user_id={u.id}")
+            self.assertTrue(response.context['user'].first_name == u.first_name)
+            self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_print_invoice_as_another_user_non_staff(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct("Test print invoice")
+        invoice_id = cons.invoice_set.all()[0].id
+        users = User.objects.all()
+        for u in users:
+            if u.first_name == self.worker_user_2.first_name:
+                continue
+            response = c.get(f"/list/invoice/{invoice_id}/print/?user_id={u.id}")
+            if response.context is None:
+                continue
+            self.assertFalse(response.context['user'].first_name == u.first_name)
+            self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_modify_invoice_post(self):
         c = Client()
