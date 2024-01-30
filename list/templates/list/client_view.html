@@ -9,6 +9,16 @@
 
 <h1>{{ construct.title_text }}</h1>
 <br>
+
+{% if construct.header_txt %}
+    <div id='construct-header'>
+        {% autoescape off %}
+            {{ construct.header_txt|escape|markup }}
+        {% endautoescape %}
+    </div>
+    <br />
+{% endif %}
+
 {% if 'list.change_construct' in perms %}
     &larr; <a href="{% url 'list:detail' construct.id %}">back to the full view</a>
     <br>
@@ -216,6 +226,15 @@
 </table>
 {% endif %}
 </form>
+
+{% if construct.footer_txt %}
+    <div id='construct-footer'>
+        {% autoescape off %}
+            {{ construct.footer_txt|escape|markup }}
+        {% endautoescape %}
+    </div>
+{% endif %}
+
 <div style='display:none' id='active_row'>-1</div>
 <div style='display:none' id='modified'>no</div>
 {% if not is_worker %}

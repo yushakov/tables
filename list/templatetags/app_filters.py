@@ -6,5 +6,7 @@ register = template.Library()
 @register.filter
 def markup(value):
     out = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", value)
+    out = re.sub(r"\*(.*?)\*", r"<i>\1</i>", out)
+    out = re.sub("\n", r"<br />\n", out)
     out = re.sub(r"&amp;", r"&", out)
     return out

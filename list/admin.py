@@ -32,7 +32,9 @@ class ConstructAdmin(admin.ModelAdmin):
               "deposit_percent_expect",
               "company_profit_percent_num",
               "ontop_profit_percent_num",
-              "notes_txt"]
+              "notes_txt",
+              "header_txt",
+              "footer_txt"]
     inlines = [CategoryInline]
 
     def get_form(self, request, obj=None, **kwargs):
@@ -49,6 +51,8 @@ class ConstructAdmin(admin.ModelAdmin):
         form.base_fields["company_profit_percent_num"].label = "Company profit, %"
         form.base_fields["ontop_profit_percent_num"].label = "On-top profits, %"
         form.base_fields["notes_txt"].label = "Notes"
+        form.base_fields["header_txt"].label = "Header"
+        form.base_fields["footer_txt"].label = "Footer"
         return form
 
 
