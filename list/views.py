@@ -820,7 +820,16 @@ def print_invoice(request, invoice_id):
         warning = f"Actual invoice amount (£{invoice_amount}) " + \
                 f"is different from the total amount from lines: £{total_and_vat}. " + \
                 f"Either your invoice price is wrong, or there is a mistake in the lines."
-    context = {'user': request.user,
+    user = request.user
+    if user.is_staff:
+        another_user_id = int(request.GET.get('user_id', -1))
+        if another_user_id > 0:
+            try:
+                user = User.objects.get(pk=another_user_id)
+            except:
+                logger.error(f"print_invoice(): Cannot get user by user id '{another_user_id}'")
+                user = request.user
+    context = {'user': user,
                'invoice': invoice,
                'no_logout_link': True,
                'lines': lines,
@@ -843,13 +852,17 @@ def view_invoice(request, invoice_id):
     user_invoices = request.user.invoice_set.filter(id=invoice_id)
     if len(user_invoices) == 0:
         user_is_owner = False
+    staff_users = []
+    if request.user.is_staff:
+        staff_users = list(User.objects.filter(is_staff=True))
     context = {'invoice': invoice,
                'transactions': tra_list,
                'pay_more': float(invoice.amount) - tra_total,
                'total_paid': tra_total,
                'mismatch': payment_mismatch,
                'user_is_owner': user_is_owner,
-               'username': request.user.username}
+               'username': request.user.username,
+               'staff_users': staff_users}
     return render(request, 'list/view_invoice.html', context)
 
 
