@@ -7,7 +7,7 @@
 </script>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 
-<h1>{{ construct.title_text }}</h1>
+<h1>{{ construct.title_text }} (maintenance)</h1>
 <br>
 
 {% if construct.header_txt %}
@@ -36,9 +36,6 @@
 
 {% elif is_client and has_access %}
 
-<a href="{% url 'gantt:slug' construct.slug_name %}">Gantt Chart</a> &rarr;
-<br /><br />
-
 <table id='choices_head'>
 <tbody>
 <tr>
@@ -52,9 +49,9 @@
     <td><b>Email:</b></td>
     <td>{{ construct.email_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td><b>Total:</b></td>
-    <td>&#163; {{ total_and_profit|floatformat:2 }}</td>
-    <td id='project_total' style='display:none'></td>
+    <td style='display:none'><b>Total:</b></td>
+    <td id='project_total' style='display:none'>&#163; {{ construct_total }}</td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
@@ -63,37 +60,37 @@
     <td><b>Phone:</b></td>
     <td>{{ construct.phone_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td></td>
-    <td></td>
-    <td><b>Full progress:</b></td>
-    <td id='progress_vat'>&#163; updating...</td>
+    <td style='display:none'><b>+ {{ construct.company_profit_percent_num }}% profit:</b></td>
+    <td id='project_total_profit' style='display:none'>&#163; {{ total_and_profit|floatformat:2 }}</td>
+    <td style='display:none'><b>Full progress<br>(with profit + VAT):</b></td>
+    <td id='progress_vat' style='display:none'>&#163; updating...</td>
 </tr>
 <tr>
     <td><b>Owner:</b></td>
     <td>{{ construct.owner_name_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td><b>VAT:</b></td>
-    <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
-    <td><b>Main contract<br>progress:</b></td>
-    <td>&#163; {{ construct.no_deposit_progress_cost }}</td>
+    <td style='display:none'><b>VAT:</b></td>
+    <td id='project_vat' style='display:none'>{{ construct.vat_percent_num }}%</td>
+    <td style='display:none'><b>Main contract<br>progress:</b></td>
+    <td style='display:none'>&#163; {{ construct.no_deposit_progress_cost }}</td>
 </tr>
 <tr>
     <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
     <td></td>
-    <td></td>
-    <td><b>Total + VAT:</b></td>
-    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat|floatformat:2 }}</td>
-    <td><b>Other works<br>progress:</b></td>
-    <td>£ {{ construct.full_side_progress_cost }}</td>
+    <td id='project_total_profit_vat' style='display:none'></td>
+    <td><b>Total:</b></td>
+    <td>&#163; {{ construct_total2|floatformat:2 }}</td>
+    <td style='display:none'><b>Other works<br>progress:</b></td>
+    <td style='display:none'>£ {{ construct.full_side_progress_cost }}</td>
 </tr>
 <tr>
     <td></td>
     <td></td>
     <td></td>
-    <td><b>Deposit:</b></td>
-    <td>£ {{ deposit }}</td>
-    <td><b>Income w/o deposit:</b></td>
-    <td id='paid'>&#163; {{ construct.income_wo_deposit }}</td>
+    <td style='display:none'><b>Deposit:</b></td>
+    <td style='display:none'>£ {{ construct.deposit }}</td>
+    <td style='display:none'><b>Income w/o deposit:</b></td>
+    <td id='paid' style='display:none'>&#163; {{ construct.income_wo_deposit }}</td>
 </tr>
 <tr>
     <td></td>
@@ -101,8 +98,8 @@
     <td></td>
     <td></td>
     <td></td>
-    <td><b>To be paid:</b></td>
-    <td>£ {{ construct.left_to_pay }}</td>
+    <td style='display:none'><b>To be paid:</b></td>
+    <td style='display:none'>£ {{ construct.left_to_pay }}</td>
 </tr>
 </tbody>
 </table>
@@ -125,10 +122,10 @@
     <th><!--Units--></th>
     {% if not is_worker %}<th>Total price</th>{% endif %}
     <th style='display:none'></th>
-    <th>Date start</th>
-    <th>Planned days</th>
+    <th style='display:none'>Date start</th>
+    <th style='display:none'>Planned days</th>
     <th>Progress</th>
-    <th></th>
+    <th style='display:none'></th>
 </tr></thead>
 <tbody>
 {% for items in ch_list %}
@@ -149,8 +146,8 @@
             <td align='right' class='choice_total_price'>&#163;{{ items.price_prft_vat|floatformat:2 }}</td>
         {% endif %}
         <td style='display:none'></td>
-        <td>{{ items.choice.plan_start_date }}</td>
-        <td align='center'>{{ items.choice.plan_days_num }}</td>
+        <td style='display:none'>{{ items.choice.plan_start_date }}</td>
+        <td align='center' style='display:none'>{{ items.choice.plan_days_num }}</td>
         <td class="progress-cell">
             <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
                 <div class='choice_progress_percent'>
@@ -158,7 +155,7 @@
                 </div>
             </div>
         </td>
-        <td>
+        <td style='display:none'>
             <div class='notes-form'>
                 <form></form>
                 <form action="#">
@@ -188,10 +185,10 @@
     {% else %}
         <td class='td_header_2' colspan='5'>{{ items.choice.name_txt }}</td>
         <td></td>
-        <td></td>
-        <td></td>
         <td style='display:none'></td>
-        <td></td>
+        <td style='display:none'></td>
+        <td style='display:none'></td>
+        <td style='display:none'></td>
     {% endif %}
         </tr>
 {% endfor %}
@@ -215,6 +212,7 @@
     {% endif %}
 </script>
 <br>
+{% comment %}
 {% if is_client %}
 <table id='choices_footer'>
 <tr>
@@ -225,6 +223,7 @@
 </tr>
 </table>
 {% endif %}
+{% endcomment %}
 </form>
 
 {% if construct.footer_txt %}

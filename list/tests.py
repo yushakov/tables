@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.forms.widgets import HiddenInput, Select
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+import io
 import numpy as np
 import re
 import datetime as dt
@@ -39,6 +42,15 @@ import os
 
 STATUS_CODE_OK = 200
 STATUS_CODE_REDIRECT = 302
+
+def get_dummy_image():
+    image = Image.new('RGB', (10, 10), color = 'red')
+    image_file = io.BytesIO()
+    image.save(image_file, format='JPEG')
+    image_file.name = 'test_receipt.jpg'
+    image_file.seek(0)
+    dummy_file = SimpleUploadedFile('test_receipt.jpg', image_file.read(), content_type='image/jpeg')
+    return dummy_file
 
 def make_test_choice(construct, name='Some new choice'):
     choice = Choice(construct=construct,
@@ -410,8 +422,24 @@ class ModelTests(TestCase):
         con.save()
         con.foreman = foreman
         con.save()
-        foreman_cons = foreman.construct_set.all()
+        foreman_cons = foreman.foreman_constructs.all()
         self.assertEqual(len(foreman_cons), 1)
+
+    def test_client_user_field(self):
+        client = User(username='Client')
+        client.save()
+        con1 = Construct(title_text='construct1')
+        con1.save()
+        con1.client_user = client
+        con1.save()
+        con2 = Construct(title_text='construct2')
+        con2.save()
+        con2.client_user = client
+        con2.save()
+        con3 = Construct(title_text='construct3')
+        con3.save()
+        client_cons = client.client_constructs.all()
+        self.assertEqual(len(client_cons), 2)
 
     def test_categories(self):
         con1 = make_test_construct(construct_name="Number one")
@@ -483,7 +511,7 @@ class ModelTests(TestCase):
         choice1.save()
         # (work price + VAT + company profit) * 15%
         expected = 25000 * 1.15 * 1.14 * 0.15
-        self.assertEqual(construct.expected_deposit, round(expected))
+        self.assertEqual(construct.expected_deposit, round(expected, 2))
 
     def test_deposit_main_only(self):
         construct = Construct(title_text="Deposit holder",
@@ -649,10 +677,10 @@ class ModelTests(TestCase):
         self.assertEqual(construct.left_to_pay, 215)
         print_it()
         progress(75.0)
-        self.assertEqual(construct.left_to_pay, 37823)
+        self.assertEqual(construct.left_to_pay, 37822.5)
         print_it()
         transaction(40000, "")
-        self.assertEqual(construct.left_to_pay, -2177)
+        self.assertEqual(construct.left_to_pay, -2177.5)
         print_it()
         progress(100.0)
         self.assertEqual(construct.left_to_pay, 35430)
@@ -1410,18 +1438,29 @@ class PayInvoicesTests(TestCase):
 class ViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
+        self.user.first_name = "Mega"
+        self.user.last_name = "Test"
+        self.user.save()
         self.simple_user = User.objects.create_user(username='simple', password='secret', email='simple@domain.com')
+        self.simple_user.first_name = "Simple"
+        self.simple_user.last_name = "Testik"
         self.simple_user.save()
         self.client_user = User.objects.create_user(username='client',
                 password='secret',
                 email='client@domain.com')
         permission = Permission.objects.get(codename='view_construct')
         self.client_user.user_permissions.add(permission)
+        self.client_user.first_name = "Client"
+        self.client_user.last_name = "Ivanovich"
+        self.client_user.save()
         self.worker_user = User.objects.create_user(username='worker',
                 password='secret',
                 email='worker@domain.com')
         permission = Permission.objects.get(codename='add_invoice')
         self.worker_user.user_permissions.add(permission)
+        self.worker_user.first_name = "Worker"
+        self.worker_user.last_name = "Petrovich"
+        self.worker_user.save()
 
         # worker in the Workers group
         workers_group, _ = Group.objects.get_or_create(name=WORKER_GROUP_NAME)
@@ -1444,12 +1483,18 @@ class ViewTests(TestCase):
         workers_group.permissions.add(add_invoice_permission, view_invoice_permission, change_invoice_permission)
         self.worker_user_2 = User.objects.create_user('worker2', 'worker@example.com', 'secret')
         self.worker_user_2.groups.add(workers_group)
+        self.worker_user_2.first_name = "Worker2"
+        self.worker_user_2.last_name = "Petrovich2"
+        self.worker_user_2.save()
 
         # client in the Clients group
         clients_group, _ = Group.objects.get_or_create(name=CLIENT_GROUP_NAME)
         content_type = ContentType.objects.get_for_model(Invoice)
         self.client_user_2 = User.objects.create_user('client2', 'client@example.com', 'secret')
         self.client_user_2.groups.add(clients_group)
+        self.client_user_2.first_name = "Client2"
+        self.client_user_2.last_name = "Ivanovich2"
+        self.client_user_2.save()
 
     def test_session_extension_on_detail_page(self):
         c = Client()
@@ -2199,6 +2244,21 @@ class ViewTests(TestCase):
         response = c.post("/list/transaction/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_submit_transaction_with_photo(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        dummy_file = get_dummy_image()
+        post_data = {'from_txt': ['Vasya'], 'to_txt': ['Petya'], 'amount': ['100'],
+                'transaction_type': ['IN'], 'construct': [str(cons.id)], 'date': ['2023-05-20'],
+                'initial-date': ['2023-05-20 07:35:12+00:00'], 'receipt_number': ['12345678'],
+                'details_txt': ['note'], 'photo': [dummy_file], 'initial-photo': ['Raw content']}
+        response = c.post("/list/transaction/submit/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        response = c.get(response.url + "/")
+        self.assertEqual(response.context['transaction'].photo.size, dummy_file.size)
         
     def test_login_submit_transaction_form(self):
         c = Client()
@@ -2302,6 +2362,23 @@ class ViewTests(TestCase):
         response = c.post("/list/invoice/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+
+    def test_submit_invoice_with_photo(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        dummy_file = get_dummy_image()
+        post_data = {'seller': ['Vasya'], 'amount': ['100'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['note'], 'photo': [dummy_file]}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        response = c.get(response.url + "/")
+        self.assertEqual(response.context['invoice'].photo.size, dummy_file.size)
 
     def test_modify_invoice_get(self):
         c = Client()
@@ -2518,6 +2595,33 @@ class ViewTests(TestCase):
         response = c.get(f"/list/invoice/{invoice.id}/print/")
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
         self.assertIs(response.url.find('accounts/login') >= 0, True)
+
+    def test_print_invoice_as_another_user(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct("Test print invoice")
+        invoice_id = cons.invoice_set.all()[0].id
+        users = User.objects.all()
+        # import pdb; pdb.set_trace()
+        for u in users:
+            response = c.get(f"/list/invoice/{invoice_id}/print/?user_id={u.id}")
+            self.assertTrue(response.context['user'].first_name == u.first_name)
+            self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_print_invoice_as_another_user_non_staff(self):
+        c = Client()
+        c.login(username="worker2", password="secret")
+        cons = make_test_construct("Test print invoice")
+        invoice_id = cons.invoice_set.all()[0].id
+        users = User.objects.all()
+        for u in users:
+            if u.first_name == self.worker_user_2.first_name:
+                continue
+            response = c.get(f"/list/invoice/{invoice_id}/print/?user_id={u.id}")
+            if response.context is None:
+                continue
+            self.assertFalse(response.context['user'].first_name == u.first_name)
+            self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_modify_invoice_post(self):
         c = Client()

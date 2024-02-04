@@ -65,14 +65,6 @@ def load_all_constructs(folder, prefix='Imported: '):
         Construct.safe_import_from_json(fname, prefix)
 
 
-class Client(models.Model):
-    name = models.CharField(max_length=100)
-    contact_info = models.TextField()
-
-    def __str__(self):
-        return self.name
-
-
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
     listed_date = models.DateTimeField('date listed', default=timezone.now)
@@ -90,7 +82,17 @@ class Construct(models.Model):
     paid_num = models.FloatField(default='0')
     struct_json = models.TextField(default='{}')
     slug_name = models.CharField(max_length=500, null=True)
-    foreman = models.ForeignKey("User", on_delete=models.DO_NOTHING, blank=True, null=True)
+    foreman = models.ForeignKey("User", on_delete=models.DO_NOTHING,
+                                blank=True, null=True, related_name='foreman_constructs')
+    client_user = models.ForeignKey("User", on_delete=models.DO_NOTHING,
+                                    blank=True, null=True, related_name='client_constructs')
+    ontop_profit_percent_num = models.FloatField(validators=percent_valid, default=0)
+    notes_txt = models.TextField(default='', blank=True, null=True)
+    header_default = ("**QUOTE**\n"
+                      "*(this quotation will be valid until Month Day, Year)*")
+    footer_default = ("**Additional information:** goes here.")
+    header_txt = models.TextField(default=header_default, blank=True, null=True)
+    footer_txt = models.TextField(default=footer_default, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         self.numbers = {}
@@ -242,7 +244,7 @@ class Construct(models.Model):
             total_amount = 0.0
             for item in items:
                 total_amount += float(func(item))
-            return round(total_amount)
+            return round(total_amount, 2)
 
         out['choices_total'] = get_total(choices, lambda x: x.quantity_num * x.price_num)
         out['transactions_total'] = get_total(transactions)
@@ -360,7 +362,7 @@ class Construct(models.Model):
                 self.numbers['invoices'] = self.invoice_set.all()
             invoices = self.numbers['invoices'].filter(invoice_type=Transaction.OUTGOING, status=Invoice.UNPAID)
             if invoices is None: return 0.0
-            self.numbers['invoices_to_pay'] = round(sum([iv.amount for iv in invoices]))
+            self.numbers['invoices_to_pay'] = round(sum([iv.amount for iv in invoices]), 2)
         return self.numbers['invoices_to_pay']
 
     @property
@@ -372,7 +374,7 @@ class Construct(models.Model):
                 self.numbers['invoices'] = self.invoice_set.all()
             invoices = self.numbers['invoices'].filter(invoice_type=Transaction.INCOMING, status=Invoice.UNPAID)
             if invoices is None: return 0.0
-            self.numbers['invoices_pending_pay'] = round(sum([iv.amount for iv in invoices]))
+            self.numbers['invoices_pending_pay'] = round(sum([iv.amount for iv in invoices]), 2)
         return self.numbers['invoices_pending_pay']
 
     def income(self):
@@ -425,20 +427,23 @@ class Construct(models.Model):
 
     @property
     def round_salaries(self):
-        return round(self.salaries())
+        return round(self.salaries(), 2)
 
     @property
     def company_profit(self):
-        return round(self.income() - self.outcome())
+        ## TODO: rename to Real Profit ##
+        return round(self.income() - self.outcome() - self.vat_from_income, 2)
 
     @property
     def owner_profit(self):
-        return round(self.withOutVat(self.income()) * self.owner_profit_coeff)
+        ## TODO: rename to Ongoing Profit ##
+        part_cost = self.income() / (1. + self.company_profit_percent_num * 0.01) / (1. + self.vat_percent_num * 0.01)
+        return round(part_cost * self.company_profit_percent_num * 0.01, 2)
 
     @property
     def salaries_part(self):
-        # Income - VAT - Owner Profit - Outcome
-        return round(self.withOutVat(self.income()) - self.owner_profit - self.outcome())
+        # Income - Outcome - VAT - Ongoing Profit 
+        return round(self.company_profit - self.owner_profit, 2)
 
     @property
     def company_profit_percent(self):
@@ -449,19 +454,19 @@ class Construct(models.Model):
 
     @property
     def round_expenses(self):
-        return round(self.expenses())
+        return round(self.expenses(), 2)
 
     @property
     def round_income(self):
-        return round(self.income())
+        return round(self.income(), 2)
 
     @property
     def round_outcome(self):
-        return round(self.outcome())
+        return round(self.outcome(), 2)
 
     @property
     def progress_minus_income(self):
-        return round(self.full_progress_cost - self.income())
+        return round(self.full_progress_cost - self.income(), 2)
 
     def progress_cost(self):
         if 'choices' not in self.numbers:
@@ -498,7 +503,7 @@ class Construct(models.Model):
 
     @property
     def full_side_progress_cost(self):
-        return round(self.withVat(self.withCompanyProfit(self.side_progress_cost())))
+        return round(self.withVat(self.withCompanyProfit(self.side_progress_cost())), 2)
 
     def overall_progress_percent(self):
         if 'choices' not in self.numbers:
@@ -523,7 +528,7 @@ class Construct(models.Model):
             self.numbers['choices'] = self.choice_set.all()
         choices = self.numbers['choices']
         choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
-        return round(self.withVat(self.withCompanyProfit(choices_cost)))
+        return round(self.withVat(self.withCompanyProfit(choices_cost)), 2)
 
     @property
     def full_cost_vat(self):
@@ -531,12 +536,12 @@ class Construct(models.Model):
             self.numbers['choices'] = self.choice_set.all()
         choices = self.numbers['choices']
         choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
-        return round(self.withCompanyProfit(choices_cost) * 0.01 * self.vat_percent_num)
+        return round(self.withCompanyProfit(choices_cost) * 0.01 * self.vat_percent_num, 2)
 
     @property
     def vat_from_income(self):
         income = self.income()
-        return round(income - self.withOutVat(income))
+        return round(income - self.withOutVat(income), 2)
 
     @property
     def main_cost(self):
@@ -544,11 +549,11 @@ class Construct(models.Model):
             self.numbers['choices'] = self.choice_set.all()
         choices = self.numbers['choices'].filter(main_contract_choice=True)
         choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
-        return round(self.withVat(self.withCompanyProfit(choices_cost)))
+        return round(self.withVat(self.withCompanyProfit(choices_cost)), 2)
 
     @property
     def expected_deposit(self):
-        return round(self.main_cost * self.deposit_percent_expect * 0.01)
+        return round(self.main_cost * self.deposit_percent_expect * 0.01, 2)
 
     @property
     def expected_deposit_str(self):
@@ -567,7 +572,7 @@ class Construct(models.Model):
 
     @property
     def income_wo_deposit(self):
-        return round(self.income() - self.deposit)
+        return round(self.income() - self.deposit, 2)
 
     @property
     def deposit_percent(self):
@@ -578,21 +583,21 @@ class Construct(models.Model):
     @property
     def no_deposit_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.main_progress_cost()))
-                     * (1. - self.deposit_percent * 0.01))
+                     * (1. - self.deposit_percent * 0.01), 2)
 
     @property
     def full_progress_cost(self):
-        return round(self.withVat(self.withCompanyProfit(self.progress_cost())))
+        return round(self.withVat(self.withCompanyProfit(self.progress_cost())), 2)
 
     @property
     def left_to_pay(self):
         return round(self.no_deposit_progress_cost + self.full_side_progress_cost
-                     - (self.income() - self.deposit))
+                     - (self.income() - self.deposit), 2)
 
     @property
     def left_to_pay_str(self):
         return str(round(self.no_deposit_progress_cost + self.full_side_progress_cost
-                     - (self.income() - self.deposit)))
+                     - (self.income() - self.deposit), 2))
 
 
 class Category(models.Model):
@@ -696,15 +701,6 @@ class HistoryRecord(models.Model):
         return out
 
 
-class Worker(models.Model):
-    name = models.CharField(max_length=200)
-    email = models.EmailField()
-    phone = models.CharField(max_length=200, validators=phone_valid)
-    
-    def __str__(self):
-        return self.name
-
-
 def instances_are_equal(instance1, instance2, fields=None):
     if fields is None:
         fields = [f.name for f in instance1._meta.fields]
@@ -803,15 +799,6 @@ class Choice(models.Model):
         self.construct.save()
         self.construct.numbers = {}
         super(Choice, self).save(*args, **kwargs)
-
-
-class Project(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
 
 
 def get_id(model_class):

@@ -485,14 +485,23 @@ class FakeChoice:
 def getChoiceListAndPrices(struc_dict, choice_dict):
     ch_list = []
     construct_total_price = 0.0
+    construct_total_price2 = 0.0
     construct_progress = 0.0
     choice, choice_price = None, None
+    price_prft_vat = None
+    item_price_prft_vat = None
     for idx, line_x in enumerate(struc_dict.values()):
         if line_x['type'].startswith('Choice'):
             choice = choice_dict[line_x['id']]
             choice_price = choice.price_num * choice.quantity_num
             construct_progress += choice_price * 0.01 * choice.progress_percent_num
             construct_total_price += choice_price
+            prcnt_coeff = (1. + 0.01 * choice.construct.company_profit_percent_num) \
+                        * (1. + 0.01 * choice.construct.ontop_profit_percent_num) \
+                        * (1. + 0.01 * choice.construct.vat_percent_num)
+            item_price_prft_vat = choice.price_num * prcnt_coeff
+            price_prft_vat = choice_price * prcnt_coeff
+            construct_total_price2 += price_prft_vat
         else:
             choice = FakeChoice(idx, line_x['id'])
         main_contract = ''
@@ -500,8 +509,10 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
             main_contract = 'main-contract'
         ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice,
                         'choice_total_price': choice_price,
+                        'item_price_prft_vat': item_price_prft_vat,
+                        'price_prft_vat': price_prft_vat,
                         'main_contract': main_contract})
-    return ch_list, construct_progress, construct_total_price
+    return ch_list, construct_progress, construct_total_price, construct_total_price2
 
 
 def checkTimeStamp(data, construct):
@@ -552,21 +563,27 @@ def detail(request, construct_id):
         construct.history_dump(request.user.id)
     extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
+    ch_list, construct_progress, construct_total_price, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
     if construct.overall_progress_percent_num != construct_progress:
         construct.overall_progress_percent_num = construct_progress
         construct.save()
-    total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    total_and_profit = construct_total_price * (1. + 0.01 * construct.company_profit_percent_num)
+    profit = construct_total_price * 0.01 * construct.company_profit_percent_num
+    on_top_profit = total_and_profit * 0.01 * construct.ontop_profit_percent_num
+    on_top_profit_and_vat = (total_and_profit + on_top_profit) * 0.01 * construct.vat_percent_num
     history = get_history_records(construct)
     session_expiration = request.session.get_expiry_date()
     context = {'construct': construct,
-            'session_expiration': f"{session_expiration.strftime('%H:%M, %d.%m.%Y')}",
+               'session_expiration': f"{session_expiration.strftime('%H:%M, %d.%m.%Y')}",
                'ch_list': ch_list,
                'construct_total': construct_total_price,
                'total_and_profit': total_and_profit,
-               'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
+               'total_profit_vat': total_and_profit * (1. + 0.01 * construct.vat_percent_num),
+               'on_top_profit': on_top_profit,
+               'on_top_profit_and_vat': on_top_profit_and_vat,
+               'total_total': (construct_total_price + profit + on_top_profit) * (1. + 0.01 * construct.vat_percent_num),
                'construct_paid': round(construct.income()),
                'noscale': True,
                'history': history}
@@ -621,7 +638,7 @@ def client(request, construct_id):
         logger.info(f'*action* client submission for {construct.title_text} by {request.user.username}')
     extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
+    ch_list, construct_progress, construct_total_price, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
     if construct.overall_progress_percent_num != construct_progress:
@@ -644,7 +661,7 @@ def client(request, construct_id):
     return render(request, 'list/client_view.html', context)
 
 
-def client_slug(request, slug):
+def client_slug(request, slug, version=1):
     construct = Construct.objects.filter(slug_name=slug).first()
     if construct is None:
         raise Http404("Project not found")
@@ -654,25 +671,36 @@ def client_slug(request, slug):
         process_post(request, construct, client=True)
         construct.history_dump(-1)
         logger.info(f"*action* client (slug) submission for construct '{construct.title_text}'.")
-    # extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, construct_progress, construct_total_price = getChoiceListAndPrices(struc_dict, choice_dict)
+    ch_list, construct_progress, construct_total_price, total_price2 = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price
     if construct.overall_progress_percent_num != construct_progress:
         construct.overall_progress_percent_num = construct_progress
         construct.save()
     total_and_profit = construct_total_price * (1. + 0.01*construct.company_profit_percent_num)
+    deposit = construct.expected_deposit
+    if construct.deposit > 0.0:
+        deposit = construct.deposit
     context = {'construct': construct,
+               'deposit': deposit,
                'ch_list': ch_list,
                'is_client': True,
                'has_access': True,
                'construct_total': construct_total_price,
+               'construct_total2': total_price2,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
                'construct_paid': construct.income()}
-    return render(request, 'list/client_view.html', context)
+    if version == 1:
+        return render(request, 'list/client_view.html', context)
+    if version == 2:
+        return render(request, 'list/client2_view.html', context)
+
+
+def client2_slug(request, slug):
+    return client_slug(request, slug, version=2)
 
 
 @login_required
@@ -714,7 +742,7 @@ def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     logger.info(f'*action* USER ACCESS: gantt({construct.title_text}) by {request.user.username}')
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
+    ch_list, _, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     common_start, marking, total, labels = getMarking(ch_list)
     context = {'construct': construct, 'ch_list': ch_list, 'start': common_start.strftime('%B'),
                'marking': json.dumps(marking), 'total': total, 'labels': labels}
@@ -796,7 +824,16 @@ def print_invoice(request, invoice_id):
         warning = f"Actual invoice amount (£{invoice_amount}) " + \
                 f"is different from the total amount from lines: £{total_and_vat}. " + \
                 f"Either your invoice price is wrong, or there is a mistake in the lines."
-    context = {'user': request.user,
+    user = request.user
+    if user.is_staff:
+        another_user_id = int(request.GET.get('user_id', -1))
+        if another_user_id > 0:
+            try:
+                user = User.objects.get(pk=another_user_id)
+            except:
+                logger.error(f"print_invoice(): Cannot get user by user id '{another_user_id}'")
+                user = request.user
+    context = {'user': user,
                'invoice': invoice,
                'no_logout_link': True,
                'lines': lines,
@@ -819,13 +856,17 @@ def view_invoice(request, invoice_id):
     user_invoices = request.user.invoice_set.filter(id=invoice_id)
     if len(user_invoices) == 0:
         user_is_owner = False
+    staff_users = []
+    if request.user.is_staff:
+        staff_users = list(User.objects.filter(is_staff=True))
     context = {'invoice': invoice,
                'transactions': tra_list,
                'pay_more': float(invoice.amount) - tra_total,
                'total_paid': tra_total,
                'mismatch': payment_mismatch,
                'user_is_owner': user_is_owner,
-               'username': request.user.username}
+               'username': request.user.username,
+               'staff_users': staff_users}
     return render(request, 'list/view_invoice.html', context)
 
 
@@ -852,9 +893,7 @@ def submit_transaction(request):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: submit_transaction() by {request.user.username}, {ip}')
     if request.method == 'POST':
-        form = TransactionSubmitForm(request.POST)
-        logger.debug("views.py, submit_transaction()")
-        logger.debug(request.POST.get('photo','no_photo'))
+        form = TransactionSubmitForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             obj = Transaction.objects.order_by('id').last()
