@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Get invoice fields{% endblock %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<h2>Get invoice fields for "{{ construct.title_text }}"</h2>
+<p>
+&larr; <a href="{% url 'list:index' %}">project list</a>&nbsp;&nbsp;&nbsp;
+&larr; <a href="{% url 'list:detail' construct.id %}">project</a>&nbsp;&nbsp;&nbsp;
+</p>
+{% for ch in choices %}
+    {{ ch.qty_num }} {{ ch.qty_name }}, {{ ch.name }}, {{ ch.price }} <br />
+{% endfor %}
+{% endblock %}

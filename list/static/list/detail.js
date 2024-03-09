@@ -280,7 +280,9 @@ function markup(str) {
 }
 
 function unMarkup(str) {
-    return str.replace(/<b>(.*?)<\/b>/g, "\*\*$1\*\*");
+    return str.replace(/<b>(.*?)<\/b>/g, "\*\*$1\*\*")
+              .replace(/<br \/>/g, "")
+              .replace(/<br>/g, "");
 }
 
 function modify(ths) {

@@ -846,6 +846,24 @@ def print_invoice(request, invoice_id):
 
 @login_required
 @permission_required("list.view_invoice")
+def get_invoice_fields(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'*action* USER ACCESS: get_invoice_fields({construct.id}) by {request.user.username}')
+    choices = construct.choice_set.all()
+    choices_modified = []
+    for ch in choices:
+        choices_modified.append({
+            'qty_num': ch.quantity_num,
+            'qty_name': ch.units_of_measure_text.replace(",", ";"),
+            'name': ch.name_txt.replace(",", ";"),
+            'price': str(ch.price_num).replace(",", "")})
+    context = {"construct": construct,
+               "choices": choices_modified}
+    return render(request, 'list/get_invoice_fields.html', context)
+
+
+@login_required
+@permission_required("list.view_invoice")
 def view_invoice(request, invoice_id):
     invoice = get_object_or_404(Invoice, pk=invoice_id)
     ip = get_client_ip_address(request)
