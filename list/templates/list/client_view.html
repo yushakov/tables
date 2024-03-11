@@ -53,7 +53,7 @@
     <td>{{ construct.email_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>Total:</b></td>
-    <td>&#163; {{ total_and_profit|floatformat:2 }}</td>
+    <td>&#163; {{ construct_total3|floatformat:2 }}</td>
     <td id='project_total' style='display:none'></td>
     <td></td>
     <td></td>
@@ -82,7 +82,7 @@
     <td></td>
     <td></td>
     <td><b>Total + VAT:</b></td>
-    <td id='project_total_profit_vat'>&#163; {{ total_profit_vat|floatformat:2 }}</td>
+    <td id='project_total_profit_vat'>&#163; {{ construct_total2|floatformat:2 }}</td>
     <td><b>Other works<br>progress:</b></td>
     <td>£ {{ construct.full_side_progress_cost }}</td>
 </tr>
@@ -142,11 +142,11 @@
         {% autoescape off %}
         <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
         {% endautoescape %}
-        {% if not is_worker %}<td align='right'>&#163;{{ items.item_price_prft_vat|floatformat:2 }}</td>{% endif %}
+        {% if not is_worker %}<td align='right'>&#163;{{ items.item_price_prft|floatformat:2 }}</td>{% endif %}
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
         {% if not is_worker %}
-            <td align='right' class='choice_total_price'>&#163;{{ items.price_prft_vat|floatformat:2 }}</td>
+            <td align='right' class='choice_total_price'>&#163;{{ items.price_prft|floatformat:2 }}</td>
         {% endif %}
         <td style='display:none'></td>
         <td>{{ items.choice.plan_start_date }}</td>

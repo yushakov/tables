@@ -280,7 +280,9 @@ function markup(str) {
 }
 
 function unMarkup(str) {
-    return str.replace(/<b>(.*?)<\/b>/g, "\*\*$1\*\*");
+    return str.replace(/<b>(.*?)<\/b>/g, "\*\*$1\*\*")
+              .replace(/<br \/>/g, "")
+              .replace(/<br>/g, "");
 }
 
 function modify(ths) {
@@ -501,7 +503,7 @@ function updateMoneyInfo(total_price) {
     //var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
     var progress_cost_value = Math.round(get_progress_cost() * (1.0 + 0.01 * profit_percent));
-    var progress_vat_value = Math.round(progress_cost_value * (1.0 + 0.01 * vat));
+    var progress_vat_value = (progress_cost_value * (1.0 + 0.01 * vat)).toFixed(2);
     //var to_be_paid_value = progress_vat_value - paid_value;
     //to_be_paid.innerHTML = '&#163; ' + Number(to_be_paid_value).toLocaleString(gLocale);
     //if(to_be_paid_value > 0) {
@@ -513,7 +515,7 @@ function updateMoneyInfo(total_price) {
     progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
     project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
     var total_and_profit = Number(total_price * (1.0 + 0.01 * profit_percent));
-    project_total_profit.innerHTML = '&#163; ' + Number(Math.round(total_and_profit)).toLocaleString(gLocale);
+    project_total_profit.innerHTML = '&#163; ' + Number(total_and_profit.toFixed(2)).toLocaleString(gLocale);
     project_total_profit_vat.innerHTML
         = '&#163; ' + Number(Math.round(total_and_profit * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
 }

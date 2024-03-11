@@ -486,22 +486,29 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
     ch_list = []
     construct_total_price = 0.0
     construct_total_price2 = 0.0
+    construct_total_price3 = 0.0
     construct_progress = 0.0
     choice, choice_price = None, None
     price_prft_vat = None
-    item_price_prft_vat = None
+    price_prft = None
     for idx, line_x in enumerate(struc_dict.values()):
+        item_price_prft_vat = None
+        item_price_prft = None
         if line_x['type'].startswith('Choice'):
             choice = choice_dict[line_x['id']]
             choice_price = choice.price_num * choice.quantity_num
             construct_progress += choice_price * 0.01 * choice.progress_percent_num
             construct_total_price += choice_price
-            prcnt_coeff = (1. + 0.01 * choice.construct.company_profit_percent_num) \
-                        * (1. + 0.01 * choice.construct.ontop_profit_percent_num) \
-                        * (1. + 0.01 * choice.construct.vat_percent_num)
-            item_price_prft_vat = choice.price_num * prcnt_coeff
-            price_prft_vat = choice_price * prcnt_coeff
+            prcnt_coeff_profit = ((1. + 0.01 * choice.construct.company_profit_percent_num)
+                               *  (1. + 0.01 * choice.construct.ontop_profit_percent_num))
+            prcnt_coeff_profit_vat = (prcnt_coeff_profit
+                                   *  (1. + 0.01 * choice.construct.vat_percent_num))
+            item_price_prft = choice.price_num * prcnt_coeff_profit
+            item_price_prft_vat = choice.price_num * prcnt_coeff_profit_vat
+            price_prft_vat = choice_price * prcnt_coeff_profit_vat
+            price_prft = choice_price * prcnt_coeff_profit
             construct_total_price2 += price_prft_vat
+            construct_total_price3 += price_prft
         else:
             choice = FakeChoice(idx, line_x['id'])
         main_contract = ''
@@ -510,9 +517,13 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
         ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice,
                         'choice_total_price': choice_price,
                         'item_price_prft_vat': item_price_prft_vat,
+                        'item_price_prft': item_price_prft,
                         'price_prft_vat': price_prft_vat,
+                        'price_prft': price_prft,
                         'main_contract': main_contract})
-    return ch_list, construct_progress, construct_total_price, construct_total_price2
+    return (ch_list, construct_progress,
+            construct_total_price, construct_total_price2,
+            construct_total_price3)
 
 
 def checkTimeStamp(data, construct):
@@ -563,7 +574,8 @@ def detail(request, construct_id):
         construct.history_dump(request.user.id)
     extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, construct_progress, construct_total_price, _ = getChoiceListAndPrices(struc_dict, choice_dict)
+    (ch_list, construct_progress, construct_total_price,
+     _, _) = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
     if construct.overall_progress_percent_num != construct_progress:
@@ -638,7 +650,8 @@ def client(request, construct_id):
         logger.info(f'*action* client submission for {construct.title_text} by {request.user.username}')
     extend_session(request)
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, construct_progress, construct_total_price, _ = getChoiceListAndPrices(struc_dict, choice_dict)
+    (ch_list, construct_progress, construct_total_price,
+     _, _) = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price 
     if construct.overall_progress_percent_num != construct_progress:
@@ -672,7 +685,10 @@ def client_slug(request, slug, version=1):
         construct.history_dump(-1)
         logger.info(f"*action* client (slug) submission for construct '{construct.title_text}'.")
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, construct_progress, construct_total_price, total_price2 = getChoiceListAndPrices(struc_dict, choice_dict)
+    (ch_list,
+     construct_progress,
+     construct_total_price,
+     total_price2, total_price3) = getChoiceListAndPrices(struc_dict, choice_dict)
     if construct_total_price > 0.0:
         construct_progress *= 100. / construct_total_price
     if construct.overall_progress_percent_num != construct_progress:
@@ -689,6 +705,7 @@ def client_slug(request, slug, version=1):
                'has_access': True,
                'construct_total': construct_total_price,
                'construct_total2': total_price2,
+               'construct_total3': total_price3,
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
@@ -742,7 +759,7 @@ def gantt(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     logger.info(f'*action* USER ACCESS: gantt({construct.title_text}) by {request.user.username}')
     struc_dict, choice_dict = getStructChoiceDict(construct)
-    ch_list, _, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
+    ch_list, _, _, _, _, _ = getChoiceListAndPrices(struc_dict, choice_dict)
     common_start, marking, total, labels = getMarking(ch_list)
     context = {'construct': construct, 'ch_list': ch_list, 'start': common_start.strftime('%B'),
                'marking': json.dumps(marking), 'total': total, 'labels': labels}
@@ -842,6 +859,24 @@ def print_invoice(request, invoice_id):
                'vat_from_total': vat_from_total,
                'total_and_vat': total_and_vat}
     return render(request, 'list/print_invoice.html', context)
+
+
+@login_required
+@permission_required("list.view_invoice")
+def get_invoice_fields(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    logger.info(f'*action* USER ACCESS: get_invoice_fields({construct.id}) by {request.user.username}')
+    choices = construct.choice_set.all()
+    choices_modified = []
+    for ch in choices:
+        choices_modified.append({
+            'qty_num': ch.quantity_num,
+            'qty_name': ch.units_of_measure_text.replace(",", ";"),
+            'name': ch.name_txt.replace(",", ";"),
+            'price': str(ch.price_num).replace(",", "")})
+    context = {"construct": construct,
+               "choices": choices_modified}
+    return render(request, 'list/get_invoice_fields.html', context)
 
 
 @login_required
