@@ -110,23 +110,17 @@ class Construct(models.Model):
         return f"{slug_title}-{slug_owner}-{slug_date}-{slug_rand}"
 
     def shallow_copy(self):
-        return Construct(
-                title_text = self.title_text,
-                listed_date = self.listed_date,
-                last_save_date = self.last_save_date,
-                address_text = self.address_text,
-                email_text = self.email_text,
-                phone_text = self.phone_text,
-                owner_name_text = self.owner_name_text,
-                assigned_to = self.assigned_to,
-                overall_progress_percent_num = self.overall_progress_percent_num,
-                vat_percent_num = self.vat_percent_num,
-                deposit_percent_expect = self.deposit_percent_expect,
-                company_profit_percent_num = self.company_profit_percent_num,
-                owner_profit_coeff = self.owner_profit_coeff,
-                paid_num = self.paid_num,
-                struct_json = self.struct_json,
-                slug_name = self.slug_name)
+        kwargs = {}
+        for v in vars(self):
+            if v in ["numbers", "_state", "id"]:
+                continue
+            kwargs[v] = getattr(self, v)
+        try:
+            return Construct(**kwargs)
+        except:
+            error_line = "Error in Construct.shallow_copy()"
+            print(error_line)
+            logger.error(error_line)
 
     def save(self, *args, **kwargs):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
