@@ -526,6 +526,16 @@ class Construct(models.Model):
         return self.numbers['choices_cost']
 
     @property
+    def main_choices_cost(self):
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices']
+        if 'main_choices_cost' not in self.numbers:
+            main_choices = choices.filter(main_contract_choice=True)
+            self.numbers['main_choices_cost'] = sum([ch.price_num * ch.quantity_num for ch in main_choices])
+        return self.numbers['main_choices_cost']
+
+    @property
     def full_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.choices_cost)), 2)
 
@@ -540,7 +550,7 @@ class Construct(models.Model):
 
     @property
     def main_cost(self):
-        return round(self.withVat(self.withCompanyProfit(self.choices_cost)), 2)
+        return round(self.withVat(self.withCompanyProfit(self.main_choices_cost)), 2)
 
     @property
     def all_profits_vat_cost(self):
@@ -550,7 +560,6 @@ class Construct(models.Model):
 
     @property
     def expected_deposit(self):
-        #return round(self.main_cost * self.deposit_percent_expect * 0.01, 2)
         return round(self.all_profits_vat_cost * self.deposit_percent_expect * 0.01, 2)
 
     @property
