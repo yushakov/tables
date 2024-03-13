@@ -698,6 +698,7 @@ def client_slug(request, slug, version=1):
     deposit = construct.expected_deposit
     if construct.deposit > 0.0:
         deposit = construct.deposit
+    logos = get_logos("constructive_choice_partner_logos")
     context = {'construct': construct,
                'deposit': deposit,
                'ch_list': ch_list,
@@ -709,7 +710,8 @@ def client_slug(request, slug, version=1):
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
-               'construct_paid': construct.income()}
+               'construct_paid': construct.income(),
+               'logos': logos}
     if version == 1:
         return render(request, 'list/client_view.html', context)
     if version == 2:
@@ -824,6 +826,12 @@ def process_invoice_lines(lines, price_coeff=1.0):
     return lines, total_amount
 
 
+def get_logos(folder):
+    img_dir = os.path.join(settings.STATIC_ROOT, "images", folder)
+    logos = [os.path.join(folder, f) for f in os.listdir(img_dir)]
+    return logos
+
+
 @login_required
 @permission_required("list.view_invoice")
 def print_invoice(request, invoice_id):
@@ -850,6 +858,7 @@ def print_invoice(request, invoice_id):
             except:
                 logger.error(f"print_invoice(): Cannot get user by user id '{another_user_id}'")
                 user = request.user
+    logos = get_logos("constructive_choice_partner_logos")
     context = {'user': user,
                'invoice': invoice,
                'no_logout_link': True,
@@ -857,7 +866,8 @@ def print_invoice(request, invoice_id):
                'lines_amount': lines_amount,
                'warning': warning,
                'vat_from_total': vat_from_total,
-               'total_and_vat': total_and_vat}
+               'total_and_vat': total_and_vat,
+               'logos': logos}
     return render(request, 'list/print_invoice.html', context)
 
 
