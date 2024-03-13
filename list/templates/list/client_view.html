@@ -235,6 +235,10 @@
     </div>
 {% endif %}
 
+{% for logo in logos %}
+    <img src="{% static 'images/' %}{{ logo }}" width="150">&nbsp;
+{% endfor %}
+
 <div style='display:none' id='active_row'>-1</div>
 <div style='display:none' id='modified'>no</div>
 {% if not is_worker %}
