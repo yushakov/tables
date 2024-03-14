@@ -1,4 +1,4 @@
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
@@ -560,6 +560,24 @@ def extend_session(request):
     one_day_seconds = 60 * 60 * 24
     if request.session.get_expiry_date() < (timezone.now() + timedelta(days=1)):
         request.session.set_expiry(one_day_seconds)
+
+
+@login_required
+@permission_required("list.view_construct")
+@permission_required("list.change_construct")
+def bg_process_post(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: bg_process_post({construct.title_text}) by {request.user.username}, {ip}')
+    if request.method == 'POST':
+        process_post(request, construct)
+        construct.history_dump(request.user.id)
+    extend_session(request)
+    data = {
+        'message': 'The construct has been updated.',
+        'newToken': 'goes here (TBD)'
+    }
+    return JsonResponse(data)
 
 
 @login_required

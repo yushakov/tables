@@ -98,8 +98,9 @@ function updateRows() {
 function setForm() {
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
+        event.preventDefault();
         saveChoices();
-        form.submit();
+        sendFormData();
     });
     updateRows();
 }
@@ -292,11 +293,17 @@ function modify(ths) {
     //ths.innerHTML = "<input type='text' value='" + text + "'/>";
 }
 
-function setModified() {
+function setModified(modified=true) {
     var modiff = document.getElementById('project_last_save_date');
-    document.getElementById('modified').innerText = 'yes';
-    if(modiff.innerText.search("\\*\\*\\*") < 0) {
-        modiff.innerHTML += '<p style="color:red">*** do not forget to save changes ***</p>';
+    if (modified) {
+        document.getElementById('modified').innerText = 'yes';
+        if(modiff.innerText.search("\\*\\*\\*") < 0) {
+            modiff.innerHTML = '<p style="color:red">*** do not forget to save changes ***</p>';
+        }
+    }
+    else {
+        document.getElementById('modified').innerText = 'no';
+        modiff.innerHTML = '<p style="color:black"><b>Modifications saved.</b></p>';
     }
 }
 
@@ -700,6 +707,35 @@ function saveChoices() {
     console.log(out);
     document.getElementById('json_input').value = JSON.stringify(out);
     return true;
+}
+
+function sendFormData() {
+    const form = document.getElementById('choices_form');
+    const url = form.action; // Get the form action
+    const formData = new FormData(form); // Create FormData object from the form
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest', // This header helps server-side to identify the request as AJAX
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle success. You can update the UI accordingly.
+        console.log(data); // Assuming the server responds with some JSON
+        setModified(false);
+    })
+    .catch(error => {
+        // Handle errors
+        console.error('There was a problem with the fetch operation:', error);
+    });
 }
 
 function setDeleteByRowIdx(idx) {

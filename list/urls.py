@@ -18,6 +18,7 @@ urlpatterns = [
     path('history/', views.history, name='history'),
     path('backup/', views.backup, name='backup'),
     path('<int:construct_id>/', views.detail, name='detail'),
+    path('<int:construct_id>/bg_update', views.bg_process_post, name='bg_update'),
     path('<int:construct_id>/client/', views.client, name='client'),
     path('<int:construct_id>/worker/', views.client, name='worker'),
     path('client/<str:slug>', views.client_slug, name='client_slug'),
