@@ -540,8 +540,10 @@ function updateMoneyInfo(total_price) {
     if (project_total_profit) {
         project_total_profit.innerHTML = '&#163; ' + Number(total_and_profit.toFixed(2)).toLocaleString(gLocale);
     }
-    project_total_profit_vat.innerHTML
-        = '&#163; ' + Number(Math.round(total_and_profit * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
+    if (project_total_profit_vat) {
+        project_total_profit_vat.innerHTML
+            = '&#163; ' + Number(Math.round(total_and_profit * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
+    }
 }
 
 function get_progress_cost() {
