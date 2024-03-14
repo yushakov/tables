@@ -311,6 +311,7 @@ function setModified(modified=true) {
 
 function setSendDataTimer() {
     saveChoices();
+    clearSendDataTimer();
     sendDataTimer = setTimeout(sendFormData, 3000);
 }
 
