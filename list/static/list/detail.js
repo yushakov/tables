@@ -18,6 +18,8 @@ const g_JsonNames = ['action', 'name', 'price', 'quantity', 'units',
 const g_header_del_col_span = 5;
 const gLocale = "en-US";
 
+let sendDataTimer = null;
+
 window.addEventListener('beforeunload', function (e) {
     var modified_text = document.getElementById('modified').innerText;
     if(modified_text == 'yes') {
@@ -307,8 +309,19 @@ function setModified(modified=true) {
     }
 }
 
+function setSendDataTimer() {
+    saveChoices();
+    sendDataTimer = setTimeout(sendFormData, 3000);
+}
+
+function clearSendDataTimer() {
+    clearTimeout(sendDataTimer);
+    sendDataTimer = null;
+}
+
 function modifyRow(ths) {
 	if(!freezeActiveRow()) return false;
+    clearSendDataTimer();
     var elem = document.getElementById('modified');
     if(elem) elem.innerText = 'yes';
     if(!ths || !ths.parentNode) return false;
@@ -421,6 +434,7 @@ function freezeActiveRow() {
         active_row_holder.innerHTML = "-1";
         updateHeaders();
         updateIDs();
+        setSendDataTimer();
 	}
 	return true;
 }
@@ -723,6 +737,7 @@ function sendFormData() {
     })
     .then(response => {
         if (!response.ok) {
+            setModified(true);
             throw new Error('Network response was not ok');
         }
         return response.json();
@@ -734,6 +749,7 @@ function sendFormData() {
     })
     .catch(error => {
         // Handle errors
+        setModified(true);
         console.error('There was a problem with the fetch operation:', error);
     });
 }
