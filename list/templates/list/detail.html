@@ -178,7 +178,7 @@
 
 
 <br>
-<form id='choices_form' action="{% url 'list:detail' construct.id %}" method='POST'>
+<form id='choices_form' action="{% url 'list:bg_update' construct.id %}" method='POST'>
 {% csrf_token %}
 <table id='choices'>
 <thead><tr>

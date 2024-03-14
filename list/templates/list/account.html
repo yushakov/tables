@@ -14,8 +14,9 @@
 {% endif %}
 {% if 'is_superuser' in perms %}
     You are a Superuser.
-    <a href="{% url 'admin:index' %}">Admin page.</a>
-    <a href="{% url 'list:index' %}">List of projects.</a>
+    <a href="{% url 'admin:index' %}">Admin page.</a>&nbsp;&nbsp;
+    <a href="{% url 'list:index' %}">List of projects.</a></a>&nbsp;&nbsp;
+    <a href="{% url 'list:backup' %}">Dump a backup.</a>
     <br>
 {% endif %}
 {% if groups %}

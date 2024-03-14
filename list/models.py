@@ -110,23 +110,17 @@ class Construct(models.Model):
         return f"{slug_title}-{slug_owner}-{slug_date}-{slug_rand}"
 
     def shallow_copy(self):
-        return Construct(
-                title_text = self.title_text,
-                listed_date = self.listed_date,
-                last_save_date = self.last_save_date,
-                address_text = self.address_text,
-                email_text = self.email_text,
-                phone_text = self.phone_text,
-                owner_name_text = self.owner_name_text,
-                assigned_to = self.assigned_to,
-                overall_progress_percent_num = self.overall_progress_percent_num,
-                vat_percent_num = self.vat_percent_num,
-                deposit_percent_expect = self.deposit_percent_expect,
-                company_profit_percent_num = self.company_profit_percent_num,
-                owner_profit_coeff = self.owner_profit_coeff,
-                paid_num = self.paid_num,
-                struct_json = self.struct_json,
-                slug_name = self.slug_name)
+        kwargs = {}
+        for v in vars(self):
+            if v in ["numbers", "_state", "id"]:
+                continue
+            kwargs[v] = getattr(self, v)
+        try:
+            return Construct(**kwargs)
+        except:
+            error_line = "Error in Construct.shallow_copy()"
+            print(error_line)
+            logger.error(error_line)
 
     def save(self, *args, **kwargs):
         delta_to_make_construct_a_bit_younger = timedelta(seconds=2)
@@ -523,20 +517,31 @@ class Construct(models.Model):
             return 0.0
 
     @property
-    def full_cost(self):
+    def choices_cost(self):
         if 'choices' not in self.numbers:
             self.numbers['choices'] = self.choice_set.all()
         choices = self.numbers['choices']
-        choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
-        return round(self.withVat(self.withCompanyProfit(choices_cost)), 2)
+        if 'choices_cost' not in self.numbers:
+            self.numbers['choices_cost'] = sum([ch.price_num * ch.quantity_num for ch in choices])
+        return self.numbers['choices_cost']
+
+    @property
+    def main_choices_cost(self):
+        if 'choices' not in self.numbers:
+            self.numbers['choices'] = self.choice_set.all()
+        choices = self.numbers['choices']
+        if 'main_choices_cost' not in self.numbers:
+            main_choices = choices.filter(main_contract_choice=True)
+            self.numbers['main_choices_cost'] = sum([ch.price_num * ch.quantity_num for ch in main_choices])
+        return self.numbers['main_choices_cost']
+
+    @property
+    def full_cost(self):
+        return round(self.withVat(self.withCompanyProfit(self.choices_cost)), 2)
 
     @property
     def full_cost_vat(self):
-        if 'choices' not in self.numbers:
-            self.numbers['choices'] = self.choice_set.all()
-        choices = self.numbers['choices']
-        choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
-        return round(self.withCompanyProfit(choices_cost) * 0.01 * self.vat_percent_num, 2)
+        return round(self.withCompanyProfit(self.choices_cost) * 0.01 * self.vat_percent_num, 2)
 
     @property
     def vat_from_income(self):
@@ -545,19 +550,21 @@ class Construct(models.Model):
 
     @property
     def main_cost(self):
-        if 'choices' not in self.numbers:
-            self.numbers['choices'] = self.choice_set.all()
-        choices = self.numbers['choices'].filter(main_contract_choice=True)
-        choices_cost = sum([ch.price_num * ch.quantity_num for ch in choices])
-        return round(self.withVat(self.withCompanyProfit(choices_cost)), 2)
+        return round(self.withVat(self.withCompanyProfit(self.main_choices_cost)), 2)
+
+    @property
+    def all_profits_vat_cost(self):
+        return self.choices_cost * ((1.0 + self.company_profit_percent_num * 0.01)
+                                    * (1.0 + self.ontop_profit_percent_num * 0.01)
+                                    * (1.0 + self.vat_percent_num * 0.01))
 
     @property
     def expected_deposit(self):
-        return round(self.main_cost * self.deposit_percent_expect * 0.01, 2)
+        return round(self.all_profits_vat_cost * self.deposit_percent_expect * 0.01, 2)
 
     @property
     def expected_deposit_str(self):
-        return f"{self.main_cost * self.deposit_percent_expect * 0.01 :.2f}"
+        return f"{self.expected_deposit :.2f}"
 
     @property
     def deposit(self):
@@ -596,8 +603,7 @@ class Construct(models.Model):
 
     @property
     def left_to_pay_str(self):
-        return str(round(self.no_deposit_progress_cost + self.full_side_progress_cost
-                     - (self.income() - self.deposit), 2))
+        return str(self.left_to_pay)
 
 
 class Category(models.Model):

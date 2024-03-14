@@ -18,6 +18,8 @@ const g_JsonNames = ['action', 'name', 'price', 'quantity', 'units',
 const g_header_del_col_span = 5;
 const gLocale = "en-US";
 
+let sendDataTimer = null;
+
 window.addEventListener('beforeunload', function (e) {
     var modified_text = document.getElementById('modified').innerText;
     if(modified_text == 'yes') {
@@ -98,8 +100,9 @@ function updateRows() {
 function setForm() {
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
+        event.preventDefault();
         saveChoices();
-        form.submit();
+        sendFormData();
     });
     updateRows();
 }
@@ -292,16 +295,33 @@ function modify(ths) {
     //ths.innerHTML = "<input type='text' value='" + text + "'/>";
 }
 
-function setModified() {
+function setModified(modified=true) {
     var modiff = document.getElementById('project_last_save_date');
-    document.getElementById('modified').innerText = 'yes';
-    if(modiff.innerText.search("\\*\\*\\*") < 0) {
-        modiff.innerHTML += '<p style="color:red">*** do not forget to save changes ***</p>';
+    if (modified) {
+        document.getElementById('modified').innerText = 'yes';
+        if(modiff.innerText.search("\\*\\*\\*") < 0) {
+            modiff.innerHTML = '<p style="color:red">*** do not forget to save changes ***</p>';
+        }
     }
+    else {
+        document.getElementById('modified').innerText = 'no';
+        modiff.innerHTML = '<p style="color:black"><b>Modifications saved.</b></p>';
+    }
+}
+
+function setSendDataTimer() {
+    saveChoices();
+    sendDataTimer = setTimeout(sendFormData, 3000);
+}
+
+function clearSendDataTimer() {
+    clearTimeout(sendDataTimer);
+    sendDataTimer = null;
 }
 
 function modifyRow(ths) {
 	if(!freezeActiveRow()) return false;
+    clearSendDataTimer();
     var elem = document.getElementById('modified');
     if(elem) elem.innerText = 'yes';
     if(!ths || !ths.parentNode) return false;
@@ -414,6 +434,7 @@ function freezeActiveRow() {
         active_row_holder.innerHTML = "-1";
         updateHeaders();
         updateIDs();
+        setSendDataTimer();
 	}
 	return true;
 }
@@ -503,7 +524,7 @@ function updateMoneyInfo(total_price) {
     //var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
     var progress_cost_value = Math.round(get_progress_cost() * (1.0 + 0.01 * profit_percent));
-    var progress_vat_value = Math.round(progress_cost_value * (1.0 + 0.01 * vat));
+    var progress_vat_value = (progress_cost_value * (1.0 + 0.01 * vat)).toFixed(2);
     //var to_be_paid_value = progress_vat_value - paid_value;
     //to_be_paid.innerHTML = '&#163; ' + Number(to_be_paid_value).toLocaleString(gLocale);
     //if(to_be_paid_value > 0) {
@@ -515,7 +536,7 @@ function updateMoneyInfo(total_price) {
     progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
     project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
     var total_and_profit = Number(total_price * (1.0 + 0.01 * profit_percent));
-    project_total_profit.innerHTML = '&#163; ' + Number(Math.round(total_and_profit)).toLocaleString(gLocale);
+    project_total_profit.innerHTML = '&#163; ' + Number(total_and_profit.toFixed(2)).toLocaleString(gLocale);
     project_total_profit_vat.innerHTML
         = '&#163; ' + Number(Math.round(total_and_profit * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
 }
@@ -700,6 +721,37 @@ function saveChoices() {
     console.log(out);
     document.getElementById('json_input').value = JSON.stringify(out);
     return true;
+}
+
+function sendFormData() {
+    const form = document.getElementById('choices_form');
+    const url = form.action; // Get the form action
+    const formData = new FormData(form); // Create FormData object from the form
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest', // This header helps server-side to identify the request as AJAX
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            setModified(true);
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle success. You can update the UI accordingly.
+        console.log(data); // Assuming the server responds with some JSON
+        setModified(false);
+    })
+    .catch(error => {
+        // Handle errors
+        setModified(true);
+        console.error('There was a problem with the fetch operation:', error);
+    });
 }
 
 function setDeleteByRowIdx(idx) {

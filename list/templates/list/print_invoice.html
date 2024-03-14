@@ -101,6 +101,13 @@
                 </table>
             </td>
         </tr>
+        <tr id="standard-logos">
+            <td colspan="4">
+                {% for logo in logos %}
+                    <img src="{% static 'images/' %}{{ logo }}" width="150">&nbsp;
+                {% endfor %}
+            </td>
+        </tr>
     </tbody>
 </table>
 {% endblock %}
