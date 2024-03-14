@@ -111,7 +111,7 @@
 <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
 </div>
 <br>
-<form id='choices_form' action="{% url 'list:client_slug' construct.slug_name %}" method='POST'>
+<form id='choices_form' action="#">
 {% csrf_token %}
 <table id='choices'>
 <thead><tr>

@@ -740,6 +740,22 @@ def client2_slug(request, slug):
     return client_slug(request, slug, version=2)
 
 
+def client_slug_bg_update(request, slug, version=1):
+    construct = Construct.objects.filter(slug_name=slug).first()
+    if construct is None:
+        raise Http404("Project not found")
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: client_slug_bg_update({construct.title_text}), {ip}')
+    if request.method == 'POST':
+        process_post(request, construct, client=True)
+        construct.history_dump(-1)
+    data = {
+        'message': 'Notes have been updated.',
+        'newToken': 'No tokens for slug.'
+    }
+    return JsonResponse(data)
+
+
 @login_required
 @permission_required("list.add_construct")
 @permission_required("list.change_construct")
