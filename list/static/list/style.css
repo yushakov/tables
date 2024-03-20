@@ -144,3 +144,7 @@ td.progress-cell {
     color: black;
     z-index: 0;
 }
+
+a {
+    text-decoration: none;
+}
