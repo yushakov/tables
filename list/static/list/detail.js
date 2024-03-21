@@ -1,4 +1,4 @@
-const gVERSION = "1.3";
+const gVERSION = "1.5";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -29,7 +29,16 @@ window.addEventListener("load", (event) => {
     else {
         console.log("detail.js version " + gVERSION);
     }
+    populateProgress();
 });
+
+function populateProgress() {
+    const cells = Array.from(document.getElementsByClassName("progress-cell"));
+    cells.forEach((cell) => {
+        const progress = cell.innerText.replace('%','').trim();
+        cell.innerHTML = getProgressCellHtml(progress);
+    });
+}
 
 window.addEventListener('beforeunload', function (e) {
     var modified_text = document.getElementById('modified').innerText;
@@ -382,6 +391,14 @@ function modifyRow(ths) {
     return false;
 }
 
+function getProgressCellHtml(progress) {
+    return "<div class='project-progress' style='width: " + progress + "%'>" +
+                "<div class='choice_progress_percent'>"
+                    + Number(progress).toFixed(2).toLocaleString(gLocale) + "&nbsp;%" +
+                "</div>" +
+           "</div>";
+}
+
 function freezeActiveRow() {
 	var active_row_holder = document.getElementById("active_row");
 	var id = active_row_holder.innerText;
@@ -416,12 +433,7 @@ function freezeActiveRow() {
 				active_row.cells[g_plan_days_cell_idx].innerHTML = encodeHTML(planDays);
 				active_row.cells[g_plan_days_cell_idx].style.textAlign = 'center';
                 active_row.cells[g_progress_cell_idx].classList.add("progress-cell");
-                active_row.cells[g_progress_cell_idx].innerHTML = 
-                    "<div class='project-progress' style='width: " + progress + "%'>" +
-                        "<div class='choice_progress_percent'>"
-                            + progress + "&nbsp;%" +
-                        "</div>" +
-                    "</div>";
+                active_row.cells[g_progress_cell_idx].innerHTML = getProgressCellHtml(progress);
 			}
 			else if(active_row.classList.contains("Header2")) {
                 del_cell_idx -= g_header_del_col_span-1;

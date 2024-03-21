@@ -166,11 +166,7 @@
         <td>{{ items.choice.plan_start_date }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
         <td class="progress-cell">
-            <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
-                <div class='choice_progress_percent'>
-                    {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
-                </div>
-            </div>
+            {{items.choice.progress_percent_num|floatformat:2}}%
         </td>
         <td>
             <div class='notes-form'>
