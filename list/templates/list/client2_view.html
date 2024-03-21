@@ -3,8 +3,8 @@
 {% block content %}
 {% load static %}
 {% load app_filters %}
-<script src="{% static 'list/detail.js' %}">
-</script>
+<script src="{% static 'list/detail.js' %}?jsv={{detailJsVersion}}"></script>
+<div id="detail-js-version" style="display: none">{{detailJsVersion}}</div>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 
 <h1>{{ construct.title_text }} (maintenance)</h1>

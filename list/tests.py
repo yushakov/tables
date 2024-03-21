@@ -1496,6 +1496,16 @@ class ViewTests(TestCase):
         self.client_user_2.last_name = "Ivanovich2"
         self.client_user_2.save()
 
+    def test_detail_js_version(self):
+        from list.views import detailJsVersion
+        with open("list/static/list/detail.js") as js_file:
+            line = js_file.readline()
+            print("From detail.js:", line)
+            print("From views.py:", detailJsVersion)
+            self.assertTrue(line.find("gVERSION") >= 0)
+            self.assertTrue(line.find(detailJsVersion) > 0)
+
+
     def test_session_extension_on_detail_page(self):
         c = Client()
         c.login(username="yuran", password="secret")

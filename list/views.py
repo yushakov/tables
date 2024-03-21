@@ -21,6 +21,8 @@ from django.conf import settings
 import os
 import shutil
 
+detailJsVersion = "1.2"
+
 logger = logging.getLogger('django')
 
 class IndexView(generic.ListView):
@@ -616,7 +618,8 @@ def detail(request, construct_id):
                'total_total': (construct_total_price + profit + on_top_profit) * (1. + 0.01 * construct.vat_percent_num),
                'construct_paid': round(construct.income()),
                'noscale': True,
-               'history': history}
+               'history': history,
+               'detailJsVersion': detailJsVersion}
     return render(request, 'list/detail.html', context)
 
 
@@ -688,7 +691,8 @@ def client(request, construct_id):
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
-               'construct_paid': construct.income()}
+               'construct_paid': construct.income(),
+               'detailJsVersion': detailJsVersion}
     return render(request, 'list/client_view.html', context)
 
 
@@ -729,7 +733,8 @@ def client_slug(request, slug, version=1):
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
                'construct_paid': construct.income(),
-               'logos': logos}
+               'logos': logos,
+               'detailJsVersion': detailJsVersion}
     if version == 1:
         return render(request, 'list/client_view.html', context)
     if version == 2:

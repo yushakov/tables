@@ -1,4 +1,4 @@
-const gVERSION = "1.0"
+const gVERSION = "1.2";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -20,6 +20,16 @@ const g_header_del_col_span = 5;
 const gLocale = "en-US";
 
 let sendDataTimer = null;
+
+window.addEventListener("load", (event) => {
+    const page_js_version_div = document.getElementById("detail-js-version");
+    if (gVERSION != page_js_version_div.innerText) {
+        console.log("Error! Wrong js version on the page: " + page_js_version_div.innerText);
+    }
+    else {
+        console.log("detail.js version " + gVERSION);
+    }
+});
 
 window.addEventListener('beforeunload', function (e) {
     var modified_text = document.getElementById('modified').innerText;
@@ -99,7 +109,6 @@ function updateRows() {
 }
 
 function setForm() {
-    console.log("detail.js version " + gVERSION)
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
         event.preventDefault();
