@@ -293,6 +293,20 @@ describe('Tests after login', () => {
     cy.contains('td', 'Left side').next().next().next().next().invoke('text').should('contain', "£1,656.00");
   })
 
+  it.only("Test the progress bar.", () => {
+    cy.visit("/list/1/");
+    cy.wait(2000);
+    cy.contains('tr', 'Left side').contains('a', 'modify').should('exist').click();
+    cy.get('#inpProgress').clear().type("27");
+    cy.contains('a', 'FREEZE').should('exist').click();
+    cy.get('#project_last_save_date').contains('p', 'do not forget').should('exist');
+    cy.wait(4000);
+    cy.get('#project_last_save_date').contains('p', 'Modifications saved').should('exist');
+    cy.reload(); // reload the page
+    cy.wait(2000);
+    cy.contains('tr', 'Left side').contains('div', '27.00').should('exist');
+  })
+
   it("Create a Foreman", () => {
     cy.visit("admin/list/user/add/");
     cy.get('#id_username').type('Foreman');
