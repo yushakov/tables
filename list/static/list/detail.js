@@ -1,3 +1,4 @@
+const gVERSION = "1.0"
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -98,6 +99,7 @@ function updateRows() {
 }
 
 function setForm() {
+    console.log("detail.js version " + gVERSION)
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
         event.preventDefault();
