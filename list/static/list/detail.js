@@ -538,21 +538,10 @@ function updateMoneyInfo(total_price) {
     if (project_vat_element) {
         project_vat = project_vat_element.innerHTML;
     }
-    //var progress_cost     = document.getElementById("progress_cost");
     var progress_vat      = document.getElementById("progress_vat");
-    //var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").replace(/,/g,"").trim());
-    //var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
     var progress_cost_value = Math.round(get_progress_cost() * (1.0 + 0.01 * profit_percent));
     var progress_vat_value = (progress_cost_value * (1.0 + 0.01 * vat)).toFixed(2);
-    //var to_be_paid_value = progress_vat_value - paid_value;
-    //to_be_paid.innerHTML = '&#163; ' + Number(to_be_paid_value).toLocaleString(gLocale);
-    //if(to_be_paid_value > 0) {
-    //    to_be_paid.style = "color: red";
-    //} else {
-    //    to_be_paid.style = "color: blue";
-    //}
-    //progress_cost.innerHTML = '&#163; ' + Number(progress_cost_value).toLocaleString(gLocale);;
     if (progress_vat) {
         progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
     }
