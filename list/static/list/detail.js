@@ -1,4 +1,4 @@
-const gVERSION = "1.2";
+const gVERSION = "1.3";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -525,14 +525,22 @@ function updateHeaders() {
 }
 
 function updateMoneyInfo(total_price) {
-    var profit_percent    = Number(document.getElementById("profit_percent").innerText);
+    var profit_percent_element = document.getElementById("profit_percent");
+    var profit_percent = 0;
+    if (profit_percent_element) {
+        profit_percent = Number(profit_percent_element.innerText);
+    }
     var project_total     = document.getElementById("project_total");
     var project_total_profit     = document.getElementById("project_total_profit");
     var project_total_profit_vat = document.getElementById("project_total_profit_vat");
-    var project_vat       = document.getElementById("project_vat").innerHTML;
+    var project_vat_element = document.getElementById("project_vat");
+    var project_vat = "0%";
+    if (project_vat_element) {
+        project_vat = project_vat_element.innerHTML;
+    }
     //var progress_cost     = document.getElementById("progress_cost");
     var progress_vat      = document.getElementById("progress_vat");
-    var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").replace(/,/g,"").trim());
+    //var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").replace(/,/g,"").trim());
     //var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
     var progress_cost_value = Math.round(get_progress_cost() * (1.0 + 0.01 * profit_percent));
@@ -545,8 +553,12 @@ function updateMoneyInfo(total_price) {
     //    to_be_paid.style = "color: blue";
     //}
     //progress_cost.innerHTML = '&#163; ' + Number(progress_cost_value).toLocaleString(gLocale);;
-    progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
-    project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
+    if (progress_vat) {
+        progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
+    }
+    if (project_total) {
+        project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
+    }
     var total_and_profit = Number(total_price * (1.0 + 0.01 * profit_percent));
     if (project_total_profit) {
         project_total_profit.innerHTML = '&#163; ' + Number(total_and_profit.toFixed(2)).toLocaleString(gLocale);
