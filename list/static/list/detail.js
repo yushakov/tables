@@ -1,3 +1,4 @@
+const gVERSION = "1.6";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -19,6 +20,30 @@ const g_header_del_col_span = 5;
 const gLocale = "en-US";
 
 let sendDataTimer = null;
+
+window.addEventListener("load", (event) => {
+    const page_js_version_div = document.getElementById("detail-js-version");
+    if (gVERSION != page_js_version_div.innerText) {
+        console.log("Error! Wrong js version on the page: " + page_js_version_div.innerText);
+    }
+    else {
+        console.log("detail.js version " + gVERSION);
+    }
+    populateProgress();
+});
+
+function populateProgress() {
+    const cells = Array.from(document.getElementsByClassName("progress-cell"));
+    cells.forEach((cell) => {
+        const progress = cell.innerText.replace('%','').trim();
+        if (cell.classList.contains("non-clickable-progress")) {
+            cell.innerHTML = getProgressCellHtml(progress, false);
+        }
+        else {
+            cell.innerHTML = getProgressCellHtml(progress, true);
+        }
+    });
+}
 
 window.addEventListener('beforeunload', function (e) {
     var modified_text = document.getElementById('modified').innerText;
@@ -371,6 +396,73 @@ function modifyRow(ths) {
     return false;
 }
 
+function getSlider(progress) {
+    const slider = document.createElement('input');
+    slider.setAttribute('type', 'range');
+    slider.setAttribute('min', '0');
+    slider.setAttribute('max', '100');
+    slider.setAttribute('value', String(progress));
+    slider.setAttribute('class', 'progress-slider');
+    // slider.setAttribute('orient', 'vertical');
+    return slider;
+}
+
+function modifyProgress(ths) {
+    if (ths == null) return;
+    const form = document.createElement('div');
+    const number_field = document.createElement('div');
+    number_field.id = "id_number_field";
+    form.classList.add("progress-form");
+    var centerX = window.innerWidth / 2;
+    var centerY = window.innerHeight / 2 + window.scrollY;
+    form.style.display = 'block';
+    form.appendChild(number_field);
+    ths.parentNode.parentNode.appendChild(form);
+    form.style.top = (centerY - form.offsetHeight / 2) + 'px';
+    form.style.left = (centerX - form.offsetWidth / 2) + 'px';
+    number_field.innerText = ths.innerText;
+    const slider = getSlider(ths.innerText.replace(/%/, '').trim());
+    form.appendChild(slider);
+    form.style.width = "fit-content";
+    slider.oninput = function() {
+        number_field.innerText = this.value + "%";
+        ths.style.width = this.value + "%";
+        ths.childNodes[0].innerHTML = Number(this.value).toFixed(2).toLocaleString(gLocale) + "&nbsp;%";
+    };
+    slider.onchange = function() {
+        form.style.width = "fit-content";
+        setModified(true);
+        setSendDataTimer();
+    };
+
+    document.addEventListener('mousedown', function(event) {
+        // Check if the click is outside the form
+        if (!form.contains(event.target)) {
+            // Remove the form if it's not already removed
+            if (form.parentNode) {
+                form.parentNode.removeChild(form);
+            }
+            // Optionally, remove this event listener since the form is removed
+            document.removeEventListener('mousedown', arguments.callee);
+        }
+    });
+
+    // Prevent clicks inside the form from bubbling up to the document
+    form.addEventListener('mousedown', function(event) {
+        event.stopPropagation();
+    });
+}
+
+function getProgressCellHtml(progress, clickable=true) {
+    var pointer = "this";
+    if (!clickable) pointer = "null";
+    return "<div class='project-progress' style='width: " + progress + "%' ondblclick='modifyProgress(" + pointer + ")'>" +
+                "<div class='choice_progress_percent'>"
+                    + Number(progress).toFixed(2).toLocaleString(gLocale) + "&nbsp;%" +
+                "</div>" +
+           "</div>";
+}
+
 function freezeActiveRow() {
 	var active_row_holder = document.getElementById("active_row");
 	var id = active_row_holder.innerText;
@@ -405,12 +497,7 @@ function freezeActiveRow() {
 				active_row.cells[g_plan_days_cell_idx].innerHTML = encodeHTML(planDays);
 				active_row.cells[g_plan_days_cell_idx].style.textAlign = 'center';
                 active_row.cells[g_progress_cell_idx].classList.add("progress-cell");
-                active_row.cells[g_progress_cell_idx].innerHTML = 
-                    "<div class='project-progress' style='width: " + progress + "%'>" +
-                        "<div class='choice_progress_percent'>"
-                            + progress + "&nbsp;%" +
-                        "</div>" +
-                    "</div>";
+                active_row.cells[g_progress_cell_idx].innerHTML = getProgressCellHtml(progress);
 			}
 			else if(active_row.classList.contains("Header2")) {
                 del_cell_idx -= g_header_del_col_span-1;
@@ -514,34 +601,37 @@ function updateHeaders() {
 }
 
 function updateMoneyInfo(total_price) {
-    var profit_percent    = Number(document.getElementById("profit_percent").innerText);
+    var profit_percent_element = document.getElementById("profit_percent");
+    var profit_percent = 0;
+    if (profit_percent_element) {
+        profit_percent = Number(profit_percent_element.innerText);
+    }
     var project_total     = document.getElementById("project_total");
     var project_total_profit     = document.getElementById("project_total_profit");
     var project_total_profit_vat = document.getElementById("project_total_profit_vat");
-    var project_vat       = document.getElementById("project_vat").innerHTML;
-    //var progress_cost     = document.getElementById("progress_cost");
+    var project_vat_element = document.getElementById("project_vat");
+    var project_vat = "0%";
+    if (project_vat_element) {
+        project_vat = project_vat_element.innerHTML;
+    }
     var progress_vat      = document.getElementById("progress_vat");
-    var paid_value        = Number(document.getElementById("paid").innerText.replace(/£/,"").replace(/,/g,"").trim());
-    //var to_be_paid        = document.getElementById("to_be_paid");
     var vat = Number(project_vat.replace(/%/,'').trim());
     var progress_cost_value = Math.round(get_progress_cost() * (1.0 + 0.01 * profit_percent));
     var progress_vat_value = (progress_cost_value * (1.0 + 0.01 * vat)).toFixed(2);
-    //var to_be_paid_value = progress_vat_value - paid_value;
-    //to_be_paid.innerHTML = '&#163; ' + Number(to_be_paid_value).toLocaleString(gLocale);
-    //if(to_be_paid_value > 0) {
-    //    to_be_paid.style = "color: red";
-    //} else {
-    //    to_be_paid.style = "color: blue";
-    //}
-    //progress_cost.innerHTML = '&#163; ' + Number(progress_cost_value).toLocaleString(gLocale);;
-    progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
-    project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
+    if (progress_vat) {
+        progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
+    }
+    if (project_total) {
+        project_total.innerHTML = '&#163; ' + total_price.toLocaleString(gLocale);
+    }
     var total_and_profit = Number(total_price * (1.0 + 0.01 * profit_percent));
     if (project_total_profit) {
         project_total_profit.innerHTML = '&#163; ' + Number(total_and_profit.toFixed(2)).toLocaleString(gLocale);
     }
-    project_total_profit_vat.innerHTML
-        = '&#163; ' + Number(Math.round(total_and_profit * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
+    if (project_total_profit_vat) {
+        project_total_profit_vat.innerHTML
+            = '&#163; ' + Number(Math.round(total_and_profit * (1.0 + 0.01 * vat))).toLocaleString(gLocale);
+    }
 }
 
 function get_progress_cost() {

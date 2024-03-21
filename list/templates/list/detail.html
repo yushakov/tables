@@ -4,8 +4,8 @@
 {% load static %}
 {% load app_filters %}
 {% load l10n %}
-<script src="{% static 'list/detail.js' %}">
-</script>
+<script src="{% static 'list/detail.js' %}?jsv={{detailJsVersion}}"></script>
+<div id="detail-js-version" style="display: none">{{detailJsVersion}}</div>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 
 <h1>{{ construct.title_text }}</h1>
@@ -213,7 +213,7 @@
         {% autoescape off %}
         <td class='name_cell {{ items.main_contract }}'>{{ items.choice.name_txt|escape|markup }}</td>
         {% endautoescape %}
-        <td align='right'>&#163;{{ items.choice.price_num }}</td>
+        <td align='right'>&#163;{{ items.choice.price_num|floatformat:2 }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
         <td align='right' class='choice_total_price'>&#163;{{ items.choice_total_price|floatformat:2 }}</td>
@@ -223,11 +223,7 @@
         <td>{{ items.choice.plan_start_date_formatted }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
         <td class="progress-cell">
-            <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
-                <div class='choice_progress_percent'>
-                    {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
-                </div>
-            </div>
+            {{items.choice.progress_percent_num|floatformat:2}}%
         </td>
         <td>
             <div class='notes-form'>

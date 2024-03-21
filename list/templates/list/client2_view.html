@@ -3,8 +3,8 @@
 {% block content %}
 {% load static %}
 {% load app_filters %}
-<script src="{% static 'list/detail.js' %}">
-</script>
+<script src="{% static 'list/detail.js' %}?jsv={{detailJsVersion}}"></script>
+<div id="detail-js-version" style="display: none">{{detailJsVersion}}</div>
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
 
 <h1>{{ construct.title_text }} (maintenance)</h1>
@@ -49,7 +49,7 @@
     <td><b>Email:</b></td>
     <td>{{ construct.email_text }}</td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-    <td style='display:none'><b>Total:</b></td>
+    <!--td style='display:none'><b>Total:</b></td-->
     <td id='project_total' style='display:none'>&#163; {{ construct_total }}</td>
     <td></td>
     <td></td>
@@ -148,12 +148,8 @@
         <td style='display:none'></td>
         <td style='display:none'>{{ items.choice.plan_start_date }}</td>
         <td align='center' style='display:none'>{{ items.choice.plan_days_num }}</td>
-        <td class="progress-cell">
-            <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
-                <div class='choice_progress_percent'>
-                    {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
-                </div>
-            </div>
+        <td class="progress-cell non-clickable-progress">
+            {{items.choice.progress_percent_num|floatformat:2}}%
         </td>
         <td style='display:none'>
             <div class='notes-form'>
