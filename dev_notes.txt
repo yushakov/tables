@@ -309,7 +309,11 @@ python manage.py dumpdata --format json -o cypress/fixtures/test__.json
 python manage.py testserver cypress/fixtures/test.json
 
 Ну и Сурге55:
+nvm use 20.5.0 (один раз на терминал)
 npx cypress open
+
+Для тестирования без запуска браузера:
+npx cypress run
 
 В общем, с 9 до часу ночи писал тесты на Cypress.
 
