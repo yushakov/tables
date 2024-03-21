@@ -238,7 +238,44 @@ describe('Tests after login', () => {
     cy.visit("/list/2")
     cy.wait(2000);
     cy.contains('a', 'Maintenance view').click();
-    cy.contains('td', 'Total:').next().should('contain', '£ 14,200.20')
+    cy.contains('td', 'Total:').next().should('contain', '£ 14,200.20');
   })
 
+  it("Set yury as a foreman of a project", () => {
+    cy.visit("admin/list/construct/1/change/");
+    cy.get('#id_foreman').select('yury');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+  })
+
+  it("Add deposit", () => {
+    cy.visit("list/transaction/submit/?construct=1");
+    cy.get('#id_to_txt').clear().type('The Project');
+    cy.get('#id_amount').clear().type('1780');
+    cy.get('#id_transaction_type').select('Incoming');
+    cy.contains('a', '#deposit').click();
+    cy.get('input[type="submit"]').should('exist').click();
+  })
+
+  it("Add money", () => {
+    cy.visit("list/transaction/submit/?construct=1");
+    cy.get('#id_to_txt').clear().type('The Project');
+    cy.get('#id_amount').clear().type('1234');
+    cy.get('#id_transaction_type').select('Incoming');
+    cy.get('input[type="submit"]').should('exist').click();
+  })
+
+  it("Check Money left in a foreman page", () => {
+    cy.visit("list/1/worker/");
+    cy.contains('span', 'Money left').next().should('contain', '£ 2,496.07');
+  })
+
+  it("Create a Foreman", () => {
+    cy.visit("admin/list/user/add/");
+    cy.get('#id_username').type('Foreman');
+    cy.get('#id_email').clear().type('foreman@mail.ru');
+    cy.get('#id_password1').clear().type('OlaOla81');
+    cy.get('#id_password2').clear().type('OlaOla81');
+    cy.contains('label', 'Workers').find('input[type="checkbox"]').check().should('be.checked');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+  })
 })
