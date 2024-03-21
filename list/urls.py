@@ -21,6 +21,7 @@ urlpatterns = [
     path('<int:construct_id>/bg_update', views.bg_process_post, name='bg_update'),
     path('<int:construct_id>/client/', views.client, name='client'),
     path('<int:construct_id>/worker/', views.client, name='worker'),
+    path('<int:construct_id>/worker/bg_update/', views.foreman_bg_update, name='foreman_bg_update'),
     path('client/<str:slug>', views.client_slug, name='client_slug'),
     path('client/<str:slug>/bg_update', views.client_slug_bg_update, name='client_slug_bg_update'),
     path('mntn/<str:slug>', views.client2_slug, name='client2_slug'),

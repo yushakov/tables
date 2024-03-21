@@ -23,7 +23,10 @@ from list.views import check_integrity,   \
                        fix_structure,     \
                        get_printed_invoice_lines, \
                        get_number,        \
-                       process_invoice_lines
+                       process_invoice_lines, \
+                       foreman_bg_update, \
+                       client_slug_bg_update, \
+                       bg_process_post
 from list.models import Construct, \
                         Category, \
                         User, \
@@ -1506,6 +1509,18 @@ class ViewTests(TestCase):
         self.client_user_2.first_name = "Client2"
         self.client_user_2.last_name = "Ivanovich2"
         self.client_user_2.save()
+
+    def test_bg_proces_post(self):
+        # bg_process_post()
+        print("!!test_bg_proces_post() is not implemented")
+
+    def test_foreman_bg_update(self):
+        # foreman_bg_update()
+        print("!!test_foreman_bg_update() is not implemented")
+
+    def test_client_slug_bg_update(self):
+        # client_slug_bg_update()
+        print("!!test_client_slug_bg_update() is not implemented")
 
     def test_session_extension_on_detail_page(self):
         c = Client()
