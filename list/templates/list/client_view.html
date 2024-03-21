@@ -165,7 +165,11 @@
         <td style='display:none'></td>
         <td>{{ items.choice.plan_start_date }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
-        <td class="progress-cell">
+        {% if is_worker or is_client %}
+            <td class="progress-cell non-clickable-progress">
+        {% else %}
+            <td class="progress-cell">
+        {% endif %}
             {{items.choice.progress_percent_num|floatformat:2}}%
         </td>
         <td>
@@ -225,7 +229,7 @@
     {% endif %}
 </script>
 <br>
-{% if is_client %}
+{% if is_client or is_foreman %}
 <table id='choices_footer'>
 <tr>
     <td>

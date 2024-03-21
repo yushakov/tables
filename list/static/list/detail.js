@@ -1,4 +1,4 @@
-const gVERSION = "1.5";
+const gVERSION = "1.6";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -36,7 +36,12 @@ function populateProgress() {
     const cells = Array.from(document.getElementsByClassName("progress-cell"));
     cells.forEach((cell) => {
         const progress = cell.innerText.replace('%','').trim();
-        cell.innerHTML = getProgressCellHtml(progress);
+        if (cell.classList.contains("non-clickable-progress")) {
+            cell.innerHTML = getProgressCellHtml(progress, false);
+        }
+        else {
+            cell.innerHTML = getProgressCellHtml(progress, true);
+        }
     });
 }
 
@@ -391,8 +396,67 @@ function modifyRow(ths) {
     return false;
 }
 
-function getProgressCellHtml(progress) {
-    return "<div class='project-progress' style='width: " + progress + "%'>" +
+function getSlider(progress) {
+    const slider = document.createElement('input');
+    slider.setAttribute('type', 'range');
+    slider.setAttribute('min', '0');
+    slider.setAttribute('max', '100');
+    slider.setAttribute('value', String(progress));
+    slider.setAttribute('class', 'progress-slider');
+    // slider.setAttribute('orient', 'vertical');
+    return slider;
+}
+
+function modifyProgress(ths) {
+    if (ths == null) return;
+    const form = document.createElement('div');
+    const number_field = document.createElement('div');
+    number_field.id = "id_number_field";
+    form.classList.add("progress-form");
+    var centerX = window.innerWidth / 2;
+    var centerY = window.innerHeight / 2 + window.scrollY;
+    form.style.display = 'block';
+    form.appendChild(number_field);
+    ths.parentNode.parentNode.appendChild(form);
+    form.style.top = (centerY - form.offsetHeight / 2) + 'px';
+    form.style.left = (centerX - form.offsetWidth / 2) + 'px';
+    number_field.innerText = ths.innerText;
+    const slider = getSlider(ths.innerText.replace(/%/, '').trim());
+    form.appendChild(slider);
+    form.style.width = "fit-content";
+    slider.oninput = function() {
+        number_field.innerText = this.value + "%";
+        ths.style.width = this.value + "%";
+        ths.childNodes[0].innerHTML = Number(this.value).toFixed(2).toLocaleString(gLocale) + "&nbsp;%";
+    };
+    slider.onchange = function() {
+        form.style.width = "fit-content";
+        setModified(true);
+        setSendDataTimer();
+    };
+
+    document.addEventListener('mousedown', function(event) {
+        // Check if the click is outside the form
+        if (!form.contains(event.target)) {
+            // Remove the form if it's not already removed
+            if (form.parentNode) {
+                form.parentNode.removeChild(form);
+            }
+            // Optionally, remove this event listener since the form is removed
+            document.removeEventListener('mousedown', arguments.callee);
+        }
+    });
+
+    // Prevent clicks inside the form from bubbling up to the document
+    form.addEventListener('mousedown', function(event) {
+        event.stopPropagation();
+    });
+}
+
+function getProgressCellHtml(progress, clickable=true) {
+    var pointer = "this";
+    if (!clickable) pointer = "null";
+    return "<div class='project-progress' style='width: " + progress + "%' ondblclick='modifyProgress(" + pointer + ")'>" +
                 "<div class='choice_progress_percent'>"
                     + Number(progress).toFixed(2).toLocaleString(gLocale) + "&nbsp;%" +
                 "</div>" +

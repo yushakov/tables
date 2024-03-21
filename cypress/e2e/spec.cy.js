@@ -293,7 +293,7 @@ describe('Tests after login', () => {
     cy.contains('td', 'Left side').next().next().next().next().invoke('text').should('contain', "£1,656.00");
   })
 
-  it.only("Test the progress bar.", () => {
+  it("Test the progress bar.", () => {
     cy.visit("/list/1/");
     cy.wait(2000);
     cy.contains('tr', 'Left side').contains('a', 'modify').should('exist').click();

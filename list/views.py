@@ -21,7 +21,7 @@ from django.conf import settings
 import os
 import shutil
 
-detailJsVersion = "1.5"
+detailJsVersion = "1.6"
 
 logger = logging.getLogger('django')
 
