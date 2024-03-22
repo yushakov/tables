@@ -1,4 +1,4 @@
-const gVERSION = "1.6";
+const gVERSION = "1.7";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -456,7 +456,7 @@ function modifyProgress(ths) {
 function getProgressCellHtml(progress, clickable=true) {
     var pointer = "this";
     if (!clickable) pointer = "null";
-    return "<div class='project-progress' style='width: " + progress + "%' ondblclick='modifyProgress(" + pointer + ")'>" +
+    return "<div class='project-progress' style='width: " + progress + "%' onclick='modifyProgress(" + pointer + ")'>" +
                 "<div class='choice_progress_percent'>"
                     + Number(progress).toFixed(2).toLocaleString(gLocale) + "&nbsp;%" +
                 "</div>" +
