@@ -1,4 +1,4 @@
-const gVERSION = "1.7";
+const gVERSION = "1.8";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -730,6 +730,7 @@ function addRow(id, className) {
 	var active_row_holder = document.getElementById("active_row");
     document.getElementById('modified').innerText = 'yes';
 	if(!freezeActiveRow()) return false;
+    clearSendDataTimer();
 	var newRow;
     if(id < table.rows.length) {
         newRow = table.insertRow(id+1);
