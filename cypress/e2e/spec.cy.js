@@ -317,7 +317,7 @@ describe('Tests after login', () => {
     //   cy.wrap($tr).find('.progress-form').should('exist')
     //     .contains('input[type="range]"').set("value", "44");
     // });
-    cy.get('input[type="range"]').invoke('val', 44).trigger('input');
+    cy.get('input[type="range"]').should('exist').invoke('val', 44).trigger('input').trigger('change');
     cy.get('body').click(0,0);
     cy.wait(4000);
     cy.reload();
