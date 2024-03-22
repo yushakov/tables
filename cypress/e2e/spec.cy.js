@@ -7,11 +7,13 @@ function fill_construct() {
 
     cy.contains('tr', 'Roof').find('a').contains('head').click()
     cy.get('#inpName').type('Walls')
+    cy.wait(3000);
 
     cy.get('tr').find('textarea').parents('tr').find('a').contains('head').click()
     cy.get('#inpName').type('Floor')
 
     cy.contains('tr', 'Roof').find('a').contains('task').click()
+    cy.wait(3000);
     cy.get('#inpName').type('Left side')
     cy.get('#inpPrice').clear().type('200')
     cy.get('#inpQty').clear().type('6')
@@ -45,6 +47,7 @@ function fill_construct() {
     cy.get('#choices').contains('a', 'FREEZE').click()
     
     cy.contains('tr', 'First wall').find('a').contains('task').click()
+    cy.wait(3000);
     cy.get('#inpName').type('Second wall')
     cy.get('#inpPrice').clear().type('50')
     cy.get('#inpQty').clear().type('45')
@@ -74,7 +77,7 @@ describe('Tests after login', () => {
     cy.login('yury', 'Tp-iMfsS2004')
   })
 
-  it("Creates a new User Group", () => {
+  it("Create a new User Group", () => {
     cy.visit("/list/account")
     // cy.contains('List of projects.').click()
     cy.contains('Admin page.').should('exist').click()
@@ -83,7 +86,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click()
   })
 
-  it("Creates a new Client", () => {
+  it("Create a new Client", () => {
     cy.visit("/list/account");
     // cy.contains('List of projects.').click()
     cy.contains('Admin page.').should('exist').click();
@@ -120,7 +123,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
   })
 
-  it("Creates a new Construct", () => {
+  it("Create a new Construct", () => {
     cy.visit("/list/account");
     cy.contains('Admin page.').should('exist').click();
     cy.get('a[href="/admin/list/construct/add/"]').click();
@@ -131,7 +134,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').click();
   })
 
-  it("Creates 'on-top profit' Construct", () => {
+  it("Create 'on-top profit' Construct", () => {
     cy.visit("/list/account");
     cy.contains('Admin page.').should('exist').click();
     cy.get('a[href="/admin/list/construct/add/"]').click();
@@ -143,7 +146,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').click();
   })
 
-  it("Fills in the new Construct", () => {
+  it("Fill in the new Construct", () => {
     cy.visit("/list/1");
     
     fill_construct();
@@ -158,7 +161,7 @@ describe('Tests after login', () => {
 
     cy.get('input[type="submit"]').click();
 
-    cy.visit("/list/1"); // reload the page to update numbers
+    cy.reload(); // reload the page to update numbers
 
     cy.get('#project_total').invoke('text').then((text) => {
       expect(text.trim()).to.equal('£ 9,800');
@@ -172,7 +175,7 @@ describe('Tests after login', () => {
   })
 
   
-  it("Fills in the 'on-top profit' Construct", () => {
+  it("Fill in the 'on-top profit' Construct", () => {
     cy.visit("/list/2");
     
     fill_construct();
@@ -313,10 +316,6 @@ describe('Tests after login', () => {
     cy.contains('tr', 'Left side').then(($tr) => {
       cy.wrap($tr).find('.project-progress').should('exist').click();
     });
-    // cy.contains('tr', 'Left side').then(($tr) => {
-    //   cy.wrap($tr).find('.progress-form').should('exist')
-    //     .contains('input[type="range]"').set("value", "44");
-    // });
     cy.get('input[type="range"]').should('exist').invoke('val', 44).trigger('input').trigger('change');
     cy.get('body').click(0,0);
     cy.wait(4000);
