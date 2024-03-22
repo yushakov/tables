@@ -4,16 +4,17 @@ function fill_construct() {
   cy.get('#choices thead').contains('a', 'head').click()
     cy.get('#inpName').type('Roof')
     cy.get('#choices').contains('a', 'FREEZE').click()
-
+    
     cy.contains('tr', 'Roof').find('a').contains('head').click()
     cy.get('#inpName').type('Walls')
-    cy.wait(3000);
+    cy.wait(3200);
+    cy.contains("do not forget").should("be.visible");
 
     cy.get('tr').find('textarea').parents('tr').find('a').contains('head').click()
     cy.get('#inpName').type('Floor')
-
+    
     cy.contains('tr', 'Roof').find('a').contains('task').click()
-    cy.wait(3000);
+    cy.wait(3200);
     cy.get('#inpName').type('Left side')
     cy.get('#inpPrice').clear().type('200')
     cy.get('#inpQty').clear().type('6')
@@ -45,9 +46,9 @@ function fill_construct() {
     cy.get('#inpDayStart').clear().type('2024-01-27')
     cy.get('#inpPlanDays').clear().type('1')
     cy.get('#choices').contains('a', 'FREEZE').click()
+    cy.contains("Modifications saved").should("be.visible");
     
     cy.contains('tr', 'First wall').find('a').contains('task').click()
-    cy.wait(3000);
     cy.get('#inpName').type('Second wall')
     cy.get('#inpPrice').clear().type('50')
     cy.get('#inpQty').clear().type('45')
@@ -65,10 +66,12 @@ function fill_construct() {
     cy.get('#inpUnits').clear().type('m2')
     cy.get('#inpDayStart').clear().type('2024-01-30')
     cy.get('#inpPlanDays').clear().type('1')
+    cy.contains("do not forget").should("be.visible")
     cy.get('#choices').contains('a', 'FREEZE').click()
-    cy.wait(3200);
-
+    cy.contains("Modifications saved").should("be.visible");
+    
     cy.contains('tr', 'Floor').find('a').contains('task').click()
+    cy.contains("do not forget").should("be.visible")
     cy.get('#inpName').type('Something else...')
     cy.get('#inpPrice').clear().type('1000')
     cy.get('#inpQty').clear().type('2')
@@ -76,18 +79,15 @@ function fill_construct() {
     cy.get('#inpDayStart').clear().type('2024-01-24')
     cy.get('#inpPlanDays').clear().type('3')
     cy.get('#choices').contains('a', 'FREEZE').click()
-    cy.wait(3200);
+    cy.contains("Modifications saved").should("be.visible");
     cy.contains('tr', 'Something else...').should('exist').find('a').contains('delete').click();
-
-    cy.get('input[type="submit"]').click();
+    
+    // cy.get('input[type="submit"]').click();
+    // cy.contains("Modifications saved").should("be.visible");
 }
 
 describe('Tests after login', () => {
   beforeEach(() => {
-    // cy.visit('/list')
-    // cy.get('#id_username').type('yury')
-    // cy.get('#id_password').type('Tp-iMfsS2004')
-    // cy.get('button[type="submit"]').click()
     cy.login('yury', 'Tp-iMfsS2004')
   })
 
@@ -160,6 +160,31 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').click();
   })
 
+  // it.only("testik", () => {
+  //   cy.visit("/list/1");
+  //   cy.contains('tr', 'Floor').find('a').contains('task').click()
+  //   cy.get('#inpName').type('Something else...')
+  //   cy.get('#inpPrice').clear().type('1000')
+  //   cy.get('#inpQty').clear().type('2')
+  //   cy.get('#inpUnits').clear().type('nr')
+  //   cy.get('#inpDayStart').clear().type('2024-01-24')
+  //   cy.get('#inpPlanDays').clear().type('3')
+  //   cy.get('#choices').contains('a', 'FREEZE').click()
+  //   cy.contains("Modifications saved").should("be.visible");
+  //   cy.contains('tr', 'Something else...').should('exist').find('a').contains('delete').click();
+  //   cy.contains("do not forget").should("be.visible");
+    
+  //   cy.get('input[type="submit"]').click();
+  //   cy.contains("Modifications saved").should("be.visible");
+  //   cy.wait(5000);
+  //   cy.reload();
+  //   cy.wait(5000);
+
+  //   cy.get('#project_total').invoke('text').then((text) => {
+  //     expect(text.trim()).to.equal('£ 9,800');
+  //   })
+  // })
+
   it("Fill in the new Construct", () => {
     cy.visit("/list/1");
     
@@ -174,6 +199,8 @@ describe('Tests after login', () => {
     })
 
     cy.get('input[type="submit"]').click();
+    cy.contains("Modifications saved.").should('be.visible');
+    cy.wait(3000);
 
     cy.reload(); // reload the page to update numbers
 
@@ -203,8 +230,10 @@ describe('Tests after login', () => {
     })
 
     cy.get('input[type="submit"]').click();
+    cy.contains("Modifications saved.").should('be.visible');
+    cy.wait(3000);
 
-    cy.visit("/list/2"); // reload the page to update numbers
+    cy.reload(); // reload the page to update numbers
 
     cy.get('#project_total').invoke('text').then((text) => {
       expect(text.trim()).to.equal('£ 9,800');
