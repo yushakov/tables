@@ -1,4 +1,4 @@
-const gVERSION = "1.8";
+const gVERSION = "1.9";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -126,8 +126,9 @@ function setForm() {
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
         event.preventDefault();
-        saveChoices();
-        sendFormData();
+        if (saveChoices()) {
+            sendFormData();
+        }
     });
     updateRows();
 }
@@ -335,7 +336,7 @@ function setModified(modified=true) {
 }
 
 function setSendDataTimer() {
-    saveChoices();
+    if(!saveChoices()) return;
     clearSendDataTimer();
     sendDataTimer = setTimeout(sendFormData, 3000);
 }

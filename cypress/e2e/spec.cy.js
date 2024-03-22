@@ -66,6 +66,7 @@ function fill_construct() {
     cy.get('#inpDayStart').clear().type('2024-01-30')
     cy.get('#inpPlanDays').clear().type('1')
     cy.get('#choices').contains('a', 'FREEZE').click()
+    cy.wait(3200);
 }
 
 describe('Tests after login', () => {
