@@ -1,4 +1,4 @@
-const gVERSION = "1.9";
+const gVERSION = "2.0";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -669,6 +669,7 @@ function restoreDeleted(ths) {
                                .replace(/restore/, "delete");
     ths.parentNode.innerHTML = new_del_link;
     updateHeaders();
+    setModified();
     return false;
 }
 

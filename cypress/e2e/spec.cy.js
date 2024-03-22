@@ -55,7 +55,7 @@ function fill_construct() {
     cy.get('#inpDayStart').clear().type('2024-01-28')
     cy.get('#inpPlanDays').clear().type('2')
     cy.get('#choices').contains('a', 'FREEZE').click()
-    
+
     // cy.debug()
     //cy.get('tr').find('textarea').parents('tr').find('a').contains('task').click()
     cy.contains('tr', 'Second wall').find('a').contains('task').click()
@@ -67,6 +67,19 @@ function fill_construct() {
     cy.get('#inpPlanDays').clear().type('1')
     cy.get('#choices').contains('a', 'FREEZE').click()
     cy.wait(3200);
+
+    cy.contains('tr', 'Floor').find('a').contains('task').click()
+    cy.get('#inpName').type('Something else...')
+    cy.get('#inpPrice').clear().type('1000')
+    cy.get('#inpQty').clear().type('2')
+    cy.get('#inpUnits').clear().type('nr')
+    cy.get('#inpDayStart').clear().type('2024-01-24')
+    cy.get('#inpPlanDays').clear().type('3')
+    cy.get('#choices').contains('a', 'FREEZE').click()
+    cy.wait(3200);
+    cy.contains('tr', 'Something else...').should('exist').find('a').contains('delete').click();
+
+    cy.get('input[type="submit"]').click();
 }
 
 describe('Tests after login', () => {
