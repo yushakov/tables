@@ -1,4 +1,4 @@
-const gVERSION = "2.0";
+const gVERSION = "2.1";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -809,8 +809,13 @@ function saveChoices() {
             if(cell.cellIndex == 1) cell_dict["class"] = String(cell.className);
             cell_dict[g_JsonNames[cell.cellIndex]] = getDictEntry(cell.cellIndex, cell);
         });
+        var row_id = String(row.id);
+        if(row_id.trim() == '') {
+            row_id = "tmp_" + Math.random().toFixed(15).toString().replace(/0\./,'');
+            row.id = row_id;
+        }
         out["row_" + String(row.rowIndex)] =
-           {"id": String(row.id), "class": String(row.classList), "cells": cell_dict};
+           {"id": row_id, "class": String(row.classList), "cells": cell_dict};
     });
     modified.innerText = 'no';
     out["timestamp"] = String(Math.round(Date.now()/1000));
@@ -819,11 +824,24 @@ function saveChoices() {
     return true;
 }
 
+
+function updateRowIDs(data) {
+    const tmp_choice_pairs = data['tmp_id_pairs'];
+    Object.keys(tmp_choice_pairs).forEach((key) => {
+        const row = document.getElementById(String(key));
+        if(row) {
+            console.log(row.id + " to " + tmp_choice_pairs[key]);
+            row.id = "tr_" + String(tmp_choice_pairs[key]);
+        }
+    })
+}
+
 function sendFormData() {
     const form = document.getElementById('choices_form');
     const url = form.action; // Get the form action
     const formData = new FormData(form); // Create FormData object from the form
-    
+    console.log("sendFormData()");
+
     fetch(url, {
         method: 'POST',
         body: formData,
@@ -841,6 +859,7 @@ function sendFormData() {
     .then(data => {
         // Handle success. You can update the UI accordingly.
         console.log(data); // Assuming the server responds with some JSON
+        updateRowIDs(data);
         setModified(false);
     })
     .catch(error => {

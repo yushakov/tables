@@ -21,7 +21,7 @@ from django.conf import settings
 import os
 import shutil
 
-detailJsVersion = "2.0"
+detailJsVersion = "2.1"
 
 logger = logging.getLogger('django')
 
@@ -396,15 +396,19 @@ def create_or_update_choice(row_id, row, construct, client=False, foreman=False)
 def save_update(data, construct, client=False, foreman=False):
     structure = dict()
     client_try_to_change_structure = client
+    out_pairs = dict()
     for key in data.keys():
         if not key.startswith("row_"): continue
         row_id = data[key]['id']
         choice_id = create_or_update_choice(row_id, data[key], construct, client, foreman)
         add_to_structure(structure, data[key], choice_id)
-    if client_try_to_change_structure: return
+        if row_id.startswith('tmp_'):
+            out_pairs[row_id] = choice_id
+    if client_try_to_change_structure: return dict()
     string_structure = json.dumps(structure)
     construct.struct_json = string_structure
     construct.save()
+    return out_pairs
 
 
 def __add_choice_to_structure(structure, choice):
@@ -551,7 +555,9 @@ def process_post(request, construct, client=False, foreman=False):
         data = json.loads(request.POST["json_value"])
         logger.debug('POST data in detail():\n %s', request.POST["json_value"])
         if checkTimeStamp(data, construct):
-            save_update(data, construct, client, foreman)
+            return save_update(data, construct, client, foreman)
+        return dict()
+    return dict()
 
 
 def get_history_records(construct, limit=8):
@@ -575,11 +581,13 @@ def bg_process_post(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: bg_process_post({construct.title_text}) by {request.user.username}, {ip}')
+    tmp_to_id_pairs = {}
     if request.method == 'POST':
-        process_post(request, construct)
+        tmp_to_id_pairs = process_post(request, construct)
         construct.history_dump(request.user.id)
     extend_session(request)
     data = {
+        'tmp_id_pairs': tmp_to_id_pairs,
         'message': 'The construct has been updated.',
         'newToken': 'goes here (TBD)'
     }
