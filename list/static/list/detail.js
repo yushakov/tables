@@ -826,6 +826,7 @@ function saveChoices() {
 
 
 function updateRowIDs(data) {
+    if(!Object.keys(data).includes('tmp_id_pairs')) return;
     const tmp_choice_pairs = data['tmp_id_pairs'];
     Object.keys(tmp_choice_pairs).forEach((key) => {
         const row = document.getElementById(String(key));
