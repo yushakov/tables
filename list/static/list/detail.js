@@ -1,4 +1,4 @@
-const gVERSION = "1.6";
+const gVERSION = "2.2";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -126,8 +126,9 @@ function setForm() {
     const form = document.getElementById('choices_form');
     form.addEventListener("submit", event => {
         event.preventDefault();
-        saveChoices();
-        sendFormData();
+        if (saveChoices()) {
+            sendFormData();
+        }
     });
     updateRows();
 }
@@ -335,7 +336,7 @@ function setModified(modified=true) {
 }
 
 function setSendDataTimer() {
-    saveChoices();
+    if(!saveChoices()) return;
     clearSendDataTimer();
     sendDataTimer = setTimeout(sendFormData, 3000);
 }
@@ -456,7 +457,7 @@ function modifyProgress(ths) {
 function getProgressCellHtml(progress, clickable=true) {
     var pointer = "this";
     if (!clickable) pointer = "null";
-    return "<div class='project-progress' style='width: " + progress + "%' ondblclick='modifyProgress(" + pointer + ")'>" +
+    return "<div class='project-progress' style='width: " + progress + "%' onclick='modifyProgress(" + pointer + ")'>" +
                 "<div class='choice_progress_percent'>"
                     + Number(progress).toFixed(2).toLocaleString(gLocale) + "&nbsp;%" +
                 "</div>" +
@@ -668,6 +669,7 @@ function restoreDeleted(ths) {
                                .replace(/restore/, "delete");
     ths.parentNode.innerHTML = new_del_link;
     updateHeaders();
+    setModified();
     return false;
 }
 
@@ -730,6 +732,7 @@ function addRow(id, className) {
 	var active_row_holder = document.getElementById("active_row");
     document.getElementById('modified').innerText = 'yes';
 	if(!freezeActiveRow()) return false;
+    clearSendDataTimer();
 	var newRow;
     if(id < table.rows.length) {
         newRow = table.insertRow(id+1);
@@ -806,8 +809,13 @@ function saveChoices() {
             if(cell.cellIndex == 1) cell_dict["class"] = String(cell.className);
             cell_dict[g_JsonNames[cell.cellIndex]] = getDictEntry(cell.cellIndex, cell);
         });
+        var row_id = String(row.id);
+        if(row_id.trim() == '') {
+            row_id = "tmp_" + Math.random().toFixed(15).toString().replace(/0\./,'');
+            row.id = row_id;
+        }
         out["row_" + String(row.rowIndex)] =
-           {"id": String(row.id), "class": String(row.classList), "cells": cell_dict};
+           {"id": row_id, "class": String(row.classList), "cells": cell_dict};
     });
     modified.innerText = 'no';
     out["timestamp"] = String(Math.round(Date.now()/1000));
@@ -816,11 +824,30 @@ function saveChoices() {
     return true;
 }
 
+
+function updateRowIDs(data) {
+    if(!Object.keys(data).includes('tmp_id_pairs')) return;
+    const tmp_choice_pairs = data['tmp_id_pairs'];
+    Object.keys(tmp_choice_pairs).forEach((key) => {
+        const row = document.getElementById(String(key));
+        if(row) {
+            console.log(row.id + " to " + tmp_choice_pairs[key]);
+            if (String(tmp_choice_pairs[key]) == "delete") {
+                row.parentNode.removeChild(row);
+            }
+            else {
+                row.id = "tr_" + String(tmp_choice_pairs[key]);
+            }
+        }
+    })
+}
+
 function sendFormData() {
     const form = document.getElementById('choices_form');
     const url = form.action; // Get the form action
     const formData = new FormData(form); // Create FormData object from the form
-    
+    console.log("sendFormData()");
+
     fetch(url, {
         method: 'POST',
         body: formData,
@@ -838,6 +865,7 @@ function sendFormData() {
     .then(data => {
         // Handle success. You can update the UI accordingly.
         console.log(data); // Assuming the server responds with some JSON
+        updateRowIDs(data);
         setModified(false);
     })
     .catch(error => {

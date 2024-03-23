@@ -6,7 +6,7 @@
 {% load l10n %}
 <script src="{% static 'list/detail.js' %}?jsv={{detailJsVersion}}"></script>
 <div id="detail-js-version" style="display: none">{{detailJsVersion}}</div>
-<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<link rel="stylesheet" href="{% static 'list/style.css' %}?jsv={{detailJsVersion}}">
 
 <h1>{{ construct.title_text }}</h1>
 

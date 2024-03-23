@@ -4,14 +4,17 @@ function fill_construct() {
   cy.get('#choices thead').contains('a', 'head').click()
     cy.get('#inpName').type('Roof')
     cy.get('#choices').contains('a', 'FREEZE').click()
-
+    
     cy.contains('tr', 'Roof').find('a').contains('head').click()
     cy.get('#inpName').type('Walls')
+    cy.wait(3200);
+    cy.contains("do not forget").should("be.visible");
 
     cy.get('tr').find('textarea').parents('tr').find('a').contains('head').click()
     cy.get('#inpName').type('Floor')
-
+    
     cy.contains('tr', 'Roof').find('a').contains('task').click()
+    cy.wait(3200);
     cy.get('#inpName').type('Left side')
     cy.get('#inpPrice').clear().type('200')
     cy.get('#inpQty').clear().type('6')
@@ -43,6 +46,7 @@ function fill_construct() {
     cy.get('#inpDayStart').clear().type('2024-01-27')
     cy.get('#inpPlanDays').clear().type('1')
     cy.get('#choices').contains('a', 'FREEZE').click()
+    cy.contains("Modifications saved").should("be.visible");
     
     cy.contains('tr', 'First wall').find('a').contains('task').click()
     cy.get('#inpName').type('Second wall')
@@ -52,7 +56,7 @@ function fill_construct() {
     cy.get('#inpDayStart').clear().type('2024-01-28')
     cy.get('#inpPlanDays').clear().type('2')
     cy.get('#choices').contains('a', 'FREEZE').click()
-    
+
     // cy.debug()
     //cy.get('tr').find('textarea').parents('tr').find('a').contains('task').click()
     cy.contains('tr', 'Second wall').find('a').contains('task').click()
@@ -62,19 +66,33 @@ function fill_construct() {
     cy.get('#inpUnits').clear().type('m2')
     cy.get('#inpDayStart').clear().type('2024-01-30')
     cy.get('#inpPlanDays').clear().type('1')
+    cy.contains("do not forget").should("be.visible")
     cy.get('#choices').contains('a', 'FREEZE').click()
+    cy.contains("Modifications saved").should("be.visible");
+    
+    // cy.contains('tr', 'Floor').find('a').contains('task').click()
+    // cy.contains("do not forget").should("be.visible")
+    // cy.get('#inpName').type('Something else...')
+    // cy.get('#inpPrice').clear().type('1000')
+    // cy.get('#inpQty').clear().type('2')
+    // cy.get('#inpUnits').clear().type('nr')
+    // cy.get('#inpDayStart').clear().type('2024-01-24')
+    // cy.get('#inpPlanDays').clear().type('3')
+    // cy.get('#choices').contains('a', 'FREEZE').click()
+    // cy.contains("Modifications saved").should("be.visible");
+    // cy.contains('tr', 'Something else...').should('exist').find('a').contains('delete').click();
+    
+    // cy.get('input[type="submit"]').click();
+    // cy.contains("Modifications saved").should("be.visible");
+    // cy.wait(10000);
 }
 
 describe('Tests after login', () => {
   beforeEach(() => {
-    // cy.visit('/list')
-    // cy.get('#id_username').type('yury')
-    // cy.get('#id_password').type('Tp-iMfsS2004')
-    // cy.get('button[type="submit"]').click()
     cy.login('yury', 'Tp-iMfsS2004')
   })
 
-  it("Creates a new User Group", () => {
+  it("Create a new User Group", () => {
     cy.visit("/list/account")
     // cy.contains('List of projects.').click()
     cy.contains('Admin page.').should('exist').click()
@@ -83,7 +101,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click()
   })
 
-  it("Creates a new Client", () => {
+  it("Create a new Client", () => {
     cy.visit("/list/account");
     // cy.contains('List of projects.').click()
     cy.contains('Admin page.').should('exist').click();
@@ -120,7 +138,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
   })
 
-  it("Creates a new Construct", () => {
+  it("Create a new Construct", () => {
     cy.visit("/list/account");
     cy.contains('Admin page.').should('exist').click();
     cy.get('a[href="/admin/list/construct/add/"]').click();
@@ -131,7 +149,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').click();
   })
 
-  it("Creates 'on-top profit' Construct", () => {
+  it("Create 'on-top profit' Construct", () => {
     cy.visit("/list/account");
     cy.contains('Admin page.').should('exist').click();
     cy.get('a[href="/admin/list/construct/add/"]').click();
@@ -143,7 +161,7 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').click();
   })
 
-  it("Fills in the new Construct", () => {
+  it("Fill in the new Construct", () => {
     cy.visit("/list/1");
     
     fill_construct();
@@ -157,8 +175,10 @@ describe('Tests after login', () => {
     })
 
     cy.get('input[type="submit"]').click();
+    cy.contains("Modifications saved.").should('be.visible');
+    cy.wait(10000);
 
-    cy.visit("/list/1"); // reload the page to update numbers
+    cy.reload(); // reload the page to update numbers
 
     cy.get('#project_total').invoke('text').then((text) => {
       expect(text.trim()).to.equal('£ 9,800');
@@ -168,11 +188,41 @@ describe('Tests after login', () => {
       expect(text.trim()).to.equal('£ 11,834');
     })
 
-    cy.get('#id_expected_deposit').invoke('text').should('contain', '£ 1,775.03');
+    cy.get('#id_expected_deposit').invoke('text').then((text) => {
+      expect(text.trim()).to.contain('£ 1,775.03');
+    });
   })
 
+  it.skip("Test task delete.", () => {
+    cy.visit("/list/1");
+    cy.contains('tr', 'Floor').then(($tr) => {
+      cy.wrap($tr).contains('a', 'task').click();
+    });
+    cy.get('#inpName').type('Something else...')
+    cy.get('#inpPrice').clear().type('1000')
+    cy.get('#inpQty').clear().type('2')
+    cy.get('#inpUnits').clear().type('nr')
+    cy.get('#inpDayStart').clear().type('2024-01-24')
+    cy.get('#inpPlanDays').clear().type('3')
+    cy.get('#choices').contains('a', 'FREEZE').click()
+    cy.contains("Modifications saved").should("be.visible");
+    cy.contains('tr', 'Something else...').should('exist').then(($tr) => {
+      cy.wrap($tr).contains('a', 'delete').click();
+    });
+    cy.contains("do not forget").should("be.visible");
+    
+    cy.get('input[type="submit"]').click();
+    cy.contains("Modifications saved").should("be.visible");
+    cy.wait(5000);
+    cy.reload();
+    cy.wait(5000);
+
+    cy.get('#project_total').invoke('text').then((text) => {
+      expect(text.trim()).to.equal('£ 9,800');
+    })
+  })
   
-  it("Fills in the 'on-top profit' Construct", () => {
+  it("Fill in the 'on-top profit' Construct", () => {
     cy.visit("/list/2");
     
     fill_construct();
@@ -186,8 +236,10 @@ describe('Tests after login', () => {
     })
 
     cy.get('input[type="submit"]').click();
+    cy.contains("Modifications saved.").should('be.visible');
+    cy.wait(13000);
 
-    cy.visit("/list/2"); // reload the page to update numbers
+    cy.reload(); // reload the page to update numbers
 
     cy.get('#project_total').invoke('text').then((text) => {
       expect(text.trim()).to.equal('£ 9,800');
@@ -197,7 +249,9 @@ describe('Tests after login', () => {
       expect(text.trim()).to.equal('£ 11,834');
     })
 
-    cy.get('#id_expected_deposit').invoke('text').should('contain', '£ 2,130.03');
+    cy.get('#id_expected_deposit').invoke('text').then((text) => {
+      expect(text.trim()).to.contain('£ 2,130.03');
+    });
   })
 
   it("Open the project list", () => {
@@ -213,32 +267,48 @@ describe('Tests after login', () => {
     cy.visit("/list/1");
     cy.wait(2000);
     cy.contains('a', 'Client view').click();
-    cy.contains('td', 'Total:').next().should('contain', '£ 11,270')
-    cy.contains('td', 'Total + VAT:').next().should('contain', '£ 11,833.50')
-    cy.contains('td', 'Deposit:').next().should('contain', '£ 1,775.03')
+    cy.contains('td', 'Total:').next().invoke('text').then((text) => {
+      expect(text.trim()).to.equal('£ 11,270.00');
+    });
+    cy.contains('td', 'Total + VAT:').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 11,833.50');
+    });
+    cy.contains('td', 'Deposit:').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 1,775.03');
+    });
   })
 
   it("Check the Maintenance page", () => {
     cy.visit("/list/1");
     cy.wait(2000);
     cy.contains('a', 'Maintenance view').click();
-    cy.contains('td', 'Total:').next().should('contain', '£ 11,833.50')
+    cy.contains('td', 'Total:').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 11,833.50');
+    });
   })
 
   it("Check the On-Top Client View page", () => {
     cy.visit("/list/2");
     cy.wait(2000);
     cy.contains('a', 'Client view').click();
-    cy.contains('td', 'Total:').next().should('contain', '£ 13,524.00')
-    cy.contains('td', 'Total + VAT:').next().should('contain', '£ 14,200.20')
-    cy.contains('td', 'Deposit:').next().should('contain', '£ 2,130.03')
+    cy.contains('td', 'Total:').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 13,524.00');
+    })
+    cy.contains('td', 'Total + VAT:').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 14,200.20');
+    })
+    cy.contains('td', 'Deposit:').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 2,130.03');
+    })
   })
 
   it("Check the On-Top Maintenance page", () => {
     cy.visit("/list/2");
     cy.wait(2000);
     cy.contains('a', 'Maintenance view').click();
-    cy.contains('td', 'Total:').next().should('contain', '£ 14,200.20');
+    cy.contains('td', 'Total:').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 14,200.20');
+    })
   })
 
   it("Set yury as a foreman of a project", () => {
@@ -266,7 +336,9 @@ describe('Tests after login', () => {
 
   it("Check Money left in a foreman page", () => {
     cy.visit("list/1/worker/");
-    cy.contains('span', 'Money left').next().should('contain', '£ 2,496.07');
+    cy.contains('span', 'Money left').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('£ 2,496.07');
+    })
   })
 
   it("Check that foreman choice prices are the same as on the admin's page.", () => {
@@ -281,16 +353,24 @@ describe('Tests after login', () => {
     cy.visit("/list/1/");
     cy.wait(2000);
     cy.contains('a', 'Client view').click();
-    cy.contains('td', 'Left side').next().invoke('text').should('contain', "£230.00");
-    cy.contains('td', 'Left side').next().next().next().next().invoke('text').should('contain', "£1,380.00");
+    cy.contains('td', 'Left side').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal("£230.00");
+    });
+    cy.contains('td', 'Left side').next().next().next().next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal("£1,380.00");
+    });
   })
 
   it("Check Client choice prices with On-Top profit.", () => {
     cy.visit("/list/2/");
     cy.wait(2000);
     cy.contains('a', 'Client view').click();
-    cy.contains('td', 'Left side').next().invoke('text').should('contain', "£276.00");
-    cy.contains('td', 'Left side').next().next().next().next().invoke('text').should('contain', "£1,656.00");
+    cy.contains('td', 'Left side').next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal("£276.00");
+    });
+    cy.contains('td', 'Left side').next().next().next().next().invoke('text').then((text)=>{
+      expect(text.trim()).to.equal("£1,656.00");
+    })
   })
 
   it("Test the progress bar.", () => {
@@ -306,6 +386,24 @@ describe('Tests after login', () => {
     cy.wait(2000);
     cy.contains('tr', 'Left side').contains('div', '27.00').should('exist');
   })
+
+  it("Test the progress slider.", () => {
+    cy.visit("/list/1/");
+    cy.wait(2000);
+    cy.contains('tr', 'Left side').then(($tr) => {
+      cy.wrap($tr).find('.project-progress').should('exist').click();
+    });
+    cy.get('input[type="range"]').should('exist').invoke('val', 44).trigger('input').trigger('change');
+    cy.get('body').click(0,0);
+    cy.wait(4000);
+    cy.reload();
+    cy.contains('tr', 'Left side').contains('div', '44.00').should('exist');
+  })
+
+  // it.only("Little", () => {
+  //   cy.visit("/list/1/");
+  //   cy.contains('tr', 'Left side').contains('div', '44.00').should('exist');
+  // })
 
   it("Create a Foreman", () => {
     cy.visit("admin/list/user/add/");
