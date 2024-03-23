@@ -21,7 +21,8 @@ from django.conf import settings
 import os
 import shutil
 
-detailJsVersion = "2.1"
+detailJsVersion = "2.2"
+DELETED = -5
 
 logger = logging.getLogger('django')
 
@@ -313,7 +314,7 @@ def update_choice(choice_id, cell_data, client=False, foreman=False):
             logger.info(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
             logger.info(choice.__dict__)
             choice.delete()
-            return -1
+            return DELETED
         else:
             logger.info(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
             data = prepare_data(cells)
@@ -404,6 +405,8 @@ def save_update(data, construct, client=False, foreman=False):
         add_to_structure(structure, data[key], choice_id)
         if row_id.startswith('tmp_'):
             out_pairs[row_id] = choice_id
+        elif choice_id == DELETED:
+            out_pairs[row_id] = "delete"
     if client_try_to_change_structure: return dict()
     string_structure = json.dumps(structure)
     construct.struct_json = string_structure

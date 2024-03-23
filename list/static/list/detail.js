@@ -1,4 +1,4 @@
-const gVERSION = "2.1";
+const gVERSION = "2.2";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -832,7 +832,12 @@ function updateRowIDs(data) {
         const row = document.getElementById(String(key));
         if(row) {
             console.log(row.id + " to " + tmp_choice_pairs[key]);
-            row.id = "tr_" + String(tmp_choice_pairs[key]);
+            if (String(tmp_choice_pairs[key]) == "delete") {
+                row.parentNode.removeChild(row);
+            }
+            else {
+                row.id = "tr_" + String(tmp_choice_pairs[key]);
+            }
         }
     })
 }
