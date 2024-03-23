@@ -21,6 +21,9 @@ from django.conf import settings
 import os
 import shutil
 
+detailJsVersion = "2.2"
+DELETED = -5
+
 logger = logging.getLogger('django')
 
 class IndexView(generic.ListView):
@@ -292,7 +295,7 @@ def prepare_data(cells):
         data['main_contract_choice'] = data['constructive_notes'].find('#main') >= 0
     return data
 
-def update_choice(choice_id, cell_data, client=False):
+def update_choice(choice_id, cell_data, client=False, foreman=False):
     # can be a header
     if type(choice_id) != int:
         try:
@@ -311,12 +314,16 @@ def update_choice(choice_id, cell_data, client=False):
             logger.info(f'DELETE "{choice.name_txt}" (id: {choice.id}) from "{choice.construct}"')
             logger.info(choice.__dict__)
             choice.delete()
-            return -1
+            return DELETED
         else:
             logger.info(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
             data = prepare_data(cells)
             if client:
                 choice.client_notes = data['client_notes']
+                choice.save()
+                return int(choice_id)
+            if foreman:
+                choice.progress_percent_num = data['progress_percent_num']
                 choice.save()
                 return int(choice_id)
             choice.name_txt =                 data['name_txt']
@@ -362,7 +369,7 @@ def create_choice(cell_data, construct):
     return -1
 
 
-def add_to_structure(structure, row_data, choice_id, client=False):
+def add_to_structure(structure, row_data, choice_id):
     ln_cntr = len(structure) + 1
     row_type = row_data['class']
     row_id = None
@@ -379,26 +386,32 @@ def add_to_structure(structure, row_data, choice_id, client=False):
     structure.update({f'line_{ln_cntr}':{'type':row_type, 'id':row_id}})
 
 
-def create_or_update_choice(row_id, row, construct, client=False):
+def create_or_update_choice(row_id, row, construct, client=False, foreman=False):
     if row_id.startswith('tr_'):
-        return update_choice(row_id.replace('tr_',''), row, client)
-    elif not client:
+        return update_choice(row_id.replace('tr_',''), row, client, foreman)
+    elif not client and not foreman:
         return create_choice(row, construct)
     return -1
 
 
-def save_update(data, construct, client=False):
+def save_update(data, construct, client=False, foreman=False):
     structure = dict()
     client_try_to_change_structure = client
+    out_pairs = dict()
     for key in data.keys():
         if not key.startswith("row_"): continue
         row_id = data[key]['id']
-        choice_id = create_or_update_choice(row_id, data[key], construct, client)
-        add_to_structure(structure, data[key], choice_id, client)
-    if client_try_to_change_structure: return
+        choice_id = create_or_update_choice(row_id, data[key], construct, client, foreman)
+        add_to_structure(structure, data[key], choice_id)
+        if row_id.startswith('tmp_'):
+            out_pairs[row_id] = choice_id
+        elif choice_id == DELETED:
+            out_pairs[row_id] = "delete"
+    if client_try_to_change_structure: return dict()
     string_structure = json.dumps(structure)
     construct.struct_json = string_structure
     construct.save()
+    return out_pairs
 
 
 def __add_choice_to_structure(structure, choice):
@@ -540,12 +553,14 @@ def checkTimeStamp(data, construct):
     return False
 
 
-def process_post(request, construct, client=False):
+def process_post(request, construct, client=False, foreman=False):
     if request.POST["json_value"]:
         data = json.loads(request.POST["json_value"])
         logger.debug('POST data in detail():\n %s', request.POST["json_value"])
         if checkTimeStamp(data, construct):
-            save_update(data, construct, client)
+            return save_update(data, construct, client, foreman)
+        return dict()
+    return dict()
 
 
 def get_history_records(construct, limit=8):
@@ -569,11 +584,13 @@ def bg_process_post(request, construct_id):
     construct = get_object_or_404(Construct, pk=construct_id)
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: bg_process_post({construct.title_text}) by {request.user.username}, {ip}')
+    tmp_to_id_pairs = {}
     if request.method == 'POST':
-        process_post(request, construct)
+        tmp_to_id_pairs = process_post(request, construct)
         construct.history_dump(request.user.id)
     extend_session(request)
     data = {
+        'tmp_id_pairs': tmp_to_id_pairs,
         'message': 'The construct has been updated.',
         'newToken': 'goes here (TBD)'
     }
@@ -616,7 +633,8 @@ def detail(request, construct_id):
                'total_total': (construct_total_price + profit + on_top_profit) * (1. + 0.01 * construct.vat_percent_num),
                'construct_paid': round(construct.income()),
                'noscale': True,
-               'history': history}
+               'history': history,
+               'detailJsVersion': detailJsVersion}
     return render(request, 'list/detail.html', context)
 
 
@@ -688,7 +706,8 @@ def client(request, construct_id):
                'total_and_profit': total_and_profit,
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
-               'construct_paid': construct.income()}
+               'construct_paid': construct.income(),
+               'detailJsVersion': detailJsVersion}
     return render(request, 'list/client_view.html', context)
 
 
@@ -729,7 +748,8 @@ def client_slug(request, slug, version=1):
                'total_profit_vat': total_and_profit * (1. + 0.01*construct.vat_percent_num),
                'noscale': True,
                'construct_paid': construct.income(),
-               'logos': logos}
+               'logos': logos,
+               'detailJsVersion': detailJsVersion}
     if version == 1:
         return render(request, 'list/client_view.html', context)
     if version == 2:
@@ -752,6 +772,25 @@ def client_slug_bg_update(request, slug, version=1):
     data = {
         'message': 'Notes have been updated.',
         'newToken': 'No tokens for slug.'
+    }
+    return JsonResponse(data)
+
+
+@login_required
+@user_passes_test(client_or_worker)
+def foreman_bg_update(request, construct_id):
+    construct = get_object_or_404(Construct, pk=construct_id)
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: foreman_bg_update({construct.title_text}) by {request.user.username}, {ip}')
+    if construct.foreman.id != request.user.id:
+        data = {'message': 'User is not a foreman for this project.'}
+        return JsonResponse(data)
+    if request.method == 'POST':
+        process_post(request, construct, foreman=True)
+        construct.history_dump(request.user.id)
+    data = {
+        'message': 'Notes and progress have been updated.',
+        'newToken': 'token goes here'
     }
     return JsonResponse(data)
 

@@ -3,9 +3,9 @@
 {% block content %}
 {% load static %}
 {% load app_filters %}
-<script src="{% static 'list/detail.js' %}">
-</script>
-<link rel="stylesheet" href="{% static 'list/style.css' %}">
+<script src="{% static 'list/detail.js' %}?jsv={{detailJsVersion}}"></script>
+<div id="detail-js-version" style="display: none">{{detailJsVersion}}</div>
+<link rel="stylesheet" href="{% static 'list/style.css' %}?jsv={{detailJsVersion}}">
 
 <h1>{{ construct.title_text }}</h1>
 <br>
@@ -31,7 +31,7 @@
     <b>Address</b>: {{ construct.address_text }}<br>
 </p>
 <p>
-    <b>Money left</b>: £ {{ construct.salaries_part }}<br>
+    <span><b>Money left</b>:</span><span> £ {{ construct.salaries_part }}</span><br>
 </p>
 
 {% elif is_client and has_access %}
@@ -114,11 +114,15 @@
 <b>Date modified:</b>&nbsp;{{ construct.last_save_date }}
 </div>
 <br>
-<form id='choices_form' action="{% url 'list:client_slug_bg_update' construct.slug_name %}" method='POST'>
+{% if is_foreman %}
+    <form id='choices_form' action="{% url 'list:foreman_bg_update' construct.id %}" method='POST'>
+{% else %}
+    <form id='choices_form' action="{% url 'list:client_slug_bg_update' construct.slug_name %}" method='POST'>
+{% endif %}
 {% csrf_token %}
 <table id='choices'>
 <thead><tr>
-    <td></td>
+    <th></th>
     <th class="name_cell">Task name</th>
     {% if not is_worker %}<th>Unit price</th>{% endif %}
     <th>Quantity</th>
@@ -142,21 +146,35 @@
         {% autoescape off %}
         <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
         {% endautoescape %}
-        {% if not is_worker %}<td align='right'>&#163;{{ items.item_price_prft|floatformat:2 }}</td>{% endif %}
+        {% if not is_worker %}
+            {% if is_client %}
+                <td align='right'>&#163;{{ items.item_price_prft|floatformat:2 }}</td>
+            {% endif%}
+            {% if is_foreman %}
+                <td align='right'>&#163;{{ items.choice.price_num|floatformat:2 }}</td>
+            {% endif%}
+        {% endif %}
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
         {% if not is_worker %}
-            <td align='right' class='choice_total_price'>&#163;{{ items.price_prft|floatformat:2 }}</td>
+            {% if is_client %}
+                <td align='right' class='choice_total_price'>&#163;{{ items.price_prft|floatformat:2 }}</td>
+            {% endif%}
+            {% if is_foreman %}
+                <td align='right' class='choice_total_price'>&#163;{{ items.choice_total_price|floatformat:2 }}</td>
+            {% endif%}
+        {% else %}
+            <td style='display:none'></td>
         {% endif %}
         <td style='display:none'></td>
         <td>{{ items.choice.plan_start_date }}</td>
         <td align='center'>{{ items.choice.plan_days_num }}</td>
-        <td class="progress-cell">
-            <div class='project-progress' style='width: {{ items.choice.progress_percent_num }}%'>
-                <div class='choice_progress_percent'>
-                    {{ items.choice.progress_percent_num|floatformat:2 }}&nbsp;%
-                </div>
-            </div>
+        {% if is_worker or is_client %}
+            <td class="progress-cell non-clickable-progress">
+        {% else %}
+            <td class="progress-cell">
+        {% endif %}
+            {{items.choice.progress_percent_num|floatformat:2}}%
         </td>
         <td>
             <div class='notes-form'>
@@ -215,7 +233,7 @@
     {% endif %}
 </script>
 <br>
-{% if is_client %}
+{% if is_client or is_foreman %}
 <table id='choices_footer'>
 <tr>
     <td>
