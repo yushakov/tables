@@ -1,4 +1,4 @@
-const gVERSION = "2.2";
+const gVERSION = "2.3";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
