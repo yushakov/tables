@@ -30,6 +30,7 @@ window.addEventListener("load", (event) => {
         console.log("detail.js version " + gVERSION);
     }
     populateProgress();
+    updateHeaders();
 });
 
 function populateProgress() {
@@ -434,6 +435,7 @@ function modifyProgress(ths) {
         form.style.width = "fit-content";
         setModified(true);
         setSendDataTimer();
+        updateHeaders();
     };
 
     document.addEventListener('mousedown', function(event) {
@@ -617,7 +619,7 @@ function updateMoneyInfo(total_price) {
     }
     var progress_vat      = document.getElementById("progress_vat");
     var vat = Number(project_vat.replace(/%/,'').trim());
-    var progress_cost_value = Math.round(get_progress_cost() * (1.0 + 0.01 * profit_percent));
+    var progress_cost_value = (get_progress_cost() * (1.0 + 0.01 * profit_percent)).toFixed(2);
     var progress_vat_value = (progress_cost_value * (1.0 + 0.01 * vat)).toFixed(2);
     if (progress_vat) {
         progress_vat.innerHTML = '&#163; ' + Number(progress_vat_value).toLocaleString(gLocale);
