@@ -2866,7 +2866,7 @@ class ViewTests(TestCase):
         choice_id = create_choice(cell_data, construct)
         cells['class'] = 'delete'
         ret = update_choice(choice_id, cell_data)
-        self.assertIs(ret == -1, True)
+        self.assertIs(ret == -5, True)
 
 
     def test_update_choice_for_header(self):

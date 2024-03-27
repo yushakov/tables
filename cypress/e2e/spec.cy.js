@@ -29,6 +29,7 @@ function fill_construct() {
     cy.get('#inpUnits').clear().type('m2')
     cy.get('#inpDayStart').clear().type('2024-01-22')
     cy.get('#inpPlanDays').clear().type('2')
+    cy.get('#inpProgress').clear().type('23')
 
     cy.contains('tr', 'Floor').find('a').contains('task').click()
     cy.get('#inpName').type('Linoleum')
@@ -37,6 +38,7 @@ function fill_construct() {
     cy.get('#inpUnits').clear().type('sqm')
     cy.get('#inpDayStart').clear().type('2024-01-24')
     cy.get('#inpPlanDays').clear().type('3')
+    cy.get('#inpProgress').clear().type('17')
 
     cy.contains('tr', 'Walls').find('a').contains('task').click()
     cy.get('#inpName').type('First wall')
@@ -346,6 +348,16 @@ describe('Tests after login', () => {
     cy.contains('td', 'Left side').next().invoke('text').then((text)=>{
       cy.visit("list/1/worker/");
       cy.contains('td', 'Left side').next().invoke('text').should('equal', text);
+    });
+  })
+
+  it("Check progress value (in pounds)", () => {
+    cy.visit("list/");
+    cy.contains("tr", "Cypress Test Project").then(($tr) => {
+      cy.wrap($tr).find('.full-progress').should('exist').invoke('text').then((text) => {
+        cy.visit("list/1/");
+        cy.get("#progress_vat").should('exist').should('contain', text.trim());
+      });
     });
   })
 
