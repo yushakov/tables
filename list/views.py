@@ -218,6 +218,17 @@ def account(request):
               }
     return render(request, 'list/account.html', context)
 
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def choice(request, choice_id):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: choice() by {request.user.username}, {ip}')
+    choice = Choice.objects.get(pk=choice_id)
+    context = {"choice": choice}
+    return render(request, 'list/choice.html', context)
+
+
 def is_yyyy_mm_dd(date_field):
     try:
         datetime.strptime(date_field, "%Y-%m-%d")

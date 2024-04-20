@@ -65,6 +65,14 @@ def load_all_constructs(folder, prefix='Imported: '):
         Construct.safe_import_from_json(fname, prefix)
 
 
+class Note(models.Model):
+    text = models.TextField(default='')
+    created_date = models.DateTimeField('date created', default=timezone.now)
+    last_modified_date = models.DateTimeField('last modified', default=timezone.now)
+    author = models.ForeignKey("User", on_delete=models.DO_NOTHING,
+                                blank=True, null=True)
+
+
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
     listed_date = models.DateTimeField('date listed', default=timezone.now)
