@@ -65,8 +65,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td></td>
     <td></td>
-    <td><b>Full progress:</b></td>
-    <td id='progress_vat'>&#163; updating...</td>
+    <td><b>Deposit aware<br>progress:</b></td>
+    <td>&#163; {{ construct.deposit_aware_progress }}</td>
 </tr>
 <tr>
     <td><b>Owner:</b></td>
@@ -74,8 +74,8 @@
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td><b>VAT:</b></td>
     <td id='project_vat'>{{ construct.vat_percent_num }}%</td>
-    <td><b>Main contract<br>progress:</b></td>
-    <td>&#163; {{ construct.no_deposit_progress_cost }}</td>
+    <td><!--b>Main contract<br>progress:</b--></td>
+    <td><!--&#163; {{ construct.no_deposit_progress_cost }}--></td>
 </tr>
 <tr>
     <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
@@ -83,8 +83,8 @@
     <td></td>
     <td><b>Total + VAT:</b></td>
     <td>&#163; {{ construct_total2|floatformat:2 }}</td>
-    <td><b>Other works<br>progress:</b></td>
-    <td>£ {{ construct.full_side_progress_cost }}</td>
+    <td><!--b>Other works<br>progress:</b--></td>
+    <td><!--£ {{ construct.full_side_progress_cost }}--></td>
 </tr>
 <tr>
     <td></td>

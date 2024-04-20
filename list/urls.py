@@ -30,6 +30,7 @@ urlpatterns = [
     path('<int:construct_id>/transactions/', views.transactions, name='transactions'),
     path('<int:construct_id>/invoices/', views.invoices, name='invoices'),
     path('<int:construct_id>/get-invoice-fields/', views.get_invoice_fields, name='get-invoice-fields'),
+    path('choice/<int:choice_id>/', views.choice, name='choice'),
     path('invoices/payall/', views.invoices_payall, name='invoices_payall'),
     path('actions/', views.actions, name='actions'),
     path('invoice/', redirect_to_admin_invoices),

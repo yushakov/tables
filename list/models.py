@@ -65,6 +65,14 @@ def load_all_constructs(folder, prefix='Imported: '):
         Construct.safe_import_from_json(fname, prefix)
 
 
+class Note(models.Model):
+    text = models.TextField(default='')
+    created_date = models.DateTimeField('date created', default=timezone.now)
+    last_modified_date = models.DateTimeField('last modified', default=timezone.now)
+    author = models.ForeignKey("User", on_delete=models.DO_NOTHING,
+                                blank=True, null=True)
+
+
 class Construct(models.Model):
     title_text = models.CharField(max_length=200)
     listed_date = models.DateTimeField('date listed', default=timezone.now)
@@ -494,10 +502,23 @@ class Construct(models.Model):
             price = ch.quantity_num * ch.price_num * ch.progress_percent_num * 0.01
             cost += price
         return cost
+    
+    @property
+    def main_side_profit_vat_progress_cost(self):
+        main_side = self.main_progress_cost() + self.side_progress_cost()
+        return round(
+               main_side * ((1.0 + self.company_profit_percent_num * 0.01)
+                         *  (1.0 + self.ontop_profit_percent_num * 0.01)
+                         *  (1.0 + self.vat_percent_num * 0.01)), 2)
 
     @property
     def full_side_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.side_progress_cost())), 2)
+
+    @property
+    def full_side_with_ontop_progress_cost(self):
+        return round(self.withVat(self.withCompanyProfit(self.side_progress_cost()))
+                     * (1. + self.ontop_profit_percent_num * 0.01), 2)
 
     def overall_progress_percent(self):
         if 'choices' not in self.numbers:
@@ -591,6 +612,17 @@ class Construct(models.Model):
     def no_deposit_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.main_progress_cost()))
                      * (1. - self.deposit_percent * 0.01), 2)
+    
+    @property
+    def no_deposit_and_ontop_progress_cost(self):
+        return round(self.withVat(self.withCompanyProfit(self.main_progress_cost()))
+                     * (1. + self.ontop_profit_percent_num * 0.01)
+                     * (1. - self.deposit_percent * 0.01), 2)
+    
+    @property
+    def deposit_aware_progress(self):
+        return round(self.no_deposit_and_ontop_progress_cost
+                     + self.full_side_with_ontop_progress_cost, 2)
 
     @property
     def full_progress_cost(self):
@@ -599,6 +631,11 @@ class Construct(models.Model):
     @property
     def left_to_pay(self):
         return round(self.no_deposit_progress_cost + self.full_side_progress_cost
+                     - (self.income() - self.deposit), 2)
+    
+    @property
+    def left_to_pay_with_ontop(self):
+        return round(self.no_deposit_and_ontop_progress_cost + self.full_side_progress_cost
                      - (self.income() - self.deposit), 2)
 
     @property
