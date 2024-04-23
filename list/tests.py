@@ -2170,6 +2170,32 @@ class ViewTests(TestCase):
         self.assertEqual(response.context['form']['to_txt'].initial, 'Ivan Ivanov')
         self.assertEqual(response.context['form']['from_txt'].initial, 'Petr Petrov')
 
+    def test_open_transaction_submit_form_copy_invoice_details(self):
+        construct = make_test_construct()
+        construct.save()
+        invoices = construct.invoice_set.all()
+        invoice = invoices[0]
+        invoice.details_txt = "details...#deposit"
+        invoice.save()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=1&type=IN&from=Petr Petrov")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(response.context['form']['details_txt'].initial, 'details...#deposit')
+
+    def test_open_transaction_submit_wrong_invoice_id(self):
+        construct = make_test_construct()
+        construct.save()
+        invoices = construct.invoice_set.all()
+        invoice = invoices[0]
+        invoice.details_txt = "details...#deposit"
+        invoice.save()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        response = c.get("/list/transaction/submit/?construct=1&to=Ivan Ivanov&amount=100&invoice=10&type=IN&from=Petr Petrov")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertNotEqual(response.context['form']['details_txt'].initial, 'details...#deposit')
+
     def test_open_transaction_submit_form_populated_2(self):
         construct = Construct()
         construct.save()
