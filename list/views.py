@@ -1015,6 +1015,14 @@ def view_transaction(request, transaction_id):
     return render(request, 'list/view_transaction.html', context)
 
 
+def get_invoice_details(invoice_id):
+    try:
+        invoice = Invoice.objects.get(pk=invoice_id)
+        return invoice.details_txt
+    except:
+        return '-'
+
+
 @login_required
 @permission_required("list.add_transaction")
 @permission_required("list.change_transaction")
@@ -1032,13 +1040,16 @@ def submit_transaction(request):
         from_txt = str(request.user.company)
         if request.user.company is None or len(from_txt.strip()) < 3:
             from_txt = str(request.user.first_name).strip() + " " + str(request.user.last_name).strip()
+        invoice_id = request.GET.get('invoice', -1)
+        invoice_details = get_invoice_details(invoice_id)
         initial_data = {'construct': construct_id,
-                        'invoices': [request.GET.get('invoice', -1)],
+                        'invoices': [invoice_id],
                         'amount': request.GET.get('amount','').replace(',',''),
                         'from_txt': request.GET.get('from', from_txt),
                         'to_txt': request.GET.get('to', ''),
                         'transaction_type': request.GET.get('type',''),
-                        'receipt_number': getConstructAndMaxId(construct_id, Transaction)
+                        'receipt_number': getConstructAndMaxId(construct_id, Transaction),
+                        'details_txt': invoice_details
                        }
         form = TransactionSubmitForm(initial = initial_data)
     return render(request, 'list/submit_transaction.html', {'form': form})
