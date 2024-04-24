@@ -889,7 +889,7 @@ def get_printed_invoice_lines(details, amount=0):
 
 def get_number(line):
     line2 = str(line).strip().replace(',', '')
-    mtch = re.search( '([0-9\.]+)', line2)
+    mtch = re.search( '([-0-9\.]+)', line2)
     number = 0.0
     try:
         number = float(mtch[0])
