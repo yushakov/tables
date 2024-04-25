@@ -125,11 +125,11 @@ def produce_document(data, construct):
         for choice in choices:
             if type(choice) == dict:
                 row_cells = table.add_row().cells
-                row_cells[0].text = choice['header']
+                row_cells[0].text = choice['header'].strip()
                 row_cells[0].paragraphs[0].runs[0].bold = True
             else:
                 row_cells = table.add_row().cells
-                row_cells[0].text = choice.name_txt
+                row_cells[0].text = choice.name_txt.strip()
                 row_cells[1].text = "£ " + str(construct.with_all_profits_and_vat(choice.price_num))
                 row_cells[2].text = str(choice.quantity_num)
                 row_cells[3].text = str(choice.units_of_measure_text)
