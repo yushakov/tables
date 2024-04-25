@@ -241,11 +241,12 @@ def gendoc(request, construct_id):
     doc_base64, doc_name = None, None
     if request.method == 'POST':
         doc, doc_name = gen_doc.produce_document(request.POST, construct)
-        buffer = BytesIO()
-        doc.save(buffer)
-        buffer.seek(0)
-        buffer = buffer.getvalue()
-        doc_base64 = base64.b64encode(buffer).decode('utf-8')
+        if doc is not None:
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+            buffer = buffer.getvalue()
+            doc_base64 = base64.b64encode(buffer).decode('utf-8')
     now = timezone.now()
     start_date = now.strftime("%d.%m.%Y")
     context = {"construct": construct,

@@ -13,7 +13,6 @@ gTypesOfWork = ["residential house renovation",
                 "garage conversion",
                 "loft conversion",
                 "extension",
-                "HMO conversion",
                 "residential to commercial",
                 "commercial to residential",
                 "maintenance"]
@@ -54,27 +53,32 @@ def produce_document(data, construct):
     doc_file_dir = settings.GENDOC_DIR
     file_name = gDocFiles[int(data["docx_file"])]
     full_file_path = doc_file_dir / file_name
-    doc = Document(full_file_path)
+    doc = None
+    try:
+        doc = Document(full_file_path)
+    except:
+        return None, ""
     now = timezone.now()
     todays_date = now.strftime("%d.%m.%Y")
+    client_name = data.get('client_name', 'CLIENT NAME')
     replacement = {'#todays date#': todays_date,
-                   '#client name#': data['client_name'],
-                   '#client address#': data['client_address'],
-                   '#project start date#': str(data['start_date']),
-                   '#project end date#': str(data['end_date']),
-                   '#type of work#': gTypesOfWork[int(data['type_of_work'])], #TODO
-                   '#total amount including profit and vat#': data['amount_total_profit_vat'],
-                   '#defects period#': str(gDefectPeriods[int(data['defects_period'])]),
-                   '#planning consents#': data['planning_consents'],
-                   '#party wall consents#': data['party_wall_consents'],
-                   '#building regulations#': data['building_regulations'],
-                   '#utility water#': data['utility_water'],
-                   '#principal designer#': data['principal_designer'],
-                   '#principal contractor#': data['principal_contractor'],
-                   '#project address#': data['project_address'],
-                   '#job description#': data['job_description'],
+                   '#client name#': client_name,
+                   '#client address#': data.get('client_address', 'CLIENT ADDRESS'),
+                   '#project start date#': str(data.get('start_date', 'START DATE')),
+                   '#project end date#': str(data.get('end_date', 'END DATE')),
+                   '#type of work#': gTypesOfWork[int(data.get('type_of_work', '0'))],
+                   '#total amount including profit and vat#': data.get('amount_total_profit_vat', 'TOTAL AMOUNT'),
+                   '#defects period#': str(gDefectPeriods[int(data.get('defects_period', '0'))]),
+                   '#planning consents#': data.get('planning_consents', 'NA'),
+                   '#party wall consents#': data.get('party_wall_consents', 'NA'),
+                   '#building regulations#': data.get('building_regulations', 'NA'),
+                   '#utility water#': data.get('utility_water', 'UTILITY WATER'),
+                   '#principal designer#': data.get('principal_designer', "PRINCIPAL DESIGNER"),
+                   '#principal contractor#': data.get('principal_contractor', "PRINCIPAL CONTRACTOR"),
+                   '#project address#': data.get('project_address', 'PROJECT ADDRESS'),
+                   '#job description#': data.get('job_description', 'JOB DESCRIPTION'),
                    '#deposit percent#': str(construct.deposit_percent_expect),
-                   '#deposit#': data['deposit'],
+                   '#deposit#': data.get('deposit', 'DEPOSIT'),
                    }
     for paragraph in doc.paragraphs:
         for key in replacement.keys():
@@ -143,8 +147,7 @@ def produce_document(data, construct):
         choice_list_paragraph.text = ""
 
     new_file_name = (file_name.replace(".docx", "") + "_"
-                     + construct.client_user.first_name + "_"
-                     + construct.client_user.last_name + "_"
+                     + client_name + "_"
                      + construct.title_text + "_"
                      + now.strftime('%Y.%m.%d_%H-%M-%S') + ".docx")
     doc.save(doc_file_dir / new_file_name)
