@@ -292,13 +292,19 @@ def send_contract(request, construct):
     for paragraph in doc.paragraphs:
         for key in replacement.keys():
             if key in paragraph.text:
-                paragraph.text = paragraph.text.replace(key, replacement[key])
+                for run in paragraph.runs:
+                    if key in run.text:
+                        text = run.text.replace(key, replacement[key])
+                        run.text = text
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
-                for key in replacement.keys():
-                    if key in cell.text:
-                        cell.text = cell.text.replace(key, replacement[key])
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        for key in replacement.keys():
+                            if key in run.text:
+                                text = run.text.replace(key, replacement[key])
+                                run.text = text
     choice_list_key = "#list of works with client prices#"
     choice_list_paragraph = None
     for paragraph in doc.paragraphs:
