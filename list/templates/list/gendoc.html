@@ -4,6 +4,9 @@
 {% load static %}
 <h1>{{ construct.title_text }}</h1>
 
+<a href="{% url 'list:detail' construct.id %}">go to the project</a>&nbsp;&nbsp;&nbsp;
+<a href="{% url 'list:index' %}">all projects</a>&nbsp;&nbsp;&nbsp;
+
 <form action="" method="post">
     {% csrf_token %}
     <p>
@@ -109,6 +112,7 @@ id="id_job_description">description</textarea>
         <b><label for="id_email">Send to:</b><br />
         <input type="text" name="email" value="{{ construct.client_user.email }}"
             id="id_email">
+        (<i>It is not sending now. Downloading only.</i>)
     </p>
     <input type="submit" value="Submit">
 </form>
