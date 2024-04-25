@@ -21,6 +21,8 @@ from django.conf import settings
 import os
 import shutil
 import list.gendoc as gen_doc
+from io import BytesIO
+import base64
 
 detailJsVersion = "2.3"
 DELETED = -5
@@ -230,18 +232,20 @@ def choice(request, choice_id):
     return render(request, 'list/choice.html', context)
 
 
-def send_contract(request, construct):
-    doc = gen_doc.produce_document(request.POST, construct)
-
-
 @login_required
 @user_passes_test(lambda user: user.is_staff)
 def gendoc(request, construct_id):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: gendoc() by {request.user.username}, {ip}')
     construct = Construct.objects.get(pk=construct_id)
+    doc_base64, doc_name = None, None
     if request.method == 'POST':
-        send_contract(request, construct)
+        doc, doc_name = gen_doc.produce_document(request.POST, construct)
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        buffer = buffer.getvalue()
+        doc_base64 = base64.b64encode(buffer).decode('utf-8')
     now = timezone.now()
     start_date = now.strftime("%d.%m.%Y")
     context = {"construct": construct,
@@ -250,6 +254,9 @@ def gendoc(request, construct_id):
                "docx_files": gen_doc.gDocFiles,
                "types_of_work": gen_doc.gTypesOfWork,
                "defect_periods": gen_doc.gDefectPeriods}
+    if doc_base64 is not None:
+        context['doc_base64'] = doc_base64
+        context['doc_name'] = doc_name
     return render(request, 'list/gendoc.html', context)
 
 

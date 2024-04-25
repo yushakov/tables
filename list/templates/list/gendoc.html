@@ -112,5 +112,15 @@ id="id_job_description">description</textarea>
     </p>
     <input type="submit" value="Submit">
 </form>
+{% if doc_base64 %}
+<script>
+    // Decode the base64 string to binary data
+    const linkSource = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${'{{ doc_base64 }}'}`;
+    const downloadLink = document.createElement('a');
+    downloadLink.href = linkSource;
+    downloadLink.download = '{{ doc_name }}';
+    downloadLink.click();
+</script>
+{% endif %}
 
 {% endblock %}

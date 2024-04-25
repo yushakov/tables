@@ -142,4 +142,10 @@ def produce_document(data, construct):
         row_cells[3].paragraphs[0].runs[0].bold = True
         choice_list_paragraph.text = ""
 
-    doc.save(doc_file_dir / "new_document.docx")
+    new_file_name = (file_name.replace(".docx", "") + "_"
+                     + construct.client_user.first_name + "_"
+                     + construct.client_user.last_name + "_"
+                     + construct.title_text + "_"
+                     + now.strftime('%Y.%m.%d_%H-%M-%S') + ".docx")
+    doc.save(doc_file_dir / new_file_name)
+    return doc, new_file_name
