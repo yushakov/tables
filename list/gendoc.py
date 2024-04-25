@@ -100,18 +100,25 @@ def produce_document(data, construct):
                     run.bold = True
         for row in table.rows:
             row.cells[0].width = Inches(2.0)
+        total_amount = 0.0
         for choice in choices:
             row_cells = table.add_row().cells
             row_cells[0].text = choice.name_txt
             row_cells[1].text = "£ " + str(construct.with_all_profits_and_vat(choice.price_num))
             row_cells[2].text = str(choice.quantity_num)
             row_cells[3].text = str(choice.units_of_measure_text)
-            row_cells[4].text = "£" + str(round(construct.with_all_profits_and_vat(choice.quantity_num * choice.price_num), 2))
+            full_work_price = construct.with_all_profits_and_vat(choice.quantity_num * choice.price_num)
+            total_amount += full_work_price
+            row_cells[4].text = "£" + str(round(full_work_price, 2))
             row_cells[5].text = str(choice.plan_start_date)
             row_cells[6].text = str(choice.plan_days_num)
         for row in table.rows:
             for cell in row.cells:
                 docx_set_cell_border(cell, 'D9D9D9', 6)
+        row_cells = table.add_row().cells
+        row_cells[3].text = "Total:"
+        row_cells[4].text = "£ " + str(round(total_amount, 2))
+        row_cells[3].paragraphs[0].runs[0].bold = True
         choice_list_paragraph.text = ""
 
     doc.save(doc_file_dir / "new_document.docx")
