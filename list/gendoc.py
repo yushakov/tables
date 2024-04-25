@@ -4,6 +4,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from django.utils import timezone
 from django.conf import settings
+import json
 
 gDocFiles = ["client_contract.docx",
              "sub_contract.docx"]
@@ -33,6 +34,20 @@ def docx_set_cell_border(cell, border_color, border_width):
         border.set(qn('w:color'), border_color)
         tcBorders.append(border)
         tcPr.append(tcBorders)
+
+
+def get_struct_choices(construct):
+    struc = json.loads(construct.struct_json)
+    out = []
+    choices = construct.choice_set.all()
+    for line in struc.values():
+        if line['type'] == 'Choice':
+            result = choices.filter(id=line['id'])
+            if len(result) > 0:
+                out.append(result[0])
+        else:
+            out.append({'header': line['id']})
+    return out
 
 
 def produce_document(data, construct):
@@ -84,7 +99,6 @@ def produce_document(data, construct):
             choice_list_paragraph = paragraph
             break
     if choice_list_paragraph is not None:
-        choices = construct.choice_set.all()
         table = doc.add_table(rows=1, cols=7)
         header_cells = table.rows[0].cells
         header_cells[0].text = 'Task name'
@@ -95,26 +109,33 @@ def produce_document(data, construct):
         header_cells[5].text = 'Date start'
         header_cells[6].text = 'Planned days'
         for cell in header_cells:
+            docx_set_cell_border(cell, 'D9D9D9', 6)
+        for cell in header_cells:
             for paragraph in cell.paragraphs:
                 for run in paragraph.runs:
                     run.bold = True
         for row in table.rows:
             row.cells[0].width = Inches(2.0)
         total_amount = 0.0
+        choices = get_struct_choices(construct)
         for choice in choices:
-            row_cells = table.add_row().cells
-            row_cells[0].text = choice.name_txt
-            row_cells[1].text = "£ " + str(construct.with_all_profits_and_vat(choice.price_num))
-            row_cells[2].text = str(choice.quantity_num)
-            row_cells[3].text = str(choice.units_of_measure_text)
-            full_work_price = construct.with_all_profits_and_vat(choice.quantity_num * choice.price_num)
-            total_amount += full_work_price
-            row_cells[4].text = "£" + str(round(full_work_price, 2))
-            row_cells[5].text = str(choice.plan_start_date)
-            row_cells[6].text = str(choice.plan_days_num)
-        for row in table.rows:
-            for cell in row.cells:
-                docx_set_cell_border(cell, 'D9D9D9', 6)
+            if type(choice) == dict:
+                row_cells = table.add_row().cells
+                row_cells[0].text = choice['header']
+                row_cells[0].paragraphs[0].runs[0].bold = True
+            else:
+                row_cells = table.add_row().cells
+                row_cells[0].text = choice.name_txt
+                row_cells[1].text = "£ " + str(construct.with_all_profits_and_vat(choice.price_num))
+                row_cells[2].text = str(choice.quantity_num)
+                row_cells[3].text = str(choice.units_of_measure_text)
+                full_work_price = construct.with_all_profits_and_vat(choice.quantity_num * choice.price_num)
+                total_amount += full_work_price
+                row_cells[4].text = "£" + str(round(full_work_price, 2))
+                row_cells[5].text = str(choice.plan_start_date)
+                row_cells[6].text = str(choice.plan_days_num)
+                for cell in row_cells:
+                    docx_set_cell_border(cell, 'D9D9D9', 6)
         row_cells = table.add_row().cells
         row_cells[3].text = "Total:"
         row_cells[4].text = "£ " + str(round(total_amount, 2))
