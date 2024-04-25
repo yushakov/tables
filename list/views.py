@@ -20,6 +20,10 @@ from django import forms
 from django.conf import settings
 import os
 import shutil
+from docx import Document
+from docx.shared import Pt, Inches, RGBColor
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 detailJsVersion = "2.3"
 DELETED = -5
@@ -227,6 +231,132 @@ def choice(request, choice_id):
     choice = Choice.objects.get(pk=choice_id)
     context = {"choice": choice}
     return render(request, 'list/choice.html', context)
+
+
+gDocFiles = ["client_contract.docx",
+             "sub_contract.docx"]
+gTypesOfWork = ["residential house renovation",
+                "HMO conversion",
+                "garage conversion",
+                "loft conversion",
+                "extension",
+                "HMO conversion",
+                "residential to commercial",
+                "commercial to residential",
+                "maintenance"]
+gDefectPeriods = [6, 12, 24, 36]
+
+
+def docx_set_cell_border(cell, border_color, border_width):
+    # This function adds a border to a cell
+    tc = cell._element
+    tcPr = tc.get_or_add_tcPr()
+    
+    # Set the border on all sides
+    for side in ('top', 'left', 'bottom', 'right'):
+        tcBorders = OxmlElement('w:tcBorders')
+        border = OxmlElement(f'w:{side}')
+        border.set(qn('w:val'), 'single')
+        border.set(qn('w:sz'), str(border_width))
+        border.set(qn('w:color'), border_color)
+        tcBorders.append(border)
+        tcPr.append(tcBorders)
+
+
+def send_contract(request, construct):
+    doc_file_dir = settings.GENDOC_DIR
+    file_name = gDocFiles[int(request.POST["docx_file"])]
+    full_file_path = doc_file_dir / file_name
+    doc = Document(full_file_path)
+    now = timezone.now()
+    todays_date = now.strftime("%d.%m.%Y")
+    replacement = {'#todays date#': todays_date,
+                   '#client name#': request.POST['client_name'],
+                   '#client address#': request.POST['client_address'],
+                   '#project start date#': str(request.POST['start_date']),
+                   '#project end date#': str(request.POST['end_date']),
+                   '#type of work#': gTypesOfWork[int(request.POST['type_of_work'])], #TODO
+                   '#total amount including profit and vat#': request.POST['amount_total_profit_vat'],
+                   '#defects period#': gTypesOfWork[int(request.POST['defects_period'])],
+                   '#planning consents#': request.POST['planning_consents'],
+                   '#party wall consents#': request.POST['party_wall_consents'],
+                   '#building regulations#': request.POST['building_regulations'],
+                   '#utility water#': request.POST['utility_water'],
+                   '#principal designer#': request.POST['principal_designer'],
+                   '#principal contractor#': request.POST['principal_contractor'],
+                   '#project address#': request.POST['project_address'],
+                   '#job description#': request.POST['job_description'],
+                   '#deposit percent#': str(construct.deposit_percent_expect),
+                   '#deposit#': request.POST['deposit'],
+                   }
+    for paragraph in doc.paragraphs:
+        for key in replacement.keys():
+            if key in paragraph.text:
+                paragraph.text = paragraph.text.replace(key, replacement[key])
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for key in replacement.keys():
+                    if key in cell.text:
+                        cell.text = cell.text.replace(key, replacement[key])
+    choice_list_key = "#list of works with client prices#"
+    choice_list_paragraph = None
+    for paragraph in doc.paragraphs:
+        if choice_list_key in paragraph.text:
+            choice_list_paragraph = paragraph
+            break
+    if choice_list_paragraph is not None:
+        choices = construct.choice_set.all()
+        choice_count = len(choices)
+        table = doc.add_table(rows=1, cols=7)
+        header_cells = table.rows[0].cells
+        header_cells[0].text = 'Task name'
+        header_cells[1].text = 'Unit price'
+        header_cells[2].text = 'Quantity'
+        header_cells[3].text = 'Unit'
+        header_cells[4].text = 'Total'
+        header_cells[5].text = 'Date start'
+        header_cells[6].text = 'Planned days'
+        for cell in header_cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.bold = True
+        for row in table.rows:
+            row.cells[0].width = Inches(2.0)
+        for choice in choices:
+            row_cells = table.add_row().cells
+            row_cells[0].text = choice.name_txt
+            row_cells[1].text = "£ " + str(construct.with_all_profits_and_vat(choice.price_num))
+            row_cells[2].text = str(choice.quantity_num)
+            row_cells[3].text = str(choice.units_of_measure_text)
+            row_cells[4].text = "£" + str(round(construct.with_all_profits_and_vat(choice.quantity_num * choice.price_num), 2))
+            row_cells[5].text = str(choice.plan_start_date)
+            row_cells[6].text = str(choice.plan_days_num)
+        for row in table.rows:
+            for cell in row.cells:
+                docx_set_cell_border(cell, 'D9D9D9', 6)
+        choice_list_paragraph.text = ""
+
+    doc.save(doc_file_dir / "new_document.docx")
+
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def gendoc(request, construct_id):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: gendoc() by {request.user.username}, {ip}')
+    construct = Construct.objects.get(pk=construct_id)
+    if request.method == 'POST':
+        send_contract(request, construct)
+    now = timezone.now()
+    start_date = now.strftime("%d.%m.%Y")
+    context = {"construct": construct,
+               "start_date": start_date,
+               "end_date": start_date,
+               "docx_files": gDocFiles,
+               "types_of_work": gTypesOfWork,
+               "defect_periods": gDefectPeriods}
+    return render(request, 'list/gendoc.html', context)
 
 
 def is_yyyy_mm_dd(date_field):

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Document generation{% endblock %}
+{% block content %}
+{% load static %}
+<h1>{{ construct.title_text }}</h1>
+
+<form action="" method="post">
+    {% csrf_token %}
+    <p>
+        <b><label for="id_docx_file">Doc file:</b><br />
+        <select name="docx_file" id="id_docx_file">
+            {% for docx_file in docx_files %}
+                <option value="{{ forloop.counter0 }}">{{ docx_file }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p>
+        <b><label for="id_client_name">Client name:</b><br />
+        <input type="text" name="client_name" value="{{ construct.client_user.first_name }} {{ construct.client_user.last_name }}"
+            id="id_client_name">
+    </p>
+    <p>
+        <b><label for="id_client_address">Client address:</b><br />
+        <textarea name="client_address" cols="40" rows="5"
+id="id_client_address">{{ construct.client_user.business_address }}</textarea>
+    </p>
+    <p>
+        <b><label for="id_start_date">Project start date:</b><br />
+        <input type="text" name="start_date" value="{{ start_date }}"
+            id="id_start_date">
+    </p>
+    <p>
+        <b><label for="id_end_date">Project end date:</b><br />
+        <input type="text" name="end_date" value="{{ end_date }}"
+            id="id_end_date">
+    </p>
+    <p>
+        <b><label for="id_type_of_work">Type of work:</b><br />
+        <select name="type_of_work" id="id_type_of_work">
+            {% for type_of_work in types_of_work %}
+                <option value="{{ forloop.counter0 }}">{{ type_of_work }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p>
+        <b><label for="id_amount_total_profit_vat">Total amount with profit and VAT:</b><br />
+        £ <input type="text" name="amount_total_profit_vat" value="{{ construct.all_profits_vat_cost }}"
+            id="id_amount_total_profit_vat">
+    </p>
+    <p>
+        <b><label for="id_defects_period">Defects period:</b><br />
+        <select name="defects_period" id="id_defects_period">
+            {% for period in defect_periods %}
+                <option value="{{ forloop.counter0 }}">{{ period }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p>
+        <b><label for="id_planning_consents">Planning consents:</b><br />
+        <input type="text" name="planning_consents" value="N/A"
+            id="id_planning_consents">
+    </p>
+    <p>
+        <b><label for="id_party_wall_consents">Party wall consents:</b><br />
+        <input type="text" name="party_wall_consents" value="N/A"
+            id="id_party_wall_consents">
+    </p>
+    <p>
+        <b><label for="id_building_regulations">Building regulations:</b><br />
+        <input type="text" name="building_regulations" value="N/A"
+            id="id_building_regulations">
+    </p>
+    <p>
+        <b><label for="id_utility_water">Utility water:</b><br />
+        <input type="text" name="utility_water" value="client"
+            id="id_utility_water">
+    </p>
+    <p>
+        <b><label for="id_principal_designer">Principal designer:</b><br />
+        <input type="text" name="principal_designer" value="The Client"
+            id="id_principal_designer">
+    </p>
+    <p>
+        <b><label for="id_principal_contractor">Principal contractor:</b><br />
+        <input type="text" name="principal_contractor" value="The Contractor"
+            id="id_principal_contractor">
+    </p>
+    <p>
+        <b><label for="id_project_address">Project address:</b><br />
+        <textarea name="project_address" cols="40" rows="5"
+id="id_project_address">{{ construct.address_text }}</textarea>
+    </p>
+    <p>
+        <b><label for="id_job_description">Job description:</b><br />
+        <textarea name="job_description" cols="40" rows="5"
+id="id_job_description">description</textarea>
+    </p>
+    <!--p>
+        <b><label for="id_deposit_percent">Deposit percent:</b><br />
+        <input type="text" name="deposit_percent" value="{{ construct.deposit_percent_expect }}"
+            id="id_deposit_percent"> %
+    </p-->
+    <p>
+        <b><label for="id_deposit">Deposit</b> ({{ construct.deposit_percent_expect }}% of £{{ construct.all_profits_vat_cost }}):<br />
+        £ <input type="text" name="deposit" value="{{ construct.expected_deposit }}"
+            id="id_deposit">
+    </p>
+    <p>
+        <b><label for="id_email">Send to:</b><br />
+        <input type="text" name="email" value="{{ construct.client_user.email }}"
+            id="id_email">
+    </p>
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}
