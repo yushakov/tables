@@ -11,6 +11,7 @@ import numpy as np
 import re
 import datetime as dt
 import json
+from django.conf import settings
 from list.views import check_integrity,   \
                        is_yyyy_mm_dd,     \
                        is_dd_mm_yyyy,     \
@@ -2532,7 +2533,6 @@ class ViewTests(TestCase):
         out = get_number(line)
         self.assertEqual(out, 12000.0)
         line = 'a12,000'
-        # import pdb; pdb.set_trace()
         out = get_number(line)
         self.assertEqual(out, 12000.0)
         line = '  12,000'
@@ -2550,6 +2550,9 @@ class ViewTests(TestCase):
         line = ' ab , klsje  dl'
         out = get_number(line)
         self.assertEqual(out, 0.0)
+        line = ' -971.11'
+        out = get_number(line)
+        self.assertEqual(out, -971.11)
 
     def test_print_invoice_warning(self):
         c = Client()
@@ -2581,6 +2584,25 @@ class ViewTests(TestCase):
                 'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
                 'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
                 'details_txt': ['1 nr, desr, 20\n 2 hour, descr2, 40'], 'photo': ['']}
+        response = c.post("/list/invoice/submit/", post_data)
+        self.assertIs(response.url.find('accounts/login') >= 0, False)
+        self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
+        invoice = Invoice.objects.latest()
+        response = c.get(f"/list/invoice/{invoice.id}/print/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertTrue(len(response.context['warning']) == 0)
+
+    def test_print_invoice_discount(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = Construct()
+        cons.save()
+        post_data = {'seller': ['Vasya'], 'amount': ['70'],
+                'invoice_type': ['IN'], 'construct': [str(cons.id)], 'issue_date': ['2023-05-20'],
+                'due_date': ['2023-05-21'], 'number': ['12345678'], 'initial-number': ['12345678'],
+                'status': ['Unpaid'], 'initial-issue_date': ['2023-07-12 07:47:28+00:00'],
+                'initial-due_date': ['2023-07-12 07:47:28+00:00'], 'initial-photo': ['Raw content'],
+                'details_txt': ['1 nr, descr, 20\n 2 hour, descr2, 40\n 1 item, discount, -30'], 'photo': ['']}
         response = c.post("/list/invoice/submit/", post_data)
         self.assertIs(response.url.find('accounts/login') >= 0, False)
         self.assertEqual(response.status_code, STATUS_CODE_REDIRECT)
@@ -2752,7 +2774,29 @@ class ViewTests(TestCase):
         self.assertEqual(response.context['form']['amount'].initial, '20000')
         self.assertEqual(response.context['form']['details_txt'].initial, '1,deposit,20000')
         self.assertEqual(response.context['form']['invoice_type'].initial, 'IN')
-        
+
+
+    def test_gendoc_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct("Test document generation")
+        response = c.get(f"/list/gendoc/{cons.id}/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+
+    def test_gendoc_produce_document(self):
+        cons = make_test_construct("Gendoc_Test_Doc")
+        import list.gendoc as gendoc
+        now = timezone.now()
+        data = {"docx_file": "0",
+                "client_name": "Ivan Ivanov",
+                "client_address": "address"}
+        doc, docname = gendoc.produce_document(data, cons)
+        doc_file_dir = settings.GENDOC_DIR
+        self.assertTrue(os.access(doc_file_dir / docname, os.F_OK))
+        os.remove(doc_file_dir / docname)
+
+
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")
         construct1 = Construct()

@@ -511,6 +511,12 @@ class Construct(models.Model):
                          *  (1.0 + self.ontop_profit_percent_num * 0.01)
                          *  (1.0 + self.vat_percent_num * 0.01)), 2)
 
+    def with_all_profits_and_vat(self, value):
+        return round(
+               value * ((1.0 + self.company_profit_percent_num * 0.01)
+                     *  (1.0 + self.ontop_profit_percent_num * 0.01)
+                     *  (1.0 + self.vat_percent_num * 0.01)), 2)
+
     @property
     def full_side_progress_cost(self):
         return round(self.withVat(self.withCompanyProfit(self.side_progress_cost())), 2)

@@ -1,0 +1,154 @@
+from docx import Document
+from docx.shared import Pt, Inches, RGBColor
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from django.utils import timezone
+from django.conf import settings
+import json
+
+gDocFiles = ["client_contract.docx",
+             "sub_contract.docx"]
+gTypesOfWork = ["residential house renovation",
+                "HMO conversion",
+                "garage conversion",
+                "loft conversion",
+                "extension",
+                "residential to commercial",
+                "commercial to residential",
+                "maintenance"]
+gDefectPeriods = [6, 12, 24, 36]
+
+
+def docx_set_cell_border(cell, border_color, border_width):
+    # This function adds a border to a cell
+    tc = cell._element
+    tcPr = tc.get_or_add_tcPr()
+    
+    # Set the border on all sides
+    for side in ('top', 'left', 'bottom', 'right'):
+        tcBorders = OxmlElement('w:tcBorders')
+        border = OxmlElement(f'w:{side}')
+        border.set(qn('w:val'), 'single')
+        border.set(qn('w:sz'), str(border_width))
+        border.set(qn('w:color'), border_color)
+        tcBorders.append(border)
+        tcPr.append(tcBorders)
+
+
+def get_struct_choices(construct):
+    struc = json.loads(construct.struct_json)
+    out = []
+    choices = construct.choice_set.all()
+    for line in struc.values():
+        if line['type'] == 'Choice':
+            result = choices.filter(id=line['id'])
+            if len(result) > 0:
+                out.append(result[0])
+        else:
+            out.append({'header': line['id']})
+    return out
+
+
+def produce_document(data, construct):
+    doc_file_dir = settings.GENDOC_DIR
+    file_name = gDocFiles[int(data["docx_file"])]
+    full_file_path = doc_file_dir / file_name
+    doc = None
+    try:
+        doc = Document(full_file_path)
+    except:
+        return None, ""
+    now = timezone.now()
+    todays_date = now.strftime("%d.%m.%Y")
+    client_name = data.get('client_name', 'CLIENT NAME')
+    replacement = {'#todays date#': todays_date,
+                   '#client name#': client_name,
+                   '#client address#': data.get('client_address', 'CLIENT ADDRESS'),
+                   '#project start date#': str(data.get('start_date', 'START DATE')),
+                   '#project end date#': str(data.get('end_date', 'END DATE')),
+                   '#type of work#': gTypesOfWork[int(data.get('type_of_work', '0'))],
+                   '#total amount including profit and vat#': data.get('amount_total_profit_vat', 'TOTAL AMOUNT'),
+                   '#defects period#': str(gDefectPeriods[int(data.get('defects_period', '0'))]),
+                   '#planning consents#': data.get('planning_consents', 'NA'),
+                   '#party wall consents#': data.get('party_wall_consents', 'NA'),
+                   '#building regulations#': data.get('building_regulations', 'NA'),
+                   '#utility water#': data.get('utility_water', 'UTILITY WATER'),
+                   '#principal designer#': data.get('principal_designer', "PRINCIPAL DESIGNER"),
+                   '#principal contractor#': data.get('principal_contractor', "PRINCIPAL CONTRACTOR"),
+                   '#project address#': data.get('project_address', 'PROJECT ADDRESS'),
+                   '#job description#': data.get('job_description', 'JOB DESCRIPTION'),
+                   '#deposit percent#': str(construct.deposit_percent_expect),
+                   '#deposit#': data.get('deposit', 'DEPOSIT'),
+                   }
+    for paragraph in doc.paragraphs:
+        for key in replacement.keys():
+            if key in paragraph.text:
+                for run in paragraph.runs:
+                    if key in run.text:
+                        text = run.text.replace(key, replacement[key])
+                        run.text = text
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        for key in replacement.keys():
+                            if key in run.text:
+                                text = run.text.replace(key, replacement[key])
+                                run.text = text
+    choice_list_key = "#list of works with client prices#"
+    choice_list_paragraph = None
+    for paragraph in doc.paragraphs:
+        if choice_list_key in paragraph.text:
+            choice_list_paragraph = paragraph
+            break
+    if choice_list_paragraph is not None:
+        table = doc.add_table(rows=1, cols=7)
+        header_cells = table.rows[0].cells
+        header_cells[0].text = 'Task name'
+        header_cells[1].text = 'Unit price'
+        header_cells[2].text = 'Quantity'
+        header_cells[3].text = 'Unit'
+        header_cells[4].text = 'Total'
+        header_cells[5].text = 'Date start'
+        header_cells[6].text = 'Planned days'
+        for cell in header_cells:
+            docx_set_cell_border(cell, 'D9D9D9', 6)
+        for cell in header_cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.bold = True
+        for row in table.rows:
+            row.cells[0].width = Inches(2.0)
+        total_amount = 0.0
+        choices = get_struct_choices(construct)
+        for choice in choices:
+            if type(choice) == dict:
+                row_cells = table.add_row().cells
+                row_cells[0].text = choice['header']
+                row_cells[0].paragraphs[0].runs[0].bold = True
+            else:
+                row_cells = table.add_row().cells
+                row_cells[0].text = choice.name_txt
+                row_cells[1].text = "£ " + str(construct.with_all_profits_and_vat(choice.price_num))
+                row_cells[2].text = str(choice.quantity_num)
+                row_cells[3].text = str(choice.units_of_measure_text)
+                full_work_price = construct.with_all_profits_and_vat(choice.quantity_num * choice.price_num)
+                total_amount += full_work_price
+                row_cells[4].text = "£" + str(round(full_work_price, 2))
+                row_cells[5].text = str(choice.plan_start_date)
+                row_cells[6].text = str(choice.plan_days_num)
+                for cell in row_cells:
+                    docx_set_cell_border(cell, 'D9D9D9', 6)
+        row_cells = table.add_row().cells
+        row_cells[3].text = "Total:"
+        row_cells[4].text = "£ " + str(round(total_amount, 2))
+        row_cells[3].paragraphs[0].runs[0].bold = True
+        choice_list_paragraph.text = ""
+
+    new_file_name = (file_name.replace(".docx", "") + "_"
+                     + client_name + "_"
+                     + construct.title_text + "_"
+                     + now.strftime('%Y.%m.%d_%H-%M-%S') + ".docx")
+    doc.save(doc_file_dir / new_file_name)
+    return doc, new_file_name
