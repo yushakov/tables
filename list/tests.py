@@ -11,6 +11,7 @@ import numpy as np
 import re
 import datetime as dt
 import json
+from django.conf import settings
 from list.views import check_integrity,   \
                        is_yyyy_mm_dd,     \
                        is_dd_mm_yyyy,     \
@@ -2773,7 +2774,29 @@ class ViewTests(TestCase):
         self.assertEqual(response.context['form']['amount'].initial, '20000')
         self.assertEqual(response.context['form']['details_txt'].initial, '1,deposit,20000')
         self.assertEqual(response.context['form']['invoice_type'].initial, 'IN')
-        
+
+
+    def test_gendoc_page(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct("Test document generation")
+        response = c.get(f"/list/gendoc/{cons.id}/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+
+    def test_gendoc_produce_document(self):
+        cons = make_test_construct("Gendoc_Test_Doc")
+        import list.gendoc as gendoc
+        now = timezone.now()
+        data = {"docx_file": "0",
+                "client_name": "Ivan Ivanov",
+                "client_address": "address"}
+        doc, docname = gendoc.produce_document(data, cons)
+        doc_file_dir = settings.GENDOC_DIR
+        self.assertTrue(os.access(doc_file_dir / docname, os.F_OK))
+        os.remove(doc_file_dir / docname)
+
+
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")
         construct1 = Construct()
