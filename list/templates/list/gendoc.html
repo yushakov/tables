@@ -7,7 +7,7 @@
 <a href="{% url 'list:detail' construct.id %}">go to the project</a>&nbsp;&nbsp;&nbsp;
 <a href="{% url 'list:index' %}">all projects</a>&nbsp;&nbsp;&nbsp;
 
-<form action="" method="post">
+<form action="" method="post" id="id_data_form">
     {% csrf_token %}
     <p>
         <b><label for="id_docx_file">Doc file:</b><br />
@@ -114,17 +114,59 @@ id="id_job_description">description</textarea>
             id="id_email">
         (<i>It is not sending now. Downloading only.</i>)
     </p>
-    <input type="submit" value="Submit">
+    <input type="submit" value="Get .docx" id="id_submit">
 </form>
 {% if doc_base64 %}
 <script>
     // Decode the base64 string to binary data
-    const linkSource = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${'{{ doc_base64 }}'}`;
+    {% comment %} const linkSource = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${'{{ doc_base64 }}'}`;
     const downloadLink = document.createElement('a');
     downloadLink.href = linkSource;
     downloadLink.download = '{{ doc_name }}';
-    downloadLink.click();
+    downloadLink.click(); {% endcomment %}
 </script>
 {% endif %}
+
+<script>
+function sendFormData() {
+    const form = document.getElementById('id_data_form');
+    const url = form.action; // Get the form action
+    const formData = new FormData(form); // Create FormData object from the form
+    console.log("sendFormData()");
+
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest', // This header helps server-side to identify the request as AJAX
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data); // Assuming the server responds with some JSON
+        const linkSource = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${data['doc_base64']}`;
+        const downloadLink = document.createElement('a');
+        downloadLink.href = linkSource;
+        downloadLink.download = data['doc_name'];
+        downloadLink.click();
+    })
+    .catch(error => {
+        // Handle errors
+        console.error('There was a problem with the fetch operation:', error);
+    });
+}
+
+const form = document.getElementById('id_data_form');
+form.addEventListener("submit", event => {
+    event.preventDefault();
+    sendFormData();
+});
+
+</script>
 
 {% endblock %}
