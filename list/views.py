@@ -247,6 +247,8 @@ def gendoc(request, construct_id):
             buffer.seek(0)
             buffer = buffer.getvalue()
             doc_base64 = base64.b64encode(buffer).decode('utf-8')
+            data = {"doc_base64": doc_base64, "doc_name": doc_name}
+        return JsonResponse(data)
     now = timezone.now()
     start_date = now.strftime("%d.%m.%Y")
     context = {"construct": construct,
@@ -255,9 +257,6 @@ def gendoc(request, construct_id):
                "docx_files": gen_doc.gDocFiles,
                "types_of_work": gen_doc.gTypesOfWork,
                "defect_periods": gen_doc.gDefectPeriods}
-    if doc_base64 is not None:
-        context['doc_base64'] = doc_base64
-        context['doc_name'] = doc_name
     return render(request, 'list/gendoc.html', context)
 
 

@@ -29,6 +29,9 @@
 <br>
 <br>
 <a href="{% url 'gantt:index' construct.id %}">Gantt Chart</a> &rarr;
+<br />
+<br />
+<a href="{% url 'list:gendoc' construct.id %}">Generate a contract</a>&nbsp;&nbsp;&nbsp;
 </div>
 <br class='hide_for_pretty'>
 <table id='choices_head'>
@@ -213,7 +216,7 @@
         <td class='name_cell {{ items.main_contract }}'
             title='{{ items.choice.id }}'>
         {% autoescape off %}
-            {{ items.choice.name_txt|escape|markup }}
+            {{ items.choice.name_txt|strip|escape|markup }}
         {% endautoescape %}
         </td>
         <td align='right'>&#163;{{ items.choice.price_num|floatformat:2 }}</td>

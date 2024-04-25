@@ -10,3 +10,7 @@ def markup(value):
     out = re.sub("\n", r"<br />\n", out)
     out = re.sub(r"&amp;", r"&", out)
     return out
+
+@register.filter
+def strip(value):
+    return value.strip()

@@ -6,8 +6,7 @@ from django.utils import timezone
 from django.conf import settings
 import json
 
-gDocFiles = ["client_contract.docx",
-             "sub_contract.docx"]
+gDocFiles = ["client_contract.docx"]
 gTypesOfWork = ["residential house renovation",
                 "HMO conversion",
                 "garage conversion",
@@ -17,6 +16,17 @@ gTypesOfWork = ["residential house renovation",
                 "commercial to residential",
                 "maintenance"]
 gDefectPeriods = [6, 12, 24, 36]
+
+
+def clear_highlight(run):
+    """
+    Remove the highlight from a run by deleting the highlight element.
+    """
+    rPr = run._element.rPr
+    if rPr is not None:
+        highlight = rPr.find(qn('w:highlight'))
+        if highlight is not None:
+            rPr.remove(highlight)
 
 
 def docx_set_cell_border(cell, border_color, border_width):
@@ -85,6 +95,7 @@ def produce_document(data, construct):
             if key in paragraph.text:
                 for run in paragraph.runs:
                     if key in run.text:
+                        clear_highlight(run)
                         text = run.text.replace(key, replacement[key])
                         run.text = text
     for table in doc.tables:
@@ -94,6 +105,7 @@ def produce_document(data, construct):
                     for run in paragraph.runs:
                         for key in replacement.keys():
                             if key in run.text:
+                                clear_highlight(run)
                                 text = run.text.replace(key, replacement[key])
                                 run.text = text
     choice_list_key = "#list of works with client prices#"
@@ -125,11 +137,11 @@ def produce_document(data, construct):
         for choice in choices:
             if type(choice) == dict:
                 row_cells = table.add_row().cells
-                row_cells[0].text = choice['header']
+                row_cells[0].text = choice['header'].strip()
                 row_cells[0].paragraphs[0].runs[0].bold = True
             else:
                 row_cells = table.add_row().cells
-                row_cells[0].text = choice.name_txt
+                row_cells[0].text = choice.name_txt.strip()
                 row_cells[1].text = "£ " + str(construct.with_all_profits_and_vat(choice.price_num))
                 row_cells[2].text = str(choice.quantity_num)
                 row_cells[3].text = str(choice.units_of_measure_text)
