@@ -137,7 +137,7 @@
         <td align='right'>{{ forloop.counter }}</td>
     {% if items.type == 'Choice' %}
         {% autoescape off %}
-        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        <td class='name_cell'>{{ items.choice.name_txt|strip|escape|markup }}</td>
         {% endautoescape %}
         {% if not is_worker %}<td align='right'>&#163;{{ items.item_price_prft_vat|floatformat:2 }}</td>{% endif %}
         <td align='right'>{{ items.choice.quantity_num }}</td>
