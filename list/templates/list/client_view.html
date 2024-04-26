@@ -144,7 +144,7 @@
         <td align='right'>{{ forloop.counter }}</td>
     {% if items.type == 'Choice' %}
         {% autoescape off %}
-        <td class='name_cell'>{{ items.choice.name_txt|escape|markup }}</td>
+        <td class='name_cell'>{{ items.choice.name_txt|strip|escape|markup }}</td>
         {% endautoescape %}
         {% if not is_worker %}
             {% if is_client %}

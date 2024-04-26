@@ -569,6 +569,7 @@ def getChoiceListAndPrices(struc_dict, choice_dict):
         main_contract = ''
         if choice.main_contract_choice:
             main_contract = 'main-contract'
+        choice.name_txt = choice.name_txt.strip()
         ch_list.append({'idx': idx+1, 'type': line_x['type'], 'choice': choice,
                         'choice_total_price': choice_price,
                         'item_price_prft_vat': item_price_prft_vat,
