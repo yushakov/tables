@@ -2797,6 +2797,19 @@ class ViewTests(TestCase):
         os.remove(doc_file_dir / docname)
 
 
+    def test_status_page(self):
+        from list.models import Status, StatusChain
+        sts = Status.objects.all()
+        stsCh = StatusChain.objects.all()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct("Test document generation")
+        response = c.get(f"/list/status/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(len(sts), 0)
+        self.assertEqual(len(stsCh), 0)
+
+
     def test_checkTimeStamp(self):
         print("\n>>> test_checkTimeStamp() <<<")
         construct1 = Construct()
