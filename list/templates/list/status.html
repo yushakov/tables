@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Status management{% endblock %}
+{% block extra-head %}
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+{% endblock %}
+{% block content %}
+{% load static %}
+
+<div style="padding: 10px;">
+<h1>Status management</h1>
+    <div class="w3-bar w3-black" style="width: fit-content; padding: 10px;">
+    {% for chain in chains %}
+        <button class="w3-bar-item w3-button tab-head" onclick="openChain('{{ chain.chain.name }}', this)"
+            {% if forloop.counter == 1 %} style="color: black; background-color: lightgrey;" {% endif %}>
+            {{ chain.chain.name }}
+        </button>
+    {% endfor %}
+    </div>
+
+    {% for chain in chains %}
+        <div id="{{ chain.chain.name }}" class="w3-container chain"
+            {% if forloop.counter > 1 %} style="display:none" {% endif %}>
+            {% for status in chain.statuses %}
+                <p style="background-color: {{ status.color }};
+                        width: fit-content;
+                        padding: 5px;
+                        border-radius: 3px;">{{ status.name }}</p>
+            {% endfor%}
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+function openChain(chainName, ths) {
+  var i;
+  var x = document.getElementsByClassName("chain");
+  for (i = 0; i < x.length; i++) {
+    x[i].style.display = "none";
+  }
+  document.getElementById(chainName).style.display = "block";
+  var x = document.getElementsByClassName("tab-head");
+  for (i = 0; i < x.length; i++) {
+    x[i].style.backgroundColor = "black";
+    x[i].style.color = "white";
+  }
+  ths.style.backgroundColor = "lightgrey";
+  ths.style.color = 'black';
+}
+</script>
+
+{% endblock %}

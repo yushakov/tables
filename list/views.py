@@ -4,6 +4,7 @@ from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
 from .models import User
 from .models import Category, CLIENT_GROUP_NAME, WORKER_GROUP_NAME
+from .models import StatusChain, Status
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -177,6 +178,14 @@ def index(request):
                'total': total
               }
     return render(request, 'list/index.html', context)
+
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def status(request):
+    context = {'chains': [{'chain': chain, 'statuses': chain.get_ordered_statuses()} for chain in StatusChain.objects.all()]}
+    return render(request, 'list/status.html', context)
+
 
 def get_active_done_constructs():
     cats = Category.objects.all()

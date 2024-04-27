@@ -17,6 +17,7 @@ urlpatterns = [
     path('account/', views.account, name='account'),
     path('history/', views.history, name='history'),
     path('backup/', views.backup, name='backup'),
+    path('status/', views.status, name='status'),
     path('<int:construct_id>/', views.detail, name='detail'),
     path('gendoc/<int:construct_id>/', views.gendoc, name='gendoc'),
     path('<int:construct_id>/bg_update', views.bg_process_post, name='bg_update'),

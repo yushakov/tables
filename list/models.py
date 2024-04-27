@@ -101,6 +101,7 @@ class Construct(models.Model):
     footer_default = ("**Additional information:** goes here.")
     header_txt = models.TextField(default=header_default, blank=True, null=True)
     footer_txt = models.TextField(default=footer_default, blank=True, null=True)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, null=True)
 
     def __init__(self, *args, **kwargs):
         self.numbers = {}
@@ -108,6 +109,18 @@ class Construct(models.Model):
     
     def __str__(self):
         return self.title_text
+
+    def advance_status(self):
+        """Advance to the next status if available."""
+        if self.status.next_status:
+            self.status = self.status.next_status
+            self.save()
+
+    def regress_status(self):
+        """Move back to the previous status if available."""
+        if hasattr(self.status, 'previous_status'):
+            self.status = self.status.previous_status
+            self.save()
 
     def get_slug(self):
         slug_title = slugify(self.title_text, allow_unicode=True)
@@ -661,6 +674,44 @@ class Category(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.priority}"
+
+
+class StatusChain(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    def get_bottom_status(self):
+        for sts in self.statuses.all():
+            if sts.next_status is None:
+                return sts
+
+    def get_ordered_statuses(self):
+        bottom = self.get_bottom_status()
+        out = [bottom]
+        while hasattr(bottom, 'previous_status'):
+            out = [bottom.previous_status] + out
+            bottom = bottom.previous_status
+        all_sts = self.statuses.all()
+        if len(out) < len(all_sts):
+            return all_sts
+        return out
+
+
+class Status(models.Model):
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=100, default='white')
+    description = models.TextField(null=True, blank=True)
+    chain = models.ForeignKey('StatusChain', related_name='statuses', on_delete=models.CASCADE)
+    next_status = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_status')
+
+    class Meta:
+        verbose_name_plural = 'statuses'
+
+    def __str__(self):
+        return f"{self.name} ({self.chain.name})"
 
 
 class User(AbstractUser):
