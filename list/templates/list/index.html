@@ -53,8 +53,10 @@
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
-        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px">
+        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px"
+            title="Created: {{ construct.listed_date }} Status: {{ construct.status.name }}">
             <a href="{% url 'list:detail' construct.id %}">{{ construct.title_text }}</a>
+            <div class="construct-status-marker" style="color: {{ construct.status.color }};">&#9679;</div>
         </td>
         <td align='left' class='progress-cell'>
             <div class='project-progress' style='width: {{ construct.overall_progress_percent_num }}%'>

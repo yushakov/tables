@@ -46,6 +46,12 @@
     max-width: 250px;
 }
 
+.construct-status-marker {
+    position: relative;
+    transform: translate(230px, -23px);
+    color: white;
+}
+
 table {
   border-spacing: 1em 0.5em;
   padding: 0 2em 1em 0;
