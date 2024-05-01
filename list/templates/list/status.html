@@ -1,17 +1,19 @@
 {% extends 'base.html' %}
 {% block title %}Status management{% endblock %}
+{% load static %}
 {% block extra-head %}
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="{% static 'list/status.css' %}">
+<script src="{% static 'list/status.js' %}"></script>
 {% endblock %}
 {% block content %}
 {% load static %}
 
 <div style="padding: 10px;">
 <h1>Status management</h1>
-    <div class="w3-bar w3-black" style="width: fit-content; padding: 10px;">
+    <div class="tab-head"">
     {% for chain in chains %}
-        <button class="w3-bar-item w3-button tab-head" onclick="openChain('{{ chain.chain.name }}', this)"
-            {% if forloop.counter == 1 %} style="color: black; background-color: lightgrey;" {% endif %}>
+        <button onclick="openChain('{{ chain.chain.name }}', this)"
+            {% if forloop.counter == 1 %} class="tab active-tab" {% else %} class="tab" {% endif %}>
             {{ chain.chain.name }}
         </button>
     {% endfor %}
@@ -29,23 +31,4 @@
         </div>
     {% endfor %}
 </div>
-
-<script>
-function openChain(chainName, ths) {
-  var i;
-  var x = document.getElementsByClassName("chain");
-  for (i = 0; i < x.length; i++) {
-    x[i].style.display = "none";
-  }
-  document.getElementById(chainName).style.display = "block";
-  var x = document.getElementsByClassName("tab-head");
-  for (i = 0; i < x.length; i++) {
-    x[i].style.backgroundColor = "black";
-    x[i].style.color = "white";
-  }
-  ths.style.backgroundColor = "lightgrey";
-  ths.style.color = 'black';
-}
-</script>
-
 {% endblock %}

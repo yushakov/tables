@@ -1,0 +1,21 @@
+.tab-head {
+    width: fit-content;
+    padding: 0px;
+    border-bottom: solid 1px;
+    padding-bottom: 1px;
+}
+
+.tab {
+    color: black;
+    background-color: #f5f0f0;
+    border: none;
+    padding: 10px;
+    width: 100px;
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.active-tab {
+    color: white;
+    background-color: #73271f;
+}
