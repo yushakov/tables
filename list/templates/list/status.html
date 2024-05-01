@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}Status management{% endblock %}
 {% load static %}
+
+{% block title %}Status management{% endblock %}
+
 {% block extra-head %}
 <link rel="stylesheet" href="{% static 'list/status.css' %}">
 <script src="{% static 'list/status.js' %}"></script>
 {% endblock %}
-{% block content %}
-{% load static %}
 
+{% block content %}
 <div style="padding: 10px;">
 <h1>Status management</h1>
     <div class="tab-head"">
@@ -20,7 +21,7 @@
     </div>
 
     {% for chain in chains %}
-        <div id="{{ chain.chain.name }}" class="w3-container chain"
+        <div id="{{ chain.chain.name }}" class="chain"
             {% if forloop.counter > 1 %} style="display:none" {% endif %}>
             {% for status in chain.statuses %}
                 <p style="background-color: {{ status.color }};
