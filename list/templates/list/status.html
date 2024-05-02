@@ -13,7 +13,8 @@
 <h1>Status management</h1>
     <div class="tab-head"">
     {% for chain in chains %}
-        <button onclick="openChain('{{ chain.chain.name }}', this)"
+        <button onclick="openChain('chain-{{ chain.chain.id }}', this)"
+                ondragover="openChain('chain-{{ chain.chain.id }}', this)"
             {% if forloop.counter == 1 %} class="tab active-tab" {% else %} class="tab" {% endif %}>
             {{ chain.chain.name }}
         </button>
@@ -21,14 +22,22 @@
     </div>
 
     {% for chain in chains %}
-        <div id="{{ chain.chain.name }}" class="chain"
+        <div id="chain-{{ chain.chain.id }}" class="chain"
             {% if forloop.counter > 1 %} style="display:none" {% endif %}>
-            {% for status in chain.statuses %}
-                <p style="background-color: {{ status.color }};
-                        width: fit-content;
-                        padding: 5px;
-                        border-radius: 3px;">{{ status.name }}</p>
-            {% endfor%}
+            <div class="chain-t">
+                {% for status in chain.statuses %}
+                    <div class="status-col" ondrop="drop(event)" ondragover="allowDrop(event)" id="status-{{ status.id }}">
+                        <div class="status-col-head" style="background-color: {{ status.color }}">
+                            {{ status.name }}
+                        </div>
+                        {% for construct in status.constructs %}
+                            <div class="construct" draggable="true" ondragstart="drag(event)" id="construct-{{ construct.id }}">
+                                {{ construct.title_text }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor%}
+            </div>
         </div>
     {% endfor %}
 </div>

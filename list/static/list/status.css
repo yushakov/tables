@@ -19,3 +19,29 @@
     color: white;
     background-color: #73271f;
 }
+
+.chain-t {
+    display: flex;
+}
+
+.status-col {
+    min-width: 150px;
+    max-width: 150px;
+    border: solid 1px;
+    border-color: lightgrey;
+    border-radius: 3px;
+}
+
+.status-col-head {
+    padding: 5px;
+    border-radius: 3px;
+    margin: 5px;
+}
+
+.construct {
+    margin: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 5px;
+    border: solid 1px lightblue;
+}

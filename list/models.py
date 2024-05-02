@@ -713,6 +713,11 @@ class Status(models.Model):
     def __str__(self):
         return f"{self.name} ({self.chain.name})"
 
+    @property
+    def constructs(self):
+        cons = Construct.objects.filter(status__id = self.id)
+        return cons
+
 
 class User(AbstractUser):
     accessible_constructs = models.ManyToManyField(Construct, blank=True)
