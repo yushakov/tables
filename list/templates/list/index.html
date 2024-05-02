@@ -33,7 +33,7 @@
 {% endfor %}
 {% if active_construct_list %}
 <table id='construct_list'>
-    <thead>
+    <tr>
         <th>Project name</th>
         <th>Progress</th>
         <th>Chart</th>
@@ -54,7 +54,7 @@
         <th class="cols left-to-pay" title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
         <th class="cols invoices-to-pay" title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
         <th class="cols requested-payments" title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
-    </thead>
+    </tr>
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
