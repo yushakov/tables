@@ -321,19 +321,29 @@ describe('Tests after login', () => {
 
   it("Add deposit", () => {
     cy.visit("list/transaction/submit/?construct=1");
+    cy.get('#id_from_txt').clear().type('The Client');
     cy.get('#id_to_txt').clear().type('The Project');
     cy.get('#id_amount').clear().type('1780');
     cy.get('#id_transaction_type').select('Incoming');
     cy.contains('a', '#deposit').click();
     cy.get('input[type="submit"]').should('exist').click();
+
+    cy.get('#id_amount').invoke('text').then((text)=>{
+      expect(text).to.contain('1,780')
+    });
   })
 
   it("Add money", () => {
     cy.visit("list/transaction/submit/?construct=1");
+    cy.get('#id_from_txt').clear().type('The Client');
     cy.get('#id_to_txt').clear().type('The Project');
     cy.get('#id_amount').clear().type('1234');
     cy.get('#id_transaction_type').select('Incoming');
     cy.get('input[type="submit"]').should('exist').click();
+
+    cy.get('#id_amount').invoke('text').then((text)=>{
+      expect(text).to.contain('1,234')
+    });
   })
 
   it("Check Money left in a foreman page", () => {
