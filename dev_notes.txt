@@ -383,3 +383,38 @@ Chat GPT подсказывает (как я и догадывался), что 
 Каждой такой задаче можно ставить приоритет и due date.
 Ну и тоже отображать везде, мол, столько-то задач в таком-то проекте.
 Важно, чтобы это делалось очень легко и быстро: сайт, проект, задачка...
+
+01.05.2024
+----------
+Сделал миграцию базы (добавил поля модели) - перестал запускаться тестовый сервер со старой .json базой.
+Что же.
+1. Копируем существующую (рабочую) базу в новую:
+   cp db.sqlite3 db_for_test.sqlite3
+2. Открываем её в sqlite3:
+   sqlite3 db_for_test.sqlite3
+3. Чистим таблицы (прямо в sqlite3>):
+   delete from list_construct;
+   delete from list_choice;
+   delete from list_transaction;
+   delete from list_invoice;
+   delete from list_invoicetransaction;
+   delete from list_historyrecord;
+   delete from list_user;
+   delete from list_user_user_permissions;
+   delete from list_user_accessible_constructs;
+   delete from list_category_constructs;
+   delete from django_content_type;
+   delete from auth_permission;
+   delete from django_admin_log;
+4. Сохраняем:
+   sqlite3> .save db_for_test_cleaned.sqlite3
+5. Создаём в ней суперпользователя (убедиться, что в settings.py правильная БД подключается):
+   python manage.py createsuperuser
+6. Сохряняем в json:
+   python manage.py dumpdata --format json -o cypress/fixtures/test.json
+   (cypress_test - эта база прописана в settings.py)
+7. Запускаем тестовый сервер:
+   python manage.py testserver cypress/fixtures/test.json
+8. Тестируем:
+   nvm use 20.5.0
+   nvm cypress run
