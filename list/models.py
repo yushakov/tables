@@ -101,7 +101,7 @@ class Construct(models.Model):
     footer_default = ("**Additional information:** goes here.")
     header_txt = models.TextField(default=header_default, blank=True, null=True)
     footer_txt = models.TextField(default=footer_default, blank=True, null=True)
-    status = models.ForeignKey('Status', on_delete=models.SET_NULL, null=True)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         self.numbers = {}
