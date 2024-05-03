@@ -193,6 +193,12 @@ def status(request):
     context = {'chains': [{'chain': chain,
                            'statuses': chain.get_ordered_statuses()}
                            for chain in StatusChain.objects.all()]}
+    no_cat_chain = StatusChain(name='No Cat')
+    empty_status = Status(name="empty",
+                          color="#b47dee",
+                          chain=no_cat_chain)
+    context['chains'].append({'chain': no_cat_chain,
+                              'statuses': [empty_status]})
     return render(request, 'list/status.html', context)
 
 
