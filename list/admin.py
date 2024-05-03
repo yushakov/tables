@@ -20,6 +20,11 @@ class CategoryInline(admin.TabularInline):
 
 class StatusAdmin(admin.ModelAdmin):
     list_filter = ['chain']
+    fields = ['name',
+              'chain',
+              'color',
+              'description']
+    # inlines = [StatusInline]
 
 class ConstructAdmin(admin.ModelAdmin):
     list_display = ["title_text", "goto", "listed_date", "overall_progress", "email"]
