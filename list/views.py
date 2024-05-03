@@ -183,7 +183,16 @@ def index(request):
 @login_required
 @user_passes_test(lambda user: user.is_staff)
 def status(request):
-    context = {'chains': [{'chain': chain, 'statuses': chain.get_ordered_statuses()} for chain in StatusChain.objects.all()]}
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: status() by {request.user.username}, {ip}')
+    if request.method == 'POST':
+        data = json.loads(request.POST.get('data', {}))
+        print(data)
+        response = {'response': "data received on server"}
+        return JsonResponse(response)
+    context = {'chains': [{'chain': chain,
+                           'statuses': chain.get_ordered_statuses()}
+                           for chain in StatusChain.objects.all()]}
     return render(request, 'list/status.html', context)
 
 

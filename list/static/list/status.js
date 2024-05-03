@@ -37,10 +37,6 @@ function drop(ev) {
         }
         var chain_id = parent.id;
         var status_id = ev.target.id;
-        console.log(construct_id);
-        console.log("From: " + ev.dataTransfer.getData("chain_id_from")
-                    + ", " + ev.dataTransfer.getData("status_id_from"));
-        console.log("To: " + chain_id + ", " + status_id);
         let parameters = {construct_id: construct_id,
             chain_from: ev.dataTransfer.getData("chain_id_from"),
             status_from: ev.dataTransfer.getData("status_id_from"),
@@ -75,14 +71,59 @@ function highlightElement(element) {
     }, { once: true });
 }
 
+function showWaitImage() {
+    var dialog_content = document.getElementById("id_dialog_content");
+    dialog_content.style.display = "none";
+    var wait_img = document.getElementById("id_wait_img");
+    wait_img.style.display = "block";
+}
+
+function hideWaitImage() {
+    var dialog_content = document.getElementById("id_dialog_content");
+    dialog_content.style.display = "block";
+    var wait_img = document.getElementById("id_wait_img");
+    wait_img.style.display = "none";
+}
+
 function dialogYes() {
-    // TODO:
-    // 1. Send new data to the server in background
+    showWaitImage();
+    sendData();
+}
+
+function dataSent() {
+    hideWaitImage();
     var dialog = document.getElementById("id_drop_dialog");
     dialog.style.display = "none";
     var construct_badge = document.getElementById(window.dialog_parameters.construct_id);
     highlightElement(construct_badge);
     window.dialog_parameters = {};
+}
+
+function sendData() {
+    document.getElementById('dialog-data').value = JSON.stringify(window.dialog_parameters);
+    var formData = new FormData(document.getElementById("id-fetch-form"));
+    fetch(window.fetch_url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest', // This header helps server-side to identify the request as AJAX
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle success. You can update the UI accordingly.
+        console.log(data); // Assuming the server responds with some JSON
+        dataSent();
+    })
+    .catch(error => {
+        // Handle errors
+        console.error('There was a problem with the fetch operation:', error);
+    });
 }
 
 function dialogNo() {

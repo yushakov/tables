@@ -47,11 +47,6 @@
 }
 
 div#id_drop_dialog {
-    /* width: fit-content;
-    height: fit-content;
-    border: solid 1px black;
-    padding: 10px; */
-
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
