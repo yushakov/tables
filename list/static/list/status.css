@@ -13,6 +13,8 @@
     width: 100px;
     font-size: 12pt;
     font-weight: bold;
+    text-decoration: overline;
+    text-decoration-thickness: 5px;
 }
 
 .active-tab {

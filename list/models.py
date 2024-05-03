@@ -679,6 +679,8 @@ class Category(models.Model):
 class StatusChain(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    priority = models.IntegerField(default=0)
+    color = models.CharField(max_length=200, default='white')
 
     def __str__(self):
         return f"{self.name}"

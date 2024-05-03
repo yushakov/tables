@@ -17,9 +17,10 @@
     {% for chain in chains %}
         <button onclick="openChain('chain-{{ chain.chain.id }}', this)"
                 ondragover="openChain('chain-{{ chain.chain.id }}', this)"
-            {% if forloop.counter == 1 %} class="tab active-tab" {% else %} class="tab" {% endif %}
-            id="tab-{{ chain.chain.id }}">
-            {{ chain.chain.name }}
+                {% if forloop.counter == 1 %} class="tab active-tab" {% else %} class="tab" {% endif %}
+                id="tab-{{ chain.chain.id }}"
+                style="text-decoration-color: {{ chain.chain.color }}">
+                    {{ chain.chain.name }}
         </button>
     {% endfor %}
     </div>
