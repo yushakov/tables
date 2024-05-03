@@ -41,10 +41,64 @@ function drop(ev) {
         console.log("From: " + ev.dataTransfer.getData("chain_id_from")
                     + ", " + ev.dataTransfer.getData("status_id_from"));
         console.log("To: " + chain_id + ", " + status_id);
-        // Before dropping, show a dialog near cursor:
-        //  "Do you want put Construct to Status in Category?"
-        // yes/no
-        //   And and the optional text field for a Note.
+        let parameters = {construct_id: construct_id,
+            chain_from: ev.dataTransfer.getData("chain_id_from"),
+            status_from: ev.dataTransfer.getData("status_id_from"),
+            chain_to: chain_id,
+            status_to: status_id
+        }
         ev.target.appendChild(document.getElementById(construct_id));
+        showDropDialog(parameters);
     }
+}
+
+function showDropDialog(par) {
+    var dialog = document.getElementById("id_drop_dialog");
+    var content = document.getElementById("id_dialog_content");
+    dialog.style.display = "block";
+    var centerX = window.innerWidth / 2.0;
+    var centerY = window.innerHeight / 2.0 + window.scrollY;
+    dialog.style.paddingTop = (centerY - content.offsetHeight / 2) + 'px';
+    dialog.style.paddingLeft = (centerX - content.offsetWidth / 2) + 'px';
+    document.getElementById("id_construct_name").innerText = window.names[par.construct_id];
+    document.getElementById("id_source").innerText = window.names[par.chain_from]
+                                                   + ", " + window.names[par.status_from];
+    document.getElementById("id_destination").innerText = window.names[par.chain_to]
+                                                        + ", " + window.names[par.status_to] + "  ?";
+    window.dialog_parameters = par;
+}
+
+function highlightElement(element) {
+    element.classList.add('highlight');
+    element.addEventListener('animationend', () => {
+        element.classList.remove('highlight');
+    }, { once: true });
+}
+
+function dialogYes() {
+    // TODO:
+    // 1. Send new data to the server in background
+    var dialog = document.getElementById("id_drop_dialog");
+    dialog.style.display = "none";
+    var construct_badge = document.getElementById(window.dialog_parameters.construct_id);
+    highlightElement(construct_badge);
+    window.dialog_parameters = {};
+}
+
+function dialogNo() {
+    var dialog = document.getElementById("id_drop_dialog");
+    var construct_badge = document.getElementById(window.dialog_parameters.construct_id);
+    dialog.style.display = "none";
+    document.getElementById(window.dialog_parameters.status_from)
+            .appendChild(construct_badge);
+    var tab_id = window.dialog_parameters.chain_from.replace(/chain-/, "tab-");
+    var tab = document.getElementById(tab_id);
+    openChain(window.dialog_parameters.chain_from, tab);
+    window.dialog_parameters = {};
+    highlightElement(construct_badge);
+}
+
+function constructTouch(ths) {
+    var field = document.getElementById("id_chosen_construct");
+    field.innerText = ths.innerText;
 }

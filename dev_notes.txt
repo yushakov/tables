@@ -456,3 +456,18 @@ Chat GPT подсказывает (как я и догадывался), что 
 3. Каждому конструкту из категории присваиваем первый статус из цепочки.
 4. Переделываем все вызовы категорий на вызовы цепочек. В тестах тоже.
 5. Кайфуем.
+
+03.05.2024
+----------
+Для скачивания в виде картинки:
+
+var script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+document.head.appendChild(script);
+script.onload = () => console.log('html2canvas loaded successfully');
+html2canvas(document.body).then(canvas => {
+    var link = document.createElement('a');
+    link.download = 'screenshot.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+});
