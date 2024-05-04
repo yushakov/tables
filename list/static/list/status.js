@@ -73,7 +73,7 @@ function showDropDialog(par) {
     var content = document.getElementById("id_dialog_content");
     dialog.style.display = "block";
     var centerX = window.innerWidth / 2.0;
-    var centerY = window.innerHeight / 2.0 + window.scrollY;
+    var centerY = window.innerHeight / 2.0;
     dialog.style.paddingTop = (centerY - content.offsetHeight / 2) + 'px';
     dialog.style.paddingLeft = (centerX - content.offsetWidth / 2) + 'px';
     document.getElementById("id_construct_name").innerText = window.names[par.construct_id];
