@@ -37,11 +37,11 @@ function drop(ev) {
         while (!parent.classList.contains("chain")) {
             parent = parent.parentNode;
         }
-        var chain_id = parent.id;
         var node = ev.target;
         while (!node.classList.contains("status-col")) {
             node = node.parentNode;
         }
+        var chain_id = parent.id;
         var status_id = node.id;
         let parameters = {construct_id: construct_id,
             chain_from: ev.dataTransfer.getData("chain_id_from"),
@@ -49,7 +49,21 @@ function drop(ev) {
             chain_to: chain_id,
             status_to: status_id
         }
-        node.appendChild(document.getElementById(construct_id));
+        var previous_construct = null;
+        var col_head = node.getElementsByClassName("status-col-head")[0];
+        if (ev.target.classList.contains("construct")) {
+            previous_construct = ev.target;
+        }
+        let construct_badge = document.getElementById(construct_id);
+        if (previous_construct && previous_construct.nextSibling) {
+            node.insertBefore(construct_badge, previous_construct.nextSibling);
+        }
+        else if (col_head.nextSibling) {
+            node.insertBefore(construct_badge, col_head.nextSibling);
+        }
+        else {
+            node.appendChild(construct_badge);
+        }
         showDropDialog(parameters);
     }
 }
