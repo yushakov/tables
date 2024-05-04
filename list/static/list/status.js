@@ -30,20 +30,26 @@ function drag(ev) {
 function drop(ev) {
     ev.preventDefault();
     var construct_id = ev.dataTransfer.getData("text");
-    if (ev.target.classList.contains("status-col")) {
+    if (ev.target.classList.contains("status-col") ||
+        ev.target.classList.contains("status-col-head") ||
+        ev.target.classList.contains("construct")) {
         var parent = ev.target.parentNode;
         while (!parent.classList.contains("chain")) {
             parent = parent.parentNode;
         }
         var chain_id = parent.id;
-        var status_id = ev.target.id;
+        var node = ev.target;
+        while (!node.classList.contains("status-col")) {
+            node = node.parentNode;
+        }
+        var status_id = node.id;
         let parameters = {construct_id: construct_id,
             chain_from: ev.dataTransfer.getData("chain_id_from"),
             status_from: ev.dataTransfer.getData("status_id_from"),
             chain_to: chain_id,
             status_to: status_id
         }
-        ev.target.appendChild(document.getElementById(construct_id));
+        node.appendChild(document.getElementById(construct_id));
         showDropDialog(parameters);
     }
 }
