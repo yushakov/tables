@@ -64,7 +64,10 @@ function drop(ev) {
         else {
             node.appendChild(construct_badge);
         }
-        showDropDialog(parameters);
+        highlightElement(construct_badge);
+        if (parameters.status_from != parameters.status_to) {
+            showDropDialog(parameters);
+        }
     }
 }
 
