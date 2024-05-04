@@ -188,9 +188,15 @@ def status(request):
     if request.method == 'POST':
         data = json.loads(request.POST.get('data', {}))
         print(data)
-        construct_id = int(data.get('construct_id', '-1').replace("construct-", ""))
-        status_id = int(data.get('status_to', '-1').replace("status-", ""))
+        construct_id, status_id = None, None
         try:
+            construct_id = int(data.get('construct_id', '-1').replace("construct-", ""))
+            status_id = int(data.get('status_to', '-1').replace("status-", ""))
+        except Exception as e:
+            logger.error(f"Error processing data {data}."
+                         + f"Exception {e}.")
+        try:
+            print(f"construct: {construct_id}, status: {status_id}")
             construct = Construct.objects.get(pk=construct_id)
             status = Status.objects.get(pk=status_id)
             construct.status = status
@@ -198,6 +204,7 @@ def status(request):
         except Exception as e:
             logger.error(f"Error setting status {status_id} to construct {construct_id}."
                          + f"Exception: {e}")
+            print(e)
         response = {'response': "data received on server"}
         return JsonResponse(response)
     context = {'chains': [{'chain': chain,
