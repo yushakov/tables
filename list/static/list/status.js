@@ -86,8 +86,18 @@ function hideWaitImage() {
 }
 
 function dialogYes() {
+    let note = document.getElementById("id_moving_note").value;
+    window.dialog_parameters.note = note;
     showWaitImage();
     sendData();
+}
+
+function cleanDialog() {
+    window.dialog_parameters = {};
+    document.getElementById("id_construct_name").value = "";
+    document.getElementById("id_source").value = "";
+    document.getElementById("id_destination").value = "";
+    document.getElementById("id_moving_note").value = "";
 }
 
 function dataSent() {
@@ -96,7 +106,7 @@ function dataSent() {
     dialog.style.display = "none";
     var construct_badge = document.getElementById(window.dialog_parameters.construct_id);
     highlightElement(construct_badge);
-    window.dialog_parameters = {};
+    cleanDialog();
 }
 
 function sendData() {
@@ -135,7 +145,8 @@ function dialogNo() {
     var tab_id = window.dialog_parameters.chain_from.replace(/chain-/, "tab-");
     var tab = document.getElementById(tab_id);
     openChain(window.dialog_parameters.chain_from, tab);
-    window.dialog_parameters = {};
+    cleanDialog();
+    construct_badge.focus();
     highlightElement(construct_badge);
 }
 
