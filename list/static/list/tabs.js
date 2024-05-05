@@ -10,4 +10,15 @@ function open_tab(tab_content_id, ths) {
         x[i].className = "tab";
     }
     ths.className = "tab active-tab";
+    localStorage.setItem('active-tab', ths.id);
+    localStorage.setItem('active-tab-content', tab_content_id);
 }
+
+window.addEventListener("load", (event) => {
+    let active_tab_id = localStorage.getItem('active-tab');
+    let active_tab_content_id = localStorage.getItem('active-tab-content');
+    if (active_tab_id) {
+        let tab = document.getElementById(active_tab_id);
+        open_tab(active_tab_content_id, tab);
+    }
+});
