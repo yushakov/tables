@@ -16,6 +16,7 @@ import logging
 from django.contrib.auth.decorators import login_required,\
                                            permission_required, \
                                            user_passes_test
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django import forms
 from django.conf import settings
@@ -686,6 +687,13 @@ def bg_process_post(request, construct_id):
     return JsonResponse(data)
 
 
+def get_construct_notes(construct_id):
+    content_type_construct = ContentType.objects.get(model='construct', app_label='list')
+    notes = Note.objects.filter(content_type=content_type_construct)
+    notes = notes.filter(object_id=construct_id)
+    return notes
+
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
@@ -723,6 +731,7 @@ def detail(request, construct_id):
                'construct_paid': round(construct.income()),
                'noscale': True,
                'history': history,
+               'notes': get_construct_notes(construct.id),
                'detailJsVersion': detailJsVersion}
     return render(request, 'list/detail.html', context)
 

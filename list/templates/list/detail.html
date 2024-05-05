@@ -343,5 +343,15 @@
 {% comment %} Tab 'id-notes'. {% endcomment %}
 <div id='id-notes' class='tab-content' style='display:none'>
     <h2>Notes</h2>
+    <form id='id-add-note-form'>
+        {% csrf_token %}
+        <textarea id='id-note-text' name='note-text' cols='50' rows='5'></textarea>
+    {% for note in notes %}
+        <p>
+            <b>{{ note.last_modified_date}}</b>
+by <a href='#'>{{ note.author }}</a><br />
+            {{ note.text }}
+        </p>
+    {% endfor %}
 </div>
 {% endblock %}
