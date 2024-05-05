@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from .models import Construct, Choice, Invoice, Transaction, InvoiceTransaction, Category, StatusChain, Status
+from .models import Note
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from .models import User
@@ -140,6 +141,11 @@ class MyUserAdmin(UserAdmin):
     )
 
 
+class NoteAdmin(admin.ModelAdmin):
+    list_display = ['text_shorten', 'last_modified_date', 'author',
+                    'content_type', 'content_object']
+
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
@@ -149,3 +155,4 @@ admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(InvoiceTransaction)
 admin.site.register(Status, StatusAdmin)
 admin.site.register(StatusChain)
+admin.site.register(Note, NoteAdmin)

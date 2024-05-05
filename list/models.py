@@ -15,6 +15,9 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 import difflib
 from random import seed, randint
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 
 DEPOSIT_PERCENT_EXPECT = 15
 CLIENT_GROUP_NAME = 'Clients'
@@ -71,6 +74,17 @@ class Note(models.Model):
     last_modified_date = models.DateTimeField('last modified', default=timezone.now)
     author = models.ForeignKey("User", on_delete=models.DO_NOTHING,
                                 blank=True, null=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.text}"
+    
+    @admin.display
+    def text_shorten(self):
+        N = 25
+        return self.text[:N] + ('...' if len(self.text) > N else '')
 
 
 class Construct(models.Model):

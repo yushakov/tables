@@ -4,7 +4,7 @@ from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
 from .models import User
 from .models import Category, CLIENT_GROUP_NAME, WORKER_GROUP_NAME
-from .models import StatusChain, Status
+from .models import StatusChain, Status, Note
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -187,7 +187,6 @@ def status(request):
     logger.info(f'*action* USER ACCESS: status() by {request.user.username}, {ip}')
     if request.method == 'POST':
         data = json.loads(request.POST.get('data', {}))
-        print(data)
         construct_id, status_id = None, None
         try:
             construct_id = int(data.get('construct_id', '-1').replace("construct-", ""))
@@ -196,15 +195,21 @@ def status(request):
             logger.error(f"Error processing data {data}."
                          + f"Exception {e}.")
         try:
-            print(f"construct: {construct_id}, status: {status_id}")
             construct = Construct.objects.get(pk=construct_id)
             status = Status.objects.get(pk=status_id)
             construct.status = status
             construct.save()
+            note_text = ("Changing status from "
+                         f"{data.get('status_from', '')} ({data.get('chain_from', '')}) to "
+                         f"{data.get('status_to', '')} ({data.get('chain_to', '')}).\n"
+                         f"Note: {data.get('note', '')}")
+            new_note = Note(text=note_text,
+                            author=request.user,
+                            content_object=construct)
+            new_note.save()
         except Exception as e:
             logger.error(f"Error setting status {status_id} to construct {construct_id}."
                          + f"Exception: {e}")
-            print(e)
         response = {'response': "data received on server"}
         return JsonResponse(response)
     context = {'chains': [{'chain': chain,
