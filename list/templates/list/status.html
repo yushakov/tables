@@ -15,9 +15,13 @@
     <div id="id_chosen_construct"></div>
     <div class="tab-head">
     {% for chain in chains %}
-        <button onclick="openChain('chain-{{ chain.chain.id }}', this)"
-                ondragover="openChain('chain-{{ chain.chain.id }}', this)"
-                {% if forloop.counter == 1 %} class="tab active-tab" {% else %} class="tab" {% endif %}
+        <button onclick="open_tab('chain-{{ chain.chain.id }}', this)"
+                ondragover="open_tab('chain-{{ chain.chain.id }}', this)"
+                {% if forloop.counter == 1 %}
+                    class="tab active-tab"
+                {% else %}
+                    class="tab"
+                {% endif %}
                 id="tab-{{ chain.chain.id }}"
                 style="text-decoration-color: {{ chain.chain.color }}">
                     {{ chain.chain.name }}
@@ -30,7 +34,7 @@
         window.fetch_url = "{% url 'list:status' %}";
     </script>
     {% for chain in chains %}
-        <div id="chain-{{ chain.chain.id }}" class="chain"
+        <div id="chain-{{ chain.chain.id }}" class="chain tab-content"
             {% if forloop.counter > 1 %} style="display:none" {% endif %}>
             <script>
                 window.names["chain-{{ chain.chain.id }}"] = "{{ chain.chain.name }}";

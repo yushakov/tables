@@ -1,10 +1,10 @@
-function openChain(chainName, ths) {
+function open_tab(tab_content_id, ths) {
     var i;
-    var x = document.getElementsByClassName("chain");
+    var x = document.getElementsByClassName("tab-content");
     for (i = 0; i < x.length; i++) {
         x[i].style.display = "none";
     }
-    document.getElementById(chainName).style.display = "block";
+    document.getElementById(tab_content_id).style.display = "block";
     var x = document.getElementsByClassName("tab");
     for (i = 0; i < x.length; i++) {
         x[i].className = "tab";
@@ -167,7 +167,7 @@ function dialogNo() {
             .appendChild(construct_badge);
     var tab_id = window.dialog_parameters.chain_from.replace(/chain-/, "tab-");
     var tab = document.getElementById(tab_id);
-    openChain(window.dialog_parameters.chain_from, tab);
+    open_tab(window.dialog_parameters.chain_from, tab);
     cleanDialog();
     construct_badge.focus();
     highlightElement(construct_badge);
