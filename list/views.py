@@ -188,29 +188,7 @@ def status(request):
     logger.info(f'*action* USER ACCESS: status() by {request.user.username}, {ip}')
     if request.method == 'POST':
         data = json.loads(request.POST.get('data', {}))
-        construct_id, status_id = None, None
-        try:
-            construct_id = int(data.get('construct_id', '-1').replace("construct-", ""))
-            status_id = int(data.get('status_to', '-1').replace("status-", ""))
-        except Exception as e:
-            logger.error(f"Error processing data {data}."
-                         + f"Exception {e}.")
-        try:
-            construct = Construct.objects.get(pk=construct_id)
-            status = Status.objects.get(pk=status_id)
-            construct.status = status
-            construct.save()
-            note_text = ("Changing status from "
-                         f"{data.get('status_from', '')} ({data.get('chain_from', '')}) to "
-                         f"{data.get('status_to', '')} ({data.get('chain_to', '')}).\n"
-                         f"Note: {data.get('note', '')}")
-            new_note = Note(text=note_text,
-                            author=request.user,
-                            content_object=construct)
-            new_note.save()
-        except Exception as e:
-            logger.error(f"Error setting status {status_id} to construct {construct_id}."
-                         + f"Exception: {e}")
+        add_status_change_note(request.user, data)
         response = {'response': "data received on server"}
         return JsonResponse(response)
     context = {'chains': [{'chain': chain,
@@ -223,6 +201,43 @@ def status(request):
     context['chains'].append({'chain': no_cat_chain,
                               'statuses': [empty_status]})
     return render(request, 'list/status.html', context)
+
+
+def add_status_change_note(user, data):
+    construct_id, status_id = None, None
+    try:
+        construct_id = int(data.get('construct_id', '-1').replace("construct-", ""))
+        status_id = int(data.get('status_to', '-1').replace("status-", ""))
+    except Exception as e:
+        logger.error(f"Error processing data {data}."
+                         + f"Exception {e}.")
+    construct, status_to = None, None
+    try:
+        construct = Construct.objects.get(pk=construct_id)
+        status_to = Status.objects.get(pk=status_id)
+        construct.status = status_to
+        construct.save()
+    except Exception as e:
+        logger.error(f"Error setting status {status_id} to construct {construct_id}."
+                         + f"Exception: {e}")
+    if construct is not None and status_to is not None:
+        status_from_name, chain_from_name = 'None', 'None'
+        try:
+            status_from = Status.objects.get(pk=int(data.get('status_from', '').replace("status-", "")))
+            status_from_name = status_from.name
+            chain_from_name = status_from.chain.name
+        except Exception as e:
+            logger.warning(f"Warning. "
+                         f"Status from {status_from_name}. "
+                         f"Chain from {chain_from_name}.")
+        note_text = ("Changed status from "
+                     f"{status_from_name} ({chain_from_name}) to "
+                     f"{status_to.name} ({status_to.chain.name}).\n"
+                     f"Note: {data.get('note', '')}")
+        new_note = Note(text=note_text,
+                        author=user,
+                        content_object=construct)
+        new_note.save()
 
 
 def get_active_done_constructs():
