@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}?jsv={{detailJsVersion}}">
 <link rel="stylesheet" href="{% static 'list/tabs.css' %}">
 <script src="{% static 'list/tabs.js' %}"></script>
+<script src="{% static 'list/notes.js' %}"></script>
 <style>
     .active-tab {
         background-color: #608a7c;
@@ -343,9 +344,17 @@
 {% comment %} Tab 'id-notes'. {% endcomment %}
 <div id='id-notes' class='tab-content' style='display:none'>
     <h2>Notes</h2>
-    <form id='id-add-note-form'>
+    <form id='id-add-note-form' action="{% url 'list:add_note' %}" method='POST'>
         {% csrf_token %}
-        <textarea id='id-note-text' name='note-text' cols='50' rows='5'></textarea>
+        <p>
+            <textarea id='id-note-text' name='note-text' cols='50' rows='5'></textarea>
+        </p>
+        <input type='hidden' name='object_type' value='construct'>
+        <input type='hidden' name='object_id' value='{{ construct.id }}'>
+        <p>
+            <input type='submit' value='Submit'>
+        </p>
+    </form>
     {% for note in notes %}
         <p>
             <b>{{ note.last_modified_date}}</b>

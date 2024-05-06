@@ -181,6 +181,45 @@ def index(request):
     return render(request, 'list/index.html', context)
 
 
+def get_content_object(data):
+    object_type = data.get('object_type', '')
+    object_id = data.get('object_id', '-1')
+    if object_type == 'construct':
+        try:
+            obj = Construct.objects.get(pk=object_id)
+            return obj
+        except Exception as e:
+            return None
+    elif object_type == 'choice':
+        try:
+            obj = Choice.objects.get(pk=object_id)
+            return obj
+        except Exception as e:
+            return None
+    return None
+
+
+@login_required
+def add_note(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: add_note() by {request.user.username}, {ip}')
+    if request.method == 'POST':
+        data = request.POST
+        note_text = data.get('note-text', '').strip()
+        if len(note_text) == 0:
+            return JsonResponse({'message': 'Empty note, nothing added (server).'})
+        content_object = get_content_object(data)
+        if content_object is None:
+            return JsonResponse({'message': 'Cannot find an object to attach note to (server).'})
+        new_note = Note(text=note_text,
+                        author=request.user,
+                        content_object=content_object)
+        new_note.save()
+        response = {'response': "data received on server"}
+        return JsonResponse(response)
+    return JsonResponse({'message': 'Wrong access.'})
+
+
 @login_required
 @user_passes_test(lambda user: user.is_staff)
 def status(request):
@@ -705,7 +744,7 @@ def bg_process_post(request, construct_id):
 def get_construct_notes(construct_id):
     content_type_construct = ContentType.objects.get(model='construct', app_label='list')
     notes = Note.objects.filter(content_type=content_type_construct)
-    notes = notes.filter(object_id=construct_id)
+    notes = notes.filter(object_id=construct_id).order_by('-last_modified_date')
     return notes
 
 
