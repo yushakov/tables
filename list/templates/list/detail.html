@@ -355,12 +355,16 @@
             <input type='submit' value='Submit'>
         </p>
     </form>
+    <div id="id-note-list">
     {% for note in notes %}
-        <p>
+        <p class='note'>
             <b>{{ note.last_modified_date}}</b>
 by <a href='#'>{{ note.author }}</a><br />
-            {{ note.text }}
+            {% autoescape off %}
+            {{ note.text|escape|markup }}
+            {% endautoescape %}
         </p>
     {% endfor %}
+    </div>
 </div>
 {% endblock %}

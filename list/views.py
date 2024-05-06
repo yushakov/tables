@@ -215,7 +215,11 @@ def add_note(request):
                         author=request.user,
                         content_object=content_object)
         new_note.save()
-        response = {'response': "data received on server"}
+        response = {'response': "data received on server",
+                    'text': new_note.text,
+                    'author': new_note.author.username,
+                    'last_modified': new_note.last_modified_date.strftime("%b %d, %Y, %l:%M %P")
+                   }
         return JsonResponse(response)
     return JsonResponse({'message': 'Wrong access.'})
 
