@@ -735,6 +735,27 @@ class Status(models.Model):
         return cons
 
 
+def categories_to_chains():
+    cats = Category.objects.all()
+    for cat in cats:
+        existing = StatusChain.objects.filter(name=cat.name)
+        if len(existing) > 0:
+            print(cat.name + " status chain already exists.")
+            continue
+        new_chain = StatusChain(name=cat.name,
+                                priority=cat.priority,
+                                color=cat.color)
+        default_status = Status(name=cat.name + '_Status',
+                                chain=new_chain)
+        new_chain.save()
+        default_status.save()
+        constructs = cat.constructs.all()
+        for con in constructs:
+            con.status = default_status
+            con.save()
+        print(new_chain.name + " status chain created.")
+
+
 class User(AbstractUser):
     accessible_constructs = models.ManyToManyField(Construct, blank=True)
     business_address = models.TextField(null=True, blank=True)
