@@ -26,7 +26,7 @@ function sendNoteForm() {
                            + "<a href='#'>" + data['author'] + "</a><br />"
                            + data['text'];
         notes[0].parentNode.insertBefore(new_note, notes[0]);
-        console.log(data);
+        document.getElementById('id-note-text').value = '';
     })
     .catch(error => {
         // Handle errors
