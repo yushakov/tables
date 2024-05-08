@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="{% static 'list/style.css' %}?jsv={{detailJsVersion}}">
 <link rel="stylesheet" href="{% static 'list/tabs.css' %}">
 <script src="{% static 'list/tabs.js' %}"></script>
+<link rel="stylesheet" href="{% static 'list/notes.css' %}">
 <script src="{% static 'list/notes.js' %}"></script>
 <style>
     .active-tab {
@@ -342,7 +343,7 @@
 </div> <!-- end of id-tasks -->
 
 {% comment %} Tab 'id-notes'. {% endcomment %}
-<div id='id-notes' class='tab-content' style='display:none'>
+<div id='id-notes' class='tab-content notes-container' style='display:none'>
     <h2>Notes</h2>
     <form id='id-add-note-form' action="{% url 'list:add_note' %}" method='POST'>
         {% csrf_token %}
@@ -351,8 +352,8 @@
         </p>
         <input type='hidden' name='object_type' value='construct'>
         <input type='hidden' name='object_id' value='{{ construct.id }}'>
-        <p>
-            <input type='submit' value='Submit'>
+        <p id='id-submit-p'>
+            <input type='submit' value='Submit' class='note-submit'>
         </p>
     </form>
     <div id="id-note-list">
