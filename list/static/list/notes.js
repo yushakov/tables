@@ -2,6 +2,9 @@ function sendNoteForm() {
     let note_form = document.getElementById("id-add-note-form");
     let url = note_form.action;
     let form_data = new FormData(note_form);
+    let input_text = document.getElementById('id-note-text').value;
+
+    if (input_text.trim().length == 0) return;
 
     fetch(url, {
         method: 'POST',

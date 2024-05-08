@@ -348,7 +348,7 @@
     <form id='id-add-note-form' action="{% url 'list:add_note' %}" method='POST'>
         {% csrf_token %}
         <p>
-            <textarea id='id-note-text' name='note-text' cols='50' rows='5'></textarea>
+            <textarea id='id-note-text' name='note-text' cols='50' rows='5' value=''></textarea>
         </p>
         <input type='hidden' name='object_type' value='construct'>
         <input type='hidden' name='object_id' value='{{ construct.id }}'>
