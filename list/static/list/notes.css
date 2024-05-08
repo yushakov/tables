@@ -24,3 +24,7 @@ textarea#id-note-text {
     background-color: #b0c4bc;
     color: #234549;
 }
+
+.note-submit:hover {
+    background-color: #eff9f5;
+}

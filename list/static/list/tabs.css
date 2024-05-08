@@ -19,6 +19,10 @@
     vertical-align: bottom;
 }
 
+.tab:hover {
+    background-color: #98c7b7;
+}
+
 .active-tab {
     color: white;
     background-color: #73271f;
