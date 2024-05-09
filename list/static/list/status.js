@@ -161,5 +161,5 @@ function dialogNo() {
 
 function constructTouch(ths) {
     var field = document.getElementById("id_chosen_construct");
-    field.innerText = ths.innerText;
+    field.innerHTML = window.construct_urls[ths.id];
 }

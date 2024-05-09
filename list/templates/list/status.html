@@ -34,6 +34,7 @@
     <script>
         window.names = {description: "Construct, Chain, and Status names"};
         window.fetch_url = "{% url 'list:status' %}";
+        window.construct_urls = {};
     </script>
     {% for chain in chains %}
         <div id="chain-{{ chain.chain.id }}" class="chain tab-content"
@@ -57,6 +58,9 @@
                             </div>
                             <script>
                                 window.names["construct-{{ construct.id }}"] = "{{ construct.title_text }}";
+                                window.construct_urls["construct-{{ construct.id }}"] =
+                                    "<a href='" + "{% url 'list:detail' construct.id %}"
+                                    + "'>{{ construct.title_text }}</a>";
                             </script>
                         {% endfor %}
                     </div>
