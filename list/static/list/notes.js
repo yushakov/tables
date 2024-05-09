@@ -28,7 +28,12 @@ function sendNoteForm() {
         new_note.innerHTML = "<b>" + data['last_modified'] + "</b> by "
                            + "<a href='#'>" + data['author'] + "</a><br />"
                            + data['text'];
-        notes[0].parentNode.insertBefore(new_note, notes[0]);
+        if (notes.length > 0) {
+            notes[0].parentNode.insertBefore(new_note, notes[0]);
+        }
+        else {
+            note_list.appendChild(new_note);
+        }
         document.getElementById('id-note-text').value = '';
     })
     .catch(error => {

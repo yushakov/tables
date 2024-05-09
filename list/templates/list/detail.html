@@ -344,7 +344,7 @@
 
 {% comment %} Tab 'id-notes'. {% endcomment %}
 <div id='id-notes' class='tab-content notes-container' style='display:none'>
-    <h2>Notes</h2>
+    <h2 style='color: #5e5e5e; margin-bottom: -15px'>New note</h2>
     <form id='id-add-note-form' action="{% url 'list:add_note' %}" method='POST'>
         {% csrf_token %}
         <p>
