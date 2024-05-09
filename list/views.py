@@ -216,6 +216,7 @@ def add_note(request):
                         content_object=content_object)
         new_note.save()
         response = {'response': "data received on server",
+                    'note_id': new_note.id,
                     'text': new_note.text,
                     'author': new_note.author.username,
                     'last_modified': new_note.last_modified_date.strftime("%b %d, %Y, %l:%M %P")
