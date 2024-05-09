@@ -715,6 +715,14 @@ class StatusChain(models.Model):
             return all_sts
         return out
 
+    @property
+    def constructs(self):
+        statuses = self.statuses.all()
+        out = []
+        for status in statuses:
+            out += [construct for construct in status.constructs]
+        return out
+
 
 class Status(models.Model):
     name = models.CharField(max_length=100)
