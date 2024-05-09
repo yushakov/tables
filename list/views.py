@@ -26,7 +26,7 @@ import list.gendoc as gen_doc
 from io import BytesIO
 import base64
 
-detailJsVersion = "2.3"
+detailJsVersion = "2.4"
 DELETED = -5
 
 logger = logging.getLogger('django')

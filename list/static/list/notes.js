@@ -28,7 +28,7 @@ function sendNoteForm() {
         new_note.id = 'note-' + data['note_id'];
         new_note.innerHTML = "<b>" + data['last_modified'] + "</b> by "
                            + "<a href='#'>" + data['author'] + "</a><br />"
-                           + data['text'];
+                           + note_markup(data['text']);
         if (notes.length > 0) {
             notes[0].parentNode.insertBefore(new_note, notes[0]);
         }
@@ -41,6 +41,17 @@ function sendNoteForm() {
         // Handle errors
         console.error('There was a problem with the fetch operation:', error);
     });
+}
+
+
+function note_markup(str) {
+    let out = str.trim();
+    out = str.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    out = out.replace(/\*(.*?)\*/g, "<i>$1</i>")
+    out = out.replace(/\n/g, "<br />")
+    out = out.replace(/"&amp;/g, "&")
+    out = out.replace(/\[([^\]]+)\]\(([^\s\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    return out;
 }
 
 
