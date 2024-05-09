@@ -25,6 +25,7 @@ function sendNoteForm() {
         let notes = note_list.getElementsByClassName("note");
         let new_note = document.createElement('p');
         new_note.classList.add('note');
+        new_note.id = 'note-' + data['note_id'];
         new_note.innerHTML = "<b>" + data['last_modified'] + "</b> by "
                            + "<a href='#'>" + data['author'] + "</a><br />"
                            + data['text'];

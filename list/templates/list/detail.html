@@ -358,7 +358,7 @@
     </form>
     <div id="id-note-list">
     {% for note in notes %}
-        <p class='note'>
+        <p class='note' id='note-{{ note.id }}'>
             <b>{{ note.last_modified_date}}</b>
 by <a href='#'>{{ note.author }}</a><br />
             {% autoescape off %}
