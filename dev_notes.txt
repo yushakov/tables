@@ -403,13 +403,17 @@ Chat GPT подсказывает (как я и догадывался), что 
    delete from list_user_user_permissions;
    delete from list_user_accessible_constructs;
    delete from list_category_constructs;
+   delete from list_note;
    delete from django_content_type;
    delete from auth_permission;
    delete from django_admin_log;
-4. Сохраняем:
-   sqlite3> .save db_for_test_cleaned.sqlite3
+4. Сохраняем и выходим:
+   .save db_for_test_cleaned.sqlite3
+   .exit
 5. Создаём в ней суперпользователя (убедиться, что в settings.py правильная БД подключается):
    python manage.py createsuperuser
+   yury
+   SecRetPa55
 6. Сохряняем в json:
    python manage.py dumpdata --format json -o cypress/fixtures/test.json
    (cypress_test - эта база прописана в settings.py)
@@ -417,7 +421,7 @@ Chat GPT подсказывает (как я и догадывался), что 
    python manage.py testserver cypress/fixtures/test.json
 8. Тестируем:
    nvm use 20.5.0
-   nvm cypress run
+   npx cypress run
 
 02.05.2024
 ----------

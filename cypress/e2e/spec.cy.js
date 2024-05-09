@@ -91,7 +91,7 @@ function fill_construct() {
 
 describe('Tests after login', () => {
   beforeEach(() => {
-    cy.login('yury', 'Tp-iMfsS2004')
+    cy.login('yury', 'SecRetPa55')
   })
 
   it("Create a new User Group", () => {
@@ -176,7 +176,7 @@ describe('Tests after login', () => {
       expect(text.trim()).to.equal('£ 11,834');
     })
 
-    cy.get('input[type="submit"]').click();
+    cy.get('#choices_form').find('input[type="submit"]').click();
     cy.contains("Modifications saved.").should('be.visible');
     cy.wait(10000);
 
@@ -237,7 +237,7 @@ describe('Tests after login', () => {
       expect(text.trim()).to.equal('£ 11,834');
     })
 
-    cy.get('input[type="submit"]').click();
+    cy.get('#choices_form').find('input[type="submit"]').click();
     cy.contains("Modifications saved.").should('be.visible');
     cy.wait(13000);
 
@@ -255,6 +255,19 @@ describe('Tests after login', () => {
       expect(text.trim()).to.contain('£ 2,130.03');
     });
   })
+
+  it("Test Construct notes", () => {
+    cy.visit("/list/1");
+    cy.get('#id-tab-notes').click();
+    cy.contains('New note').should('be.visible');
+    cy.get('#id-note-text').clear().type('Note from Cypress');
+    cy.get('#id-add-note-form').find('input[type="submit"]').click();
+    cy.wait(1000);
+    cy.get('#id-note-text').invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('');
+    });
+    cy.contains('Note from Cypress').should('be.visible');
+  });
 
   it("Open the project list", () => {
     // cy.contains('back to the project list').should('exist').click()
