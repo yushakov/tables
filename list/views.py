@@ -4,6 +4,7 @@ from django.views import generic
 from .models import Construct, Choice, Invoice, Transaction, HistoryRecord, getConstructAndMaxId
 from .models import User
 from .models import Category, CLIENT_GROUP_NAME, WORKER_GROUP_NAME
+from .models import StatusChain, Status, Note
 from .forms import TransactionSubmitForm
 from .forms import InvoiceSubmitForm
 import json
@@ -15,6 +16,7 @@ import logging
 from django.contrib.auth.decorators import login_required,\
                                            permission_required, \
                                            user_passes_test
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django import forms
 from django.conf import settings
@@ -24,7 +26,7 @@ import list.gendoc as gen_doc
 from io import BytesIO
 import base64
 
-detailJsVersion = "2.3"
+detailJsVersion = "2.4"
 DELETED = -5
 
 logger = logging.getLogger('django')
@@ -177,6 +179,110 @@ def index(request):
                'total': total
               }
     return render(request, 'list/index.html', context)
+
+
+def get_content_object(data):
+    object_type = data.get('object_type', '')
+    object_id = data.get('object_id', '-1')
+    if object_type == 'construct':
+        try:
+            obj = Construct.objects.get(pk=object_id)
+            return obj
+        except Exception as e:
+            return None
+    elif object_type == 'choice':
+        try:
+            obj = Choice.objects.get(pk=object_id)
+            return obj
+        except Exception as e:
+            return None
+    return None
+
+
+@login_required
+def add_note(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: add_note() by {request.user.username}, {ip}')
+    if request.method == 'POST':
+        data = request.POST
+        note_text = data.get('note-text', '').strip()
+        if len(note_text) == 0:
+            return JsonResponse({'message': 'Empty note, nothing added (server).'})
+        content_object = get_content_object(data)
+        if content_object is None:
+            return JsonResponse({'message': 'Cannot find an object to attach note to (server).'})
+        new_note = Note(text=note_text,
+                        author=request.user,
+                        content_object=content_object)
+        new_note.save()
+        response = {'response': "data received on server",
+                    'note_id': new_note.id,
+                    'text': new_note.text,
+                    'author': new_note.author.username,
+                    'last_modified': new_note.last_modified_date.strftime("%b %d, %Y, %l:%M %P")
+                   }
+        return JsonResponse(response)
+    return JsonResponse({'message': 'Wrong access.'})
+
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def status(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: status() by {request.user.username}, {ip}')
+    if request.method == 'POST':
+        data = json.loads(request.POST.get('data', {}))
+        add_status_change_note(request.user, data)
+        response = {'response': "data received on server"}
+        return JsonResponse(response)
+    context = {'chains': [{'chain': chain,
+                           'statuses': chain.get_ordered_statuses()}
+                           for chain in StatusChain.objects.all()]}
+    no_cat_chain = StatusChain(name='No Cat')
+    empty_status = Status(name="empty",
+                          color="#b47dee",
+                          chain=no_cat_chain)
+    context['chains'].append({'chain': no_cat_chain,
+                              'statuses': [empty_status]})
+    return render(request, 'list/status.html', context)
+
+
+def add_status_change_note(user, data):
+    construct_id, status_id = None, None
+    try:
+        construct_id = int(data.get('construct_id', '-1').replace("construct-", ""))
+        status_id = int(data.get('status_to', '-1').replace("status-", ""))
+    except Exception as e:
+        logger.error(f"Error processing data {data}."
+                         + f"Exception {e}.")
+    construct, status_to = None, None
+    try:
+        construct = Construct.objects.get(pk=construct_id)
+        status_to = Status.objects.get(pk=status_id)
+        construct.status = status_to
+        construct.save()
+    except Exception as e:
+        logger.error(f"Error setting status {status_id} to construct {construct_id}."
+                         + f"Exception: {e}")
+    if construct is not None and status_to is not None:
+        status_from_name, chain_from_name = 'None', 'None'
+        try:
+            status_from = Status.objects.get(pk=int(data.get('status_from', '').replace("status-", "")))
+            status_from_name = status_from.name
+            chain_from_name = status_from.chain.name
+        except Exception as e:
+            logger.warning(f"Warning. "
+                         f"Status from {status_from_name}. "
+                         f"Chain from {chain_from_name}.")
+        note_text = ("Changed status from "
+                     f"{status_from_name} ({chain_from_name}) to "
+                     f"{status_to.name} ({status_to.chain.name}).\n"
+                     f"Note: {data.get('note', '')}")
+        new_note = Note(text=note_text,
+                        author=user,
+                        content_object=construct)
+        new_note.save()
+
 
 def get_active_done_constructs():
     cats = Category.objects.all()
@@ -640,6 +746,13 @@ def bg_process_post(request, construct_id):
     return JsonResponse(data)
 
 
+def get_construct_notes(construct_id):
+    content_type_construct = ContentType.objects.get(model='construct', app_label='list')
+    notes = Note.objects.filter(content_type=content_type_construct)
+    notes = notes.filter(object_id=construct_id).order_by('-last_modified_date')
+    return notes
+
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
@@ -677,6 +790,7 @@ def detail(request, construct_id):
                'construct_paid': round(construct.income()),
                'noscale': True,
                'history': history,
+               'notes': get_construct_notes(construct.id),
                'detailJsVersion': detailJsVersion}
     return render(request, 'list/detail.html', context)
 

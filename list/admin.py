@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
-from .models import Construct, Choice, Invoice, Transaction, InvoiceTransaction, Category
+from .models import Construct, Choice, Invoice, Transaction, InvoiceTransaction, Category, StatusChain, Status
+from .models import Note
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from .models import User
@@ -18,10 +19,19 @@ class CategoryInline(admin.TabularInline):
     model = Category.constructs.through
     extra = 1
 
+class StatusAdmin(admin.ModelAdmin):
+    list_filter = ['chain']
+    fields = ['name',
+              'chain',
+              'color',
+              'description']
+    # inlines = [StatusInline]
+
 class ConstructAdmin(admin.ModelAdmin):
     list_display = ["title_text", "goto", "listed_date", "overall_progress", "email"]
     search_fields = ["title_text"]
     fields = ["title_text",
+              "status",
               "address_text",
               "email_text",
               "phone_text",
@@ -131,6 +141,11 @@ class MyUserAdmin(UserAdmin):
     )
 
 
+class NoteAdmin(admin.ModelAdmin):
+    list_display = ['text_shorten', 'last_modified_date', 'author',
+                    'content_type', 'content_object']
+
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
@@ -138,3 +153,6 @@ admin.site.register(Choice, ChoiceAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(InvoiceTransaction)
+admin.site.register(Status, StatusAdmin)
+admin.site.register(StatusChain)
+admin.site.register(Note, NoteAdmin)

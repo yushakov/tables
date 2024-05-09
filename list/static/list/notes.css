@@ -1,0 +1,30 @@
+.notes-container {
+    width: 600px;
+}
+
+p#id-submit-p {
+    text-align: right;
+}
+
+textarea#id-note-text {
+    width: -webkit-fill-available;
+}
+
+.note {
+    margin-left: 30px;
+}
+
+.note-submit {
+    width: 100px;
+    height: 40px;
+    border-radius: 10px;
+    border: dotted 1px;
+    font-size: 11pt;
+    font-weight: bolder;
+    background-color: #b0c4bc;
+    color: #234549;
+}
+
+.note-submit:hover {
+    background-color: #eff9f5;
+}

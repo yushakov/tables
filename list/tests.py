@@ -40,7 +40,9 @@ from list.models import Construct, \
                         dump_all_constructs, \
                         load_all_constructs, \
                         CLIENT_GROUP_NAME, \
-                        WORKER_GROUP_NAME
+                        WORKER_GROUP_NAME, \
+                        categories_to_chains, \
+                        StatusChain, Status
 import os
 
 
@@ -479,6 +481,53 @@ class ModelTests(TestCase):
             if len(con.category_set.all()) == 0:
                 con.category_set.add(cat1.id)
         self.assertEqual(len(cat1.constructs.all()), 2)
+
+
+    def test_cats_to_chains(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        categories_to_chains()
+        chains = StatusChain.objects.all()
+        statuses = Status.objects.all()
+        self.assertEqual(len(chains), 2)
+        self.assertEqual(len(statuses), 2)
+        self.assertEqual(len(chains[0].constructs), 2)
+        self.assertEqual(len(chains[1].constructs), 1)
+
+    def test_chain_constructs(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con4 = make_test_construct(construct_name="Number four")
+        con5 = make_test_construct(construct_name="Number five")
+        for con in [con1, con2, con3, con4, con5]: con.save()
+        chain1, chain2 = StatusChain(name='ch1'), StatusChain(name='ch2')
+        chain1.save()
+        chain2.save()
+        status1 = Status(name='one', chain=chain1)
+        status2 = Status(name='two', chain=chain1)
+        status3 = Status(name='three', chain=chain2)
+        for st in [status1, status2, status3]: st.save()
+        for con, st in zip([con1, con2, con3, con4, con5],
+                           [status1, status1, status2, status3, status3]):
+            con.status = st
+        for con in [con1, con2, con3, con4, con5]: con.save()
+        self.assertEqual(len(chain1.constructs), 3)
+        self.assertEqual(len(chain2.constructs), 2)
+
 
     def test_expected_deposit_percent(self):
         import list.models as lm
@@ -2795,6 +2844,19 @@ class ViewTests(TestCase):
         doc_file_dir = settings.GENDOC_DIR
         self.assertTrue(os.access(doc_file_dir / docname, os.F_OK))
         os.remove(doc_file_dir / docname)
+
+
+    def test_status_page(self):
+        from list.models import Status, StatusChain
+        sts = Status.objects.all()
+        stsCh = StatusChain.objects.all()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct("Test document generation")
+        response = c.get(f"/list/status/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(len(sts), 0)
+        self.assertEqual(len(stsCh), 0)
 
 
     def test_checkTimeStamp(self):

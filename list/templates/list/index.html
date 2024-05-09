@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}Project list{% endblock %}
-{% block content %}
 {% load static %}
+
+{% block title %}Project list{% endblock %}
+
+{% block extra-head %}
 <link rel="stylesheet" href="{% static 'list/style.css' %}">
+{% endblock %}
+
+{% block content %}
 <h1>Projects</h1>
 <a href="{% url 'admin:list_construct_add' %}">add a project</a>
 &nbsp;&nbsp;
@@ -28,7 +33,7 @@
 {% endfor %}
 {% if active_construct_list %}
 <table id='construct_list'>
-    <thead>
+    <tr>
         <th>Project name</th>
         <th>Progress</th>
         <th>Chart</th>
@@ -49,12 +54,16 @@
         <th class="cols left-to-pay" title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
         <th class="cols invoices-to-pay" title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
         <th class="cols requested-payments" title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
-    </thead>
+    </tr>
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
-        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px">
+        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px"
+            title="Created: {{ construct.listed_date }}
+Status: {{ construct.status.name }} ({{ construct.status.chain.name }}).
+ToDo: N tasks.">
             <a href="{% url 'list:detail' construct.id %}">{{ construct.title_text }}</a>
+            <div class="construct-status-marker" style="color: {{ construct.status.color }};">&#9679;</div>
         </td>
         <td align='left' class='progress-cell'>
             <div class='project-progress' style='width: {{ construct.overall_progress_percent_num }}%'>

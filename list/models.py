@@ -15,6 +15,9 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 import difflib
 from random import seed, randint
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 
 DEPOSIT_PERCENT_EXPECT = 15
 CLIENT_GROUP_NAME = 'Clients'
@@ -71,6 +74,17 @@ class Note(models.Model):
     last_modified_date = models.DateTimeField('last modified', default=timezone.now)
     author = models.ForeignKey("User", on_delete=models.DO_NOTHING,
                                 blank=True, null=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.text}"
+    
+    @admin.display
+    def text_shorten(self):
+        N = 25
+        return self.text[:N] + ('...' if len(self.text) > N else '')
 
 
 class Construct(models.Model):
@@ -101,6 +115,7 @@ class Construct(models.Model):
     footer_default = ("**Additional information:** goes here.")
     header_txt = models.TextField(default=header_default, blank=True, null=True)
     footer_txt = models.TextField(default=footer_default, blank=True, null=True)
+    status = models.ForeignKey('Status', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         self.numbers = {}
@@ -108,6 +123,18 @@ class Construct(models.Model):
     
     def __str__(self):
         return self.title_text
+
+    def advance_status(self):
+        """Advance to the next status if available."""
+        if self.status.next_status:
+            self.status = self.status.next_status
+            self.save()
+
+    def regress_status(self):
+        """Move back to the previous status if available."""
+        if hasattr(self.status, 'previous_status'):
+            self.status = self.status.previous_status
+            self.save()
 
     def get_slug(self):
         slug_title = slugify(self.title_text, allow_unicode=True)
@@ -661,6 +688,80 @@ class Category(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.priority}"
+
+
+class StatusChain(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+    priority = models.IntegerField(default=0)
+    color = models.CharField(max_length=200, default='white')
+
+    def __str__(self):
+        return f"{self.name}"
+
+    def get_bottom_status(self):
+        for sts in self.statuses.all():
+            if sts.next_status is None:
+                return sts
+
+    def get_ordered_statuses(self):
+        bottom = self.get_bottom_status()
+        out = [bottom]
+        while hasattr(bottom, 'previous_status'):
+            out = [bottom.previous_status] + out
+            bottom = bottom.previous_status
+        all_sts = self.statuses.all()
+        if len(out) < len(all_sts):
+            return all_sts
+        return out
+
+    @property
+    def constructs(self):
+        statuses = self.statuses.all()
+        out = []
+        for status in statuses:
+            out += [construct for construct in status.constructs]
+        return out
+
+
+class Status(models.Model):
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=100, default='white')
+    description = models.TextField(null=True, blank=True)
+    chain = models.ForeignKey('StatusChain', related_name='statuses', on_delete=models.CASCADE)
+    next_status = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_status')
+
+    class Meta:
+        verbose_name_plural = 'statuses'
+
+    def __str__(self):
+        return f"{self.name} ({self.chain.name})"
+
+    @property
+    def constructs(self):
+        cons = Construct.objects.filter(status__id = self.id)
+        return cons
+
+
+def categories_to_chains():
+    cats = Category.objects.all()
+    for cat in cats:
+        existing = StatusChain.objects.filter(name=cat.name)
+        if len(existing) > 0:
+            print(cat.name + " status chain already exists.")
+            continue
+        new_chain = StatusChain(name=cat.name,
+                                priority=cat.priority,
+                                color=cat.color)
+        default_status = Status(name=cat.name + '_Status',
+                                chain=new_chain)
+        new_chain.save()
+        default_status.save()
+        constructs = cat.constructs.all()
+        for con in constructs:
+            con.status = default_status
+            con.save()
+        print(new_chain.name + " status chain created.")
 
 
 class User(AbstractUser):

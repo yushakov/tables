@@ -1,0 +1,29 @@
+.tab-head {
+    width: max-content;
+    padding: 0px;
+    border-bottom: solid 1px;
+    padding-bottom: 1px;
+}
+
+.tab {
+    color: black;
+    background-color: #f5f0f0;
+    border: none;
+    padding: 10px;
+    width: 150px;
+    height: 60px;
+    font-size: 12pt;
+    font-weight: bold;
+    text-decoration: overline;
+    text-decoration-thickness: 5px;
+    vertical-align: bottom;
+}
+
+.tab:hover {
+    background-color: #98c7b7;
+}
+
+.active-tab {
+    color: white;
+    background-color: #73271f;
+}

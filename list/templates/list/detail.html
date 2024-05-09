@@ -1,13 +1,26 @@
 {% extends 'base.html' %}
-{% block title %}{{ construct.title_text }}{% endblock %}
-{% block content %}
 {% load static %}
 {% load app_filters %}
 {% load l10n %}
+
+{% block title %}{{ construct.title_text }}{% endblock %}
+
+{% block extra-head %}
 <script src="{% static 'list/detail.js' %}?jsv={{detailJsVersion}}"></script>
 <div id="detail-js-version" style="display: none">{{detailJsVersion}}</div>
 <link rel="stylesheet" href="{% static 'list/style.css' %}?jsv={{detailJsVersion}}">
+<link rel="stylesheet" href="{% static 'list/tabs.css' %}">
+<script src="{% static 'list/tabs.js' %}"></script>
+<link rel="stylesheet" href="{% static 'list/notes.css' %}">
+<script src="{% static 'list/notes.js' %}"></script>
+<style>
+    .active-tab {
+        background-color: #608a7c;
+    }
+</style>
+{% endblock %}
 
+{% block content %}
 <h1>{{ construct.title_text }}</h1>
 
 {% if construct.header_txt %}
@@ -153,7 +166,27 @@
 </tbody>
 </table>
 
-<br><br>
+{% comment %} Tab header. {% endcomment %}
+<div class='tab-head'>
+    <br /><br /><br />
+    <button onclick="open_tab('id-tasks', this)"
+            class="tab active-tab"
+            id="id-tab-tasks"
+            style="text-decoration: none">
+                Tasks
+    </button>
+    <button onclick="open_tab('id-notes', this)"
+            class="tab"
+            id="id-tab-notes"
+            style="text-decoration: none">
+                Notes
+    </button>
+</div>
+{% comment %} Tab header end. {% endcomment %}
+
+{% comment %} Tab 'id-tasks'. {% endcomment %}
+<div id='id-tasks' class='tab-content'>
+
 <div  class='hide_for_pretty'>
 <div id='project_last_save_date'>
 {% if not history|length %}
@@ -306,4 +339,36 @@
 
 <div style='display:none' id='active_row'>-1</div>
 <div style='display:none' id='modified'>no</div>
+
+</div> <!-- end of id-tasks -->
+
+{% comment %} Tab 'id-notes'. {% endcomment %}
+<div id='id-notes' class='tab-content notes-container' style='display:none'>
+    <h2 style='color: #5e5e5e; margin-bottom: 5px'
+    title="**bold text**
+*italic text*
+[link title](https://www.example.com)">New note<sup>?</sup></h2>
+    <form id='id-add-note-form' action="{% url 'list:add_note' %}" method='POST'>
+        {% csrf_token %}
+        <p>
+            <textarea id='id-note-text' name='note-text' cols='50' rows='5' value=''></textarea>
+        </p>
+        <input type='hidden' name='object_type' value='construct'>
+        <input type='hidden' name='object_id' value='{{ construct.id }}'>
+        <p id='id-submit-p'>
+            <input type='submit' value='Submit' class='note-submit'>
+        </p>
+    </form>
+    <div id="id-note-list">
+    {% for note in notes %}
+        <p class='note' id='note-{{ note.id }}'>
+            <b>{{ note.last_modified_date}}</b>
+by <a href='#'>{{ note.author }}</a><br />
+            {% autoescape off %}
+            {{ note.text|escape|markup }}
+            {% endautoescape %}
+        </p>
+    {% endfor %}
+    </div>
+</div>
 {% endblock %}

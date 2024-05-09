@@ -1,4 +1,4 @@
-const gVERSION = "2.3";
+const gVERSION = "2.4";
 const g_action_cell_idx    = 0;
 const g_name_cell_idx      = 1;
 const g_price_cell_idx     = 2;
@@ -306,13 +306,35 @@ function encodeHTML(s) {
 }
 
 function markup(str) {
-    return str.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    let out = str.trim()
+    out = out.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    out = out.replace(/\*(.*?)\*/g, "<i>$1</i>")
+    out = out.replace(/\n/g, "<br />")
+    out = out.replace(/"&amp;/g, "&")
+    out = out.replace(/\[([^\]]+)\]\(([^\s\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    return out;
 }
 
 function unMarkup(str) {
-    return str.replace(/<b>(.*?)<\/b>/g, "\*\*$1\*\*")
-              .replace(/<br \/>/g, "")
-              .replace(/<br>/g, "");
+    let out = str.trim();
+
+    // Reverse the hyperlink replacement
+    out = out.replace(/<a href="([^"]+)" target="_blank">([^<]+)<\/a>/g, '[$2]($1)');
+
+    // Reverse the bold tags
+    out = out.replace(/<b>(.*?)<\/b>/g, '**$1**');
+
+    // Reverse the italic tags
+    out = out.replace(/<i>(.*?)<\/i>/g, '*$1*');
+
+    // Reverse <br> to new lines
+    out = out.replace(/<br \/>/g, "\n");
+    out = out.replace(/<br>/g, "\n");
+
+    // Reverse any encoded ampersands
+    out = out.replace(/&amp;/g, "&");
+
+    return out;
 }
 
 function modify(ths) {

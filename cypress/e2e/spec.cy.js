@@ -91,7 +91,7 @@ function fill_construct() {
 
 describe('Tests after login', () => {
   beforeEach(() => {
-    cy.login('yury', 'Tp-iMfsS2004')
+    cy.login('yury', 'SecRetPa55')
   })
 
   it("Create a new User Group", () => {
@@ -176,7 +176,7 @@ describe('Tests after login', () => {
       expect(text.trim()).to.equal('£ 11,834');
     })
 
-    cy.get('input[type="submit"]').click();
+    cy.get('#choices_form').find('input[type="submit"]').click();
     cy.contains("Modifications saved.").should('be.visible');
     cy.wait(10000);
 
@@ -237,7 +237,7 @@ describe('Tests after login', () => {
       expect(text.trim()).to.equal('£ 11,834');
     })
 
-    cy.get('input[type="submit"]').click();
+    cy.get('#choices_form').find('input[type="submit"]').click();
     cy.contains("Modifications saved.").should('be.visible');
     cy.wait(13000);
 
@@ -255,6 +255,19 @@ describe('Tests after login', () => {
       expect(text.trim()).to.contain('£ 2,130.03');
     });
   })
+
+  it("Test Construct notes", () => {
+    cy.visit("/list/1");
+    cy.get('#id-tab-notes').click();
+    cy.contains('New note').should('be.visible');
+    cy.get('#id-note-text').clear().type('Note from Cypress');
+    cy.get('#id-add-note-form').find('input[type="submit"]').click();
+    cy.wait(1000);
+    cy.get('#id-note-text').invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('');
+    });
+    cy.contains('Note from Cypress').should('be.visible');
+  });
 
   it("Open the project list", () => {
     // cy.contains('back to the project list').should('exist').click()
@@ -321,19 +334,29 @@ describe('Tests after login', () => {
 
   it("Add deposit", () => {
     cy.visit("list/transaction/submit/?construct=1");
+    cy.get('#id_from_txt').clear().type('The Client');
     cy.get('#id_to_txt').clear().type('The Project');
     cy.get('#id_amount').clear().type('1780');
     cy.get('#id_transaction_type').select('Incoming');
     cy.contains('a', '#deposit').click();
     cy.get('input[type="submit"]').should('exist').click();
+
+    cy.get('#id_amount').invoke('text').then((text)=>{
+      expect(text).to.contain('1,780')
+    });
   })
 
   it("Add money", () => {
     cy.visit("list/transaction/submit/?construct=1");
+    cy.get('#id_from_txt').clear().type('The Client');
     cy.get('#id_to_txt').clear().type('The Project');
     cy.get('#id_amount').clear().type('1234');
     cy.get('#id_transaction_type').select('Incoming');
     cy.get('input[type="submit"]').should('exist').click();
+
+    cy.get('#id_amount').invoke('text').then((text)=>{
+      expect(text).to.contain('1,234')
+    });
   })
 
   it("Check Money left in a foreman page", () => {
