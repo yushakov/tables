@@ -10,9 +10,12 @@ export interface StatusChainType {
 }
 
 interface StatusChainProps {
-    chain: StatusChainType;
-    statuses: StatusType[];
-    setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>;
+    chain: StatusChainType,
+    statuses: StatusType[],
+    setStatusesOfAddStatus: Dispatch<SetStateAction<StatusType[]>>,
+    setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>,
+    setAddStatusChainName: Dispatch<SetStateAction<string>>,
+    setAddStatusChainId: Dispatch<SetStateAction<string>>,
 }
 
 export function StatusChain(props: StatusChainProps) {
@@ -59,6 +62,37 @@ export function StatusChain(props: StatusChainProps) {
         }).join('');
     }
 
+    const handleAddStatusClick = (e: React.MouseEvent) => {
+        const dialog = document.getElementById("id-add-status-dialog")!;
+        dialog.style.display = "block";
+        const inputs = dialog.getElementsByTagName('input');
+        inputs.namedItem('status-name')!.focus();
+        props.setAddStatusChainName(props.chain.name);
+        props.setAddStatusChainId(props.chain.id);
+        props.setStatusesOfAddStatus(statuses);
+        // inputs.namedItem('button-add')!.addEventListener('click', (event) => {
+        //     console.log(event);
+        //     if (inputs.namedItem('status-name')!.value.trim().length == 0) {
+        //         inputs.namedItem('status-name')!.focus();
+        //         return;
+        //     }
+        //     setStatuses(prevStatuses => {
+        //         let newStatuses = [...prevStatuses];
+        //         const newStatus: StatusType = {
+        //             id: "-1",
+        //             name: inputs.namedItem('status-name')!.value,
+        //             color: inputs.namedItem('status-color')!.value,
+        //             chain_id: props.chain.id,
+        //             next_status_id: ""
+        //         };
+        //         newStatuses.push(newStatus);
+        //         return newStatuses;
+        //     })
+        //     closeDialog(dialog);
+        // });
+        return;
+    };
+
     const handleChainNameDblClick = (e: React.MouseEvent) => {
         let nameInput = document.createElement('input');
         let colorInput = document.createElement('input')
@@ -67,7 +101,6 @@ export function StatusChain(props: StatusChainProps) {
         const currentTarget = e.currentTarget as HTMLDivElement;
         const parent = e.currentTarget.parentNode as HTMLDivElement;
         colorInput.value = rgbToHex(getComputedStyle(parent).backgroundColor);
-        console.log(colorInput.value);
         nameInput.type = "text";
         nameInput.placeholder = e.currentTarget.textContent!;
         nameInput.value = e.currentTarget.textContent!;
@@ -111,7 +144,8 @@ export function StatusChain(props: StatusChainProps) {
                     onDoubleClick={handleChainNameDblClick}>
                     {props.chain.name}
                 </div>
-                <div className="add-status">+</div>
+                <div className="add-status"
+                     onClick={handleAddStatusClick}>+</div>
             </div>
             {
                 statuses.map(status => (
