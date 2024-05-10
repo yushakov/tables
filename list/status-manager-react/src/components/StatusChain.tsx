@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { StatusType, Status } from "./Status";
 import "./StatusChain.css"
 
@@ -12,6 +12,7 @@ export interface StatusChainType {
 interface StatusChainProps {
     chain: StatusChainType;
     statuses: StatusType[];
+    setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>;
 }
 
 export function StatusChain(props: StatusChainProps) {
@@ -79,10 +80,17 @@ export function StatusChain(props: StatusChainProps) {
             console.log(event.key);
             if (event.key === 'Enter') {
                 currentTarget.textContent = nameInput.value;
-                props.chain.name = nameInput.value;
-                parent.removeChild(nameInput);
                 parent.style.backgroundColor = colorInput.value;
-                props.chain.color = colorInput.value;
+                props.setChainsHook(chains => {
+                    let newChains = chains.map(chain => {
+                        if (chain.id === props.chain.id) {
+                            return {...chain, name: nameInput.value, color: colorInput.value}
+                        }
+                        return chain;
+                    });
+                    return newChains;
+                });
+                parent.removeChild(nameInput);
                 parent.removeChild(colorInput);
                 console.log(colorInput.value);
             }
