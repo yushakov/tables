@@ -20,26 +20,34 @@ function App() {
       const movingStatus = prevStatuses[index];
       let newStatuses = [...prevStatuses];
       if (targetId.includes("chain-head")) {
-        newStatuses.splice(index, 1); // Remove the item first
-        newStatuses.unshift(movingStatus); // Add to the beginning
+        putOnTop(newStatuses, index, movingStatus) // Add to the beginning
       }
       else {
-        const beforeIndex = prevStatuses.findIndex(status => status.id === targetId.replace(/status-/, ""));
-        newStatuses.splice(index, 1);
-        if (beforeIndex == prevStatuses.length - 1) {
-            newStatuses.push(movingStatus);
-        }
-        else {
-          if (index > beforeIndex) {
-            newStatuses.splice(beforeIndex + 1, 0, movingStatus);
-          }
-          else {
-            newStatuses.splice(beforeIndex, 0, movingStatus);
-          }
-        }
+        putInBetween(newStatuses, index, movingStatus)
       }
       return newStatuses;
     });
+
+    function putInBetween(newStatuses: StatusType[], index: number, movingStatus: StatusType) {
+      const beforeIndex = newStatuses.findIndex(status => status.id === targetId.replace(/status-/, ""))
+      newStatuses.splice(index, 1)
+      if (beforeIndex == newStatuses.length - 1) {
+        newStatuses.push(movingStatus)
+      }
+      else {
+        if (index > beforeIndex) {
+          newStatuses.splice(beforeIndex + 1, 0, movingStatus)
+        }
+        else {
+          newStatuses.splice(beforeIndex, 0, movingStatus)
+        }
+      }
+    }
+
+    function putOnTop(newStatuses: StatusType[], index: number, movingStatus: StatusType) {
+      newStatuses.splice(index, 1) // Remove the item first
+      newStatuses.unshift(movingStatus)
+    }
   }
 
   function addStatus(status: StatusType) {
