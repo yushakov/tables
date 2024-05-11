@@ -7,9 +7,11 @@ export type AddStatusProps = {
     chainName: string,
     chainId: string,
     statusSet: StatusType[],
-    setStatuses: Dispatch<SetStateAction<StatusType[]>>,
+    addStatus: (status: StatusType) => void,
+    newStatusId: () => string,
+    //setStatuses: Dispatch<SetStateAction<StatusType[]>>,
     onChange?: (chainName: string) => void;
-    setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>;
+    //setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>;
 }
 
 function closeDialog() {
@@ -34,19 +36,14 @@ export function AddStatus(props: AddStatusProps) {
         const newColor = inputs.namedItem('status-color')!.value;
         console.log(props.chainName);
         console.log(props.chainId);
-        props.setStatuses(prevStatuses => {
-            let newStatuses = [...prevStatuses];
-            const newStatus: StatusType = {
-                id: "-1",
-                name: newName,
-                color: newColor,
-                chain_id: props.chainId,
-                next_status_id: ""
-            };
-            console.log(newName);
-            newStatuses.push(newStatus);
-            return newStatuses;
-        })
+        const newStatus: StatusType = {
+            id: props.newStatusId(),
+            name: newName,
+            color: newColor,
+            chain_id: props.chainId,
+            next_status_id: ""
+        };
+        props.addStatus(newStatus);
         closeDialog();
     }
 

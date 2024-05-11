@@ -12,6 +12,7 @@ export interface StatusChainType {
 interface StatusChainProps {
     chain: StatusChainType,
     statuses: StatusType[],
+    dropStatus: (statusId: String, targetId: String) => void;
     setStatusesOfAddStatus: Dispatch<SetStateAction<StatusType[]>>,
     setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>,
     setAddStatusChainName: Dispatch<SetStateAction<string>>,
@@ -19,7 +20,7 @@ interface StatusChainProps {
 }
 
 export function StatusChain(props: StatusChainProps) {
-    const [statuses, setStatuses] = useState(props.statuses.filter(status => status.chain_id === props.chain.id));
+    const statuses = props.statuses;
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault(); // Necessary to allow drop
@@ -29,29 +30,7 @@ export function StatusChain(props: StatusChainProps) {
         e.preventDefault();
         const statusId = e.dataTransfer.getData("statusId").replace(/status-/, "");
         const targetId = e.currentTarget.id;
-
-        setStatuses(prevStatuses => {
-            const index = prevStatuses.findIndex(status => status.id === statusId);
-            if (index === -1) return prevStatuses; // Status not found, return previous state
-    
-            const movingStatus = prevStatuses[index];
-            let newStatuses = [...prevStatuses];
-            if (targetId.includes("chain-head")) {
-                newStatuses.splice(index, 1); // Remove the item first
-                newStatuses.unshift(movingStatus); // Add to the beginning
-            }
-            else {
-                const beforeIndex = prevStatuses.findIndex(status => status.id === targetId.replace(/status-/, ""));
-                newStatuses.splice(index, 1);
-                if (beforeIndex == prevStatuses.length - 1) {
-                    newStatuses.push(movingStatus);
-                }
-                else {
-                    newStatuses.splice(beforeIndex + 1, 0, movingStatus);
-                }
-            }
-            return newStatuses;
-        });
+        props.dropStatus(statusId, targetId);
     };
 
     function rgbToHex(rgb: string) {
@@ -69,7 +48,6 @@ export function StatusChain(props: StatusChainProps) {
         inputs.namedItem('status-name')!.focus();
         props.setAddStatusChainName(props.chain.name);
         props.setAddStatusChainId(props.chain.id);
-        props.setStatusesOfAddStatus(statuses);
         // inputs.namedItem('button-add')!.addEventListener('click', (event) => {
         //     console.log(event);
         //     if (inputs.namedItem('status-name')!.value.trim().length == 0) {
