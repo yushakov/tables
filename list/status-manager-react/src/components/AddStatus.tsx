@@ -46,7 +46,7 @@ export function AddStatus(props: AddStatusProps) {
                 <p><input type="text" name="status-name" width="200px;" placeholder="Status Name" /></p>
                 <p>
                     Status color:&nbsp;&nbsp;
-                    <input type="color" name="status-color" value="#000000" />
+                    <input type="color" name="status-color" />
                 </p>
                 <p className="add-cancel-buttons">
                 <input type="button" name="button-add" value="add"

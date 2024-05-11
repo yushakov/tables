@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { StatusType, Status } from "./Status";
 import "./StatusChain.css"
 
