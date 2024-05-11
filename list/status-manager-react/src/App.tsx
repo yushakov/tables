@@ -8,7 +8,6 @@ import { StatusType } from './components/Status'
 
 function App() {
   const [statuses, setStatuses] = useState(initChains()[1]);
-  const [statusesOfAddStatus, setStatusesOfAddStatus] = useState(initChains()[1]);
   const [chains, setChains] = useState(initChains()[0]);
   const [addStatusChainName, setAddStatusChainName] = useState('');
   const [addStatusChainId, setAddStatusChainId] = useState('');
@@ -70,7 +69,6 @@ function App() {
         newStatusId={getNewStatusId}
         chainName={addStatusChainName}
         chainId={addStatusChainId}
-        statusSet={statusesOfAddStatus}
         addStatus={addStatus}/>
       <div style={{ display: "flex", padding: "20px"}}>
         {chains.map(chain => (
@@ -80,7 +78,6 @@ function App() {
             statuses={statuses.filter(status => status.chain_id === chain.id)}
             dropStatus={dropStatus}
             setChainsHook={setChains}
-            setStatusesOfAddStatus={setStatusesOfAddStatus}
             setAddStatusChainName={setAddStatusChainName}
             setAddStatusChainId={setAddStatusChainId}
           />

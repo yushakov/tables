@@ -4,7 +4,6 @@ import { StatusType } from "./Status";
 export type AddStatusProps = {
     chainName: string,
     chainId: string,
-    statusSet: StatusType[],
     addStatus: (status: StatusType) => void,
     newStatusId: () => string
 }
@@ -27,8 +26,6 @@ export function AddStatus(props: AddStatusProps) {
         }
         const newName = inputs.namedItem('status-name')!.value;
         const newColor = inputs.namedItem('status-color')!.value;
-        console.log(props.chainName);
-        console.log(props.chainId);
         const newStatus: StatusType = {
             id: props.newStatusId(),
             name: newName,

@@ -13,7 +13,6 @@ interface StatusChainProps {
     chain: StatusChainType,
     statuses: StatusType[],
     dropStatus: (statusId: String, targetId: String) => void;
-    setStatusesOfAddStatus: Dispatch<SetStateAction<StatusType[]>>,
     setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>,
     setAddStatusChainName: Dispatch<SetStateAction<string>>,
     setAddStatusChainId: Dispatch<SetStateAction<string>>,
@@ -48,26 +47,6 @@ export function StatusChain(props: StatusChainProps) {
         inputs.namedItem('status-name')!.focus();
         props.setAddStatusChainName(props.chain.name);
         props.setAddStatusChainId(props.chain.id);
-        // inputs.namedItem('button-add')!.addEventListener('click', (event) => {
-        //     console.log(event);
-        //     if (inputs.namedItem('status-name')!.value.trim().length == 0) {
-        //         inputs.namedItem('status-name')!.focus();
-        //         return;
-        //     }
-        //     setStatuses(prevStatuses => {
-        //         let newStatuses = [...prevStatuses];
-        //         const newStatus: StatusType = {
-        //             id: "-1",
-        //             name: inputs.namedItem('status-name')!.value,
-        //             color: inputs.namedItem('status-color')!.value,
-        //             chain_id: props.chain.id,
-        //             next_status_id: ""
-        //         };
-        //         newStatuses.push(newStatus);
-        //         return newStatuses;
-        //     })
-        //     closeDialog(dialog);
-        // });
         return;
     };
 
