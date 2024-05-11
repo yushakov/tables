@@ -1,6 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
 import "./AddStatus.css"
-import { StatusChainType } from "./StatusChain";
 import { StatusType } from "./Status";
 
 export type AddStatusProps = {
@@ -8,10 +6,7 @@ export type AddStatusProps = {
     chainId: string,
     statusSet: StatusType[],
     addStatus: (status: StatusType) => void,
-    newStatusId: () => string,
-    //setStatuses: Dispatch<SetStateAction<StatusType[]>>,
-    onChange?: (chainName: string) => void;
-    //setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>;
+    newStatusId: () => string
 }
 
 function closeDialog() {
@@ -23,8 +18,6 @@ function closeDialog() {
 
 
 export function AddStatus(props: AddStatusProps) {
-    //console.log(props);
-
     function addStatus() {
         const dialog = document.getElementById("id-add-status-dialog");
         const inputs = dialog!.getElementsByTagName('input');
