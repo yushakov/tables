@@ -40,7 +40,7 @@ export function StatusChain(props: StatusChainProps) {
         }).join('');
     }
 
-    const handleAddStatusClick = (e: React.MouseEvent) => {
+    const handleAddStatusClick = () => {
         const dialog = document.getElementById("id-add-status-dialog")!;
         dialog.style.display = "block";
         const inputs = dialog.getElementsByTagName('input');
