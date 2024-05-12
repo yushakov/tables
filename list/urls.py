@@ -18,6 +18,7 @@ urlpatterns = [
     path('history/', views.history, name='history'),
     path('backup/', views.backup, name='backup'),
     path('status/', views.status, name='status'),
+    path('status_mgr/', views.status_mgr, name='status_mgr'),
     path('add_note/', views.add_note, name='add_note'),
     path('<int:construct_id>/', views.detail, name='detail'),
     path('gendoc/<int:construct_id>/', views.gendoc, name='gendoc'),

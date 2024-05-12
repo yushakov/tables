@@ -247,6 +247,23 @@ def status(request):
     return render(request, 'list/status.html', context)
 
 
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def status_mgr(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: status_mgr() by {request.user.username}, {ip}')
+    context = {'chains': [{'chain': chain,
+                           'statuses': chain.get_ordered_statuses()}
+                           for chain in StatusChain.objects.all()]}
+    no_cat_chain = StatusChain(name='No Cat')
+    empty_status = Status(name="empty",
+                          color="#b47dee",
+                          chain=no_cat_chain)
+    context['chains'].append({'chain': no_cat_chain,
+                              'statuses': [empty_status]})
+    return render(request, 'list/status_mgr.html', context)
+
+
 def add_status_change_note(user, data):
     construct_id, status_id = None, None
     try:
