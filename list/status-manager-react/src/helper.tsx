@@ -1,7 +1,7 @@
 import { StatusType } from "./components/Status"
 import { StatusChainType } from "./components/StatusChain"
 
-export function initChains(): [StatusChainType[], StatusType[]] {
+export function initHelperChains(): [StatusChainType[], StatusType[]] {
     const chains: StatusChainType[] = [
       {
         id: '1',

@@ -1,14 +1,32 @@
 import { useState } from 'react'
 import './App.css'
-import { initChains } from "./helper"
-import { StatusChain } from './components/StatusChain'
+import { initHelperChains } from "./helper"
+import { StatusChain, StatusChainType } from './components/StatusChain'
 import { AddStatus } from './components/AddStatus'
 import { StatusType } from './components/Status'
 
+declare global {
+  interface Window {
+    dataFetchUrl: String;
+  }
+}
+
+function getInitialStatusesAndChains(): [StatusChainType[], StatusType[]] {
+  if (window.dataFetchUrl) {
+    const outStatuses: StatusType[] = [];
+    const outChains: StatusChainType[] = [];
+    return [outChains, outStatuses]
+  }
+  else {
+    const [outChains, outStatuses] = initHelperChains();
+    return [outChains, outStatuses];
+  }
+}
 
 function App() {
-  const [statuses, setStatuses] = useState(initChains()[1]);
-  const [chains, setChains] = useState(initChains()[0]);
+  const [iniChains, iniStatuses] = getInitialStatusesAndChains();
+  const [statuses, setStatuses] = useState(iniStatuses);
+  const [chains, setChains] = useState(iniChains);
   const [addStatusChainName, setAddStatusChainName] = useState('');
   const [addStatusChainId, setAddStatusChainId] = useState('');
 
