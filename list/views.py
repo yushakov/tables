@@ -290,6 +290,52 @@ def get_status_chains(request):
     return JsonResponse(context)
 
 
+def update_status_chain(chain, statuses):
+    db_chain = None
+    new_ids = []
+    try:
+        db_chain = StatusChain.objects.get(pk=chain["id"])
+        db_chain.name = chain['name']
+        db_chain.color = chain['color']
+        db_chain.priority = chain['priority']
+        db_chain.save()
+    except Exception as e:
+        logger.warning(f"No chain {chain['name']} ({chain['id']}) in DB", e)
+        # Create new chain (TODO)
+    # Create all new first
+    for status in filter(lambda s: s['id'].startswith('new-'), statuses):
+        try:
+            new_status = Status(name=status['name'],
+                                color=status['color'],
+                                chain=db_chain)
+            new_status.save()
+            new_ids.append({
+                'status': {
+                    'old_id': status['id'],
+                    'new_id': str(new_status.id)
+                }})
+            status['id'] = str(new_status.id)
+        except Exception as e:
+            logger.error(f"Exception {e} at status {status['name']} ({status['id']})")
+    allChainStatusesFromDB = Status.objects.filter(chain=db_chain)
+    # clean all next_status fields
+    for status in allChainStatusesFromDB:
+        status.next_status = None
+        status.save()
+    allChainStatusesFromDB = Status.objects.filter(chain=db_chain)
+    for i, status in enumerate(statuses):
+        try:
+            db_status = allChainStatusesFromDB.get(pk=int(status['id']))
+            db_status.name = status['name']
+            db_status.color = status['color']
+            if i < len(statuses) - 1:
+                db_status.next_status = allChainStatusesFromDB.get(pk=statuses[i+1]['id'])
+            db_status.save()
+        except Exception as e:
+            logger.error(f"Exception {e} at status {status['name']} ({status['id']})")
+    return new_ids
+    
+
 @login_required
 @user_passes_test(lambda user: user.is_staff)
 def set_status_chains(request):
@@ -298,17 +344,13 @@ def set_status_chains(request):
     if request.method == 'POST':
         chains = json.loads(request.POST['chains'])
         statuses = json.loads(request.POST['statuses'])
+        all_new_ids = []
         for chain in chains:
-            print("Chain: ", chain['name'])
-            for status in filter(lambda st: st['chain_id'] == chain['id'], statuses):
-                print("Status: ", status['name'])
-        print("New Statuses")
-        for status in filter(lambda st: st['id'].startswith('new-'), statuses):
-            print("Status: ", status['name'], ". Chain: ", status['chain_id'])
-    chains = [{'id': '0', 'name': 'dummy', 'color': 'purple', 'priority': 100}]
-    statuses = [{'id': '0', 'name': 'status', 'color': 'green', 'chain_id': 0, 'next_status_id': ''}]
-    context = {'chains': chains, 'statuses': statuses}
-    return JsonResponse(context)
+            chain_statuses = [s for s in filter(lambda st: st['chain_id'] == chain['id'], statuses)]
+            new_ids = update_status_chain(chain, chain_statuses)
+            all_new_ids += new_ids
+        return JsonResponse({'new_ids': all_new_ids})
+    return JsonResponse({'response': 'Use to submit Status Chain data.'})
 
 
 def add_status_change_note(user, data):
