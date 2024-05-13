@@ -11,6 +11,8 @@
 {% block content %}
     <script>
         window.dataFetchUrl = "{% url 'list:get_status_chains' %}";
+        window.dataPushUrl = "{% url 'list:set_status_chains' %}";
+        window.csrf = "{{ csrf_token }}";
     </script>
     <div id="root"></div>
 {% endblock %}

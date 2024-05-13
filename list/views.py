@@ -290,6 +290,27 @@ def get_status_chains(request):
     return JsonResponse(context)
 
 
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def set_status_chains(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: set_status_chains() by {request.user.username}, {ip}')
+    if request.method == 'POST':
+        chains = json.loads(request.POST['chains'])
+        statuses = json.loads(request.POST['statuses'])
+        for chain in chains:
+            print("Chain: ", chain['name'])
+            for status in filter(lambda st: st['chain_id'] == chain['id'], statuses):
+                print("Status: ", status['name'])
+        print("New Statuses")
+        for status in filter(lambda st: st['id'].startswith('new-'), statuses):
+            print("Status: ", status['name'], ". Chain: ", status['chain_id'])
+    chains = [{'id': '0', 'name': 'dummy', 'color': 'purple', 'priority': 100}]
+    statuses = [{'id': '0', 'name': 'status', 'color': 'green', 'chain_id': 0, 'next_status_id': ''}]
+    context = {'chains': chains, 'statuses': statuses}
+    return JsonResponse(context)
+
+
 def add_status_change_note(user, data):
     construct_id, status_id = None, None
     try:

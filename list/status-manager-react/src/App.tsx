@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { initHelperChains } from "./helper"
 import { StatusChain, StatusChainType } from './components/StatusChain'
@@ -8,6 +8,8 @@ import { StatusType } from './components/Status'
 declare global {
   interface Window {
     dataFetchUrl: string;
+    dataPushUrl: string;
+    csrf: string;
   }
 }
 
@@ -19,8 +21,18 @@ interface fetchDataType {
 function App() {
   const [statuses, setStatuses] = useState<StatusType[]>([]);
   const [chains, setChains] = useState<StatusChainType[]>([]);
+  const statusesRef = useRef(statuses);
+  const chainsRef = useRef(chains);
   const [addStatusChainName, setAddStatusChainName] = useState('');
   const [addStatusChainId, setAddStatusChainId] = useState('');
+
+  useEffect(()=>{
+    statusesRef.current = statuses;
+  }, [statuses]);
+
+  useEffect(()=>{
+    chainsRef.current = chains
+  }, [chains]);
 
   useEffect(() => {
     const fetchData= async (url: string) => {
@@ -51,7 +63,7 @@ function App() {
     };
 
     getInitialStatusesAndChains();
-  }, []); // Empty dependency array means this effect runs once after the initial render
+  }, []);
 
 
   function dropStatus(statusId: String, targetId: String) {
@@ -105,6 +117,34 @@ function App() {
     return "new-1";
   }
 
+  const handleSubmit = async () => {
+    fetch(window.dataPushUrl, {
+      method: 'POST',
+      body: new URLSearchParams([
+        ['chains', JSON.stringify(chainsRef.current)],
+        ['statuses', JSON.stringify(statusesRef.current)],
+      ]),
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest', // This header helps server-side to identify the request as AJAX
+        'X-CSRFToken': window.csrf
+      },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle success. You can update the UI accordingly.
+        console.log(data); // Assuming the server responds with some JSON
+    })
+    .catch(error => {
+        // Handle errors
+        console.error('There was a problem with the fetch operation:', error);
+    });
+  }
+
   return (
     <>
       <AddStatus
@@ -125,6 +165,7 @@ function App() {
           />
         ))}
       </div>
+      <button onClick={handleSubmit}>Submit</button>
     </>
   )
 }
