@@ -287,7 +287,7 @@ function App() {
       </button>
       <a href='#' onClick={handleAddChain} style={{ marginLeft: "20px"}}>Add Chain</a>
       <div style={{ display: "flex", padding: "20px"}}>
-        {chains.map(chain => (
+        {chains.sort((a, b) => a.priority - b.priority).map(chain => (
           <StatusChain
             key={chain.id}
             chain={chain}

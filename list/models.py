@@ -696,6 +696,9 @@ class StatusChain(models.Model):
     priority = models.IntegerField(default=0)
     color = models.CharField(max_length=200, default='white')
 
+    class Meta:
+        ordering = ['priority']
+
     def __str__(self):
         return f"{self.name}"
 
