@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction } from "react";
 import { StatusType, Status } from "./Status";
 import "./StatusChain.css"
+import { rgbToHex } from "./Utils";
 
 export interface StatusChainType {
     id: string;
@@ -17,7 +18,8 @@ interface StatusChainProps {
     setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>,
     setAddStatusChainName: Dispatch<SetStateAction<string>>,
     setAddStatusChainId: Dispatch<SetStateAction<string>>,
-    setModified: () => void;
+    setModified: () => void,
+    editStatus: (newStatus: StatusType) => void
 }
 
 export function StatusChain(props: StatusChainProps) {
@@ -33,14 +35,6 @@ export function StatusChain(props: StatusChainProps) {
         const targetId = e.currentTarget.id;
         props.dropStatus(statusId, targetId);
     };
-
-    function rgbToHex(rgb: string) {
-        const rgbArray = rgb.match(/\d+/g)!;
-        return "#" + rgbArray.map(x => {
-            const hex = parseInt(x).toString(16);
-            return hex.length === 1 ? "0" + hex : hex;
-        }).join('');
-    }
 
     const handleAddStatusClick = () => {
         const dialog = document.getElementById("id-add-status-dialog")!;
@@ -69,7 +63,6 @@ export function StatusChain(props: StatusChainProps) {
         parent.insertBefore(colorInput, nameInput);
         nameInput.focus();
         nameInput.addEventListener('keypress', (event) => {
-            console.log(event.key);
             if (event.key === 'Enter') {
                 currentTarget.textContent = nameInput.value;
                 parent.style.backgroundColor = colorInput.value;
@@ -112,6 +105,7 @@ export function StatusChain(props: StatusChainProps) {
                     <Status
                         key={"status-" + status.id}
                         status={status}
+                        editStatus={props.editStatus}
                         clickDelete={props.deleteStatus}
                         onDrop={handleDrop}/>
                     ))

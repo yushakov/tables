@@ -6,6 +6,19 @@
     border-radius: 5px;
 }
 
+.status-name-container {
+    display: flex;
+    color: black;
+}
+
+.status-name {
+    display: block;
+}
+
+.status-editor {
+    display: none;
+}
+
 .delete-symbol {
     position: relative;
     top: 0;
@@ -63,7 +76,7 @@
     animation: fadeHighlight 2s forwards;
 }
 
-.status-name {
+.dialog-status-name {
     font-size: larger;
     text-align: center;
     font-weight: bold;

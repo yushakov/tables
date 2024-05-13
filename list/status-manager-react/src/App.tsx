@@ -61,8 +61,6 @@ function App() {
     };
 
     const getInitialStatusesAndChains = async () => {
-      console.log("window fetch url:")
-      console.log(window.dataFetchUrl);
       if (window.dataFetchUrl) {
         // Assuming fetchStatuses returns a Promise
         fetchData(window.dataFetchUrl)
@@ -235,6 +233,19 @@ function App() {
     }
   };
 
+  const editStatus = (newStatus: StatusType) => {
+    setStatuses(oldStats => {
+      const newStats = oldStats.map(status => {
+        if (status.id === newStatus.id) {
+          return newStatus;
+        }
+        return status;
+      });
+      return newStats;
+    });
+    setPageState('modified');
+  };
+
   return (
     <>
       <AddStatus
@@ -255,6 +266,7 @@ function App() {
             key={chain.id}
             chain={chain}
             statuses={statuses.filter(status => status.chain_id === chain.id)}
+            editStatus={editStatus}
             dropStatus={dropStatus}
             deleteStatus={handleStatusDelete}
             setChainsHook={setChains}
