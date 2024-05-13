@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { SyntheticEvent, useEffect, useRef, useState } from 'react'
 import './App.css'
 import { initHelperChains } from "./helper"
 import { StatusChain, StatusChainType } from './components/StatusChain'
@@ -125,6 +125,7 @@ function App() {
   };
 
   function updateNewIds(data: DataStructure) {
+    console.log(data.new_ids)
     data.new_ids.forEach((entry) => {
       if ('status' in entry) {
         setStatuses(oldStats => {
@@ -175,6 +176,30 @@ function App() {
     });
   };
 
+  function getNewChainId() {
+    const newChains = chains.filter(chain => chain.id.includes("new"));
+    if (newChains.length > 0) {
+      return "new-" + String(Number(newChains.sort((a, b) => {
+        return Number(a.id.replace("new-", "")) - Number(b.id.replace("new-", ""))
+      })[newChains.length - 1].id.replace("new-", "")) + 1);
+    }
+    return "new-1";
+  }
+
+  const handleAddChain = (e: SyntheticEvent) => {
+    e.preventDefault();
+    setChains(existing => {
+      const newChain: StatusChainType = {
+        id: getNewChainId(),
+        name: "new chain",
+        color: "lightblue",
+        priority: chains.reduce((max, chain) => chain.priority > max ? chain.priority : max, chains[0].priority) + 1
+      };
+      const newChains = [...existing, newChain];
+      return newChains;
+    });
+  };
+
   return (
     <>
       <AddStatus
@@ -182,6 +207,8 @@ function App() {
         chainName={addStatusChainName}
         chainId={addStatusChainId}
         addStatus={addStatus}/>
+      <button onClick={handleSubmit} style={{ marginLeft: "20px"}}>Submit</button>
+      <a href='#' onClick={handleAddChain} style={{ marginLeft: "20px"}}>Add Chain</a>
       <div style={{ display: "flex", padding: "20px"}}>
         {chains.map(chain => (
           <StatusChain
@@ -196,7 +223,6 @@ function App() {
           />
         ))}
       </div>
-      <button onClick={handleSubmit}>Submit</button>
     </>
   )
 }

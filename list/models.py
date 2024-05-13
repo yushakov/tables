@@ -703,10 +703,13 @@ class StatusChain(models.Model):
         for sts in self.statuses.all():
             if sts.next_status is None:
                 return sts
+        return None
 
     def get_ordered_statuses(self):
         bottom = self.get_bottom_status()
         out = [bottom]
+        if bottom is None:
+            out = []
         while hasattr(bottom, 'previous_status'):
             out = [bottom.previous_status] + out
             bottom = bottom.previous_status

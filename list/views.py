@@ -293,15 +293,35 @@ def get_status_chains(request):
 def update_status_chain(chain, statuses):
     db_chain = None
     new_ids = []
-    try:
-        db_chain = StatusChain.objects.get(pk=chain["id"])
-        db_chain.name = chain['name']
-        db_chain.color = chain['color']
-        db_chain.priority = chain['priority']
-        db_chain.save()
-    except Exception as e:
-        logger.warning(f"No chain {chain['name']} ({chain['id']}) in DB", e)
-        # Create new chain (TODO)
+    if not chain['id'].startswith('new-'):
+        try:
+            db_chain = StatusChain.objects.get(pk=chain["id"])
+            db_chain.name = chain['name']
+            db_chain.color = chain['color']
+            db_chain.priority = chain['priority']
+            db_chain.save()
+        except Exception as e:
+            logger.warning(f"No chain {chain['name']} ({chain['id']}) in DB", e)
+            # print(f"No chain {chain['name']} ({chain['id']}) in DB", e)
+    if db_chain is None:
+        # Create new chain
+        try:
+            db_chain = StatusChain(name=chain['name'],
+                                   color=chain['color'],
+                                   priority=chain['priority'])
+            db_chain.save()
+        except Exception as e:
+            logger.error(f"Could not create a new chain {chain['name']}", e)
+            # print(e)
+            return []
+        new_ids.append({
+            'chain': {
+                'old_id': chain['id'],
+                'new_id': str(db_chain.id)
+            }
+        })
+        chain['id'] = str(db_chain.id)
+        # print("New chain: ", db_chain.name, db_chain.color, db_chain.priority)
     # Create all new first
     for status in filter(lambda s: s['id'].startswith('new-'), statuses):
         try:
