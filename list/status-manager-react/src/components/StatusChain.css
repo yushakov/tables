@@ -28,3 +28,10 @@
     font-weight: bold;
     text-align: center;
 }
+
+.add-status:hover {
+    background-color: rgb(5, 134, 40);
+    color: white;
+    box-shadow: 2px 2px black;
+    border: 1px solid black;
+}

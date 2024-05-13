@@ -43,7 +43,7 @@ function App() {
     const getInitialStatusesAndChains = async () => {
       console.log("window fetch url:")
       console.log(window.dataFetchUrl);
-      if (window.dataFetchUrl.length > 0) {
+      if (window.dataFetchUrl) {
         // Assuming fetchStatuses returns a Promise
         fetchData(window.dataFetchUrl)
         .then(response => response.json())
@@ -166,6 +166,15 @@ function App() {
     });
   }
 
+  const handleStatusDelete = (status: StatusType) => {
+    setStatuses(oldStatuses => {
+      const newStats = [...oldStatuses];
+      const index = newStats.findIndex(newStatus => newStatus.id === status.id);
+      newStats.splice(index, 1);
+      return newStats;
+    });
+  };
+
   return (
     <>
       <AddStatus
@@ -180,6 +189,7 @@ function App() {
             chain={chain}
             statuses={statuses.filter(status => status.chain_id === chain.id)}
             dropStatus={dropStatus}
+            deleteStatus={handleStatusDelete}
             setChainsHook={setChains}
             setAddStatusChainName={setAddStatusChainName}
             setAddStatusChainId={setAddStatusChainId}

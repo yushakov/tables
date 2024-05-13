@@ -322,7 +322,19 @@ def update_status_chain(chain, statuses):
     for status in allChainStatusesFromDB:
         status.next_status = None
         status.save()
+    # delete those deleted in frontend
+    db_ids = set([int(status.id) for status in allChainStatusesFromDB])
+    frontend_ids = set([int(status['id']) for status in statuses])
+    ids_to_delete = db_ids.difference(frontend_ids)
     allChainStatusesFromDB = Status.objects.filter(chain=db_chain)
+    for i in ids_to_delete:
+        try:
+            status = allChainStatusesFromDB.get(pk=i)
+            status.delete()
+            logger.warning(f"Delete status {i}.")
+        except Exception as e:
+            logger.error(f"Cannot find status {i} to delete.", e)
+    # update next_status fields
     for i, status in enumerate(statuses):
         try:
             db_status = allChainStatusesFromDB.get(pk=int(status['id']))

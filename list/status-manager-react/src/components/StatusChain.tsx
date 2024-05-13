@@ -12,7 +12,8 @@ export interface StatusChainType {
 interface StatusChainProps {
     chain: StatusChainType,
     statuses: StatusType[],
-    dropStatus: (statusId: String, targetId: String) => void;
+    dropStatus: (statusId: String, targetId: String) => void,
+    deleteStatus: (s: StatusType) => void,
     setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>,
     setAddStatusChainName: Dispatch<SetStateAction<string>>,
     setAddStatusChainId: Dispatch<SetStateAction<string>>,
@@ -109,6 +110,7 @@ export function StatusChain(props: StatusChainProps) {
                     <Status
                         key={"status-" + status.id}
                         status={status}
+                        clickDelete={props.deleteStatus}
                         onDrop={handleDrop}/>
                     ))
             }
