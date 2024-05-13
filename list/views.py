@@ -264,6 +264,32 @@ def status_mgr(request):
     return render(request, 'list/status_mgr.html', context)
 
 
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def get_status_chains(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: get_status_chains() by {request.user.username}, {ip}')
+    chains, statuses = [], []
+    chain_objects = StatusChain.objects.all()
+    for chain in chain_objects:
+        chain_dict = {'id': str(chain.id),
+                      'name': str(chain.name),
+                      'color': str(chain.color),
+                      'priority': chain.priority}
+        chains.append(chain_dict)
+        for status in chain.get_ordered_statuses():
+            next_status_id = ""
+            if status.next_status:
+                next_status_id = status.next_status.id
+            statuses.append({'id': str(status.id),
+                             'name': str(status.name),
+                             'color': str(status.color),
+                             'chain_id': str(status.chain.id),
+                             'next_status_id': str(next_status_id)})
+    context = {'chains': chains, 'statuses': statuses}
+    return JsonResponse(context)
+
+
 def add_status_change_note(user, data):
     construct_id, status_id = None, None
     try:

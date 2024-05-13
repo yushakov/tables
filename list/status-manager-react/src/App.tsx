@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { initHelperChains } from "./helper"
 import { StatusChain, StatusChainType } from './components/StatusChain'
@@ -7,28 +7,52 @@ import { StatusType } from './components/Status'
 
 declare global {
   interface Window {
-    dataFetchUrl: String;
+    dataFetchUrl: string;
   }
 }
 
-function getInitialStatusesAndChains(): [StatusChainType[], StatusType[]] {
-  if (window.dataFetchUrl) {
-    const outStatuses: StatusType[] = [];
-    const outChains: StatusChainType[] = [];
-    return [outChains, outStatuses]
-  }
-  else {
-    const [outChains, outStatuses] = initHelperChains();
-    return [outChains, outStatuses];
-  }
+interface fetchDataType {
+  chains: StatusChainType[];
+  statuses: StatusType[];
 }
 
 function App() {
-  const [iniChains, iniStatuses] = getInitialStatusesAndChains();
-  const [statuses, setStatuses] = useState(iniStatuses);
-  const [chains, setChains] = useState(iniChains);
+  const [statuses, setStatuses] = useState<StatusType[]>([]);
+  const [chains, setChains] = useState<StatusChainType[]>([]);
   const [addStatusChainName, setAddStatusChainName] = useState('');
   const [addStatusChainId, setAddStatusChainId] = useState('');
+
+  useEffect(() => {
+    const fetchData= async (url: string) => {
+      const response = await fetch(url);
+      return response;
+    };
+
+    const getInitialStatusesAndChains = async () => {
+      console.log("window fetch url:")
+      console.log(window.dataFetchUrl);
+      if (window.dataFetchUrl.length > 0) {
+        // Assuming fetchStatuses returns a Promise
+        fetchData(window.dataFetchUrl)
+        .then(response => response.json())
+        .then((data: fetchDataType) => {
+          setChains(data.chains);
+          setStatuses(data.statuses);
+        }).catch(error => {
+          console.error("Failed to fetch statuses and chains", error);
+        });
+      } else {
+        // Synchronously set data returned by initHelperChains
+        console.log("Get data from helper.tsx")
+        const [newChains, newStatuses] = initHelperChains();
+        setChains(newChains);
+        setStatuses(newStatuses);
+      }
+    };
+
+    getInitialStatusesAndChains();
+  }, []); // Empty dependency array means this effect runs once after the initial render
+
 
   function dropStatus(statusId: String, targetId: String) {
     setStatuses(prevStatuses => {

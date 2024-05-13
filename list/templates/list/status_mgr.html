@@ -9,5 +9,8 @@
 {% endblock %}
 
 {% block content %}
+    <script>
+        window.dataFetchUrl = "{% url 'list:get_status_chains' %}";
+    </script>
     <div id="root"></div>
 {% endblock %}
