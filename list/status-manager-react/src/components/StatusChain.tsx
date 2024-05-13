@@ -17,6 +17,7 @@ interface StatusChainProps {
     setChainsHook: Dispatch<SetStateAction<StatusChainType[]>>,
     setAddStatusChainName: Dispatch<SetStateAction<string>>,
     setAddStatusChainId: Dispatch<SetStateAction<string>>,
+    setModified: () => void;
 }
 
 export function StatusChain(props: StatusChainProps) {
@@ -81,6 +82,7 @@ export function StatusChain(props: StatusChainProps) {
                     });
                     return newChains;
                 });
+                props.setModified();
                 parent.removeChild(nameInput);
                 parent.removeChild(colorInput);
                 console.log(colorInput.value);

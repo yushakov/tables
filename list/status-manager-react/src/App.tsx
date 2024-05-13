@@ -25,13 +25,33 @@ function App() {
   const chainsRef = useRef(chains);
   const [addStatusChainName, setAddStatusChainName] = useState('');
   const [addStatusChainId, setAddStatusChainId] = useState('');
+  const [pageState, setPageState] = useState('saved');
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+        if (pageState === 'modified') {
+            const message = 'You have unsaved changes. Are you sure you want to leave?';
+            event.returnValue = message; // Standard for most browsers
+            return message; // For some older browsers
+        }
+        return undefined;
+    };
+
+    // Set up the event listener
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Clean up the event listener
+    return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [pageState]);
 
   useEffect(()=>{
     statusesRef.current = statuses;
   }, [statuses]);
 
   useEffect(()=>{
-    chainsRef.current = chains
+    chainsRef.current = chains;
   }, [chains]);
 
   useEffect(() => {
@@ -60,6 +80,7 @@ function App() {
         setChains(newChains);
         setStatuses(newStatuses);
       }
+      setPageState('saved');
     };
 
     getInitialStatusesAndChains();
@@ -80,6 +101,10 @@ function App() {
       }
       return newStatuses;
     });
+
+    if (pageState === 'saved') {
+      setPageState('modified');
+    }
 
     function putInBetween(newStatuses: StatusType[], index: number, movingStatus: StatusType) {
       const beforeIndex = newStatuses.findIndex(status => status.id === targetId.replace(/status-/, ""))
@@ -105,6 +130,9 @@ function App() {
 
   function addStatus(status: StatusType) {
     setStatuses([...statuses, status]);
+    if (pageState === 'saved') {
+      setPageState('modified');
+    }
   }
 
   function getNewStatusId() {
@@ -161,6 +189,7 @@ function App() {
     })
     .then(data => {
       updateNewIds(data);
+      setPageState('saved');
     })
     .catch(error => {
         console.error('There was a problem with the fetch operation:', error);
@@ -174,6 +203,9 @@ function App() {
       newStats.splice(index, 1);
       return newStats;
     });
+    if (pageState === 'saved') {
+      setPageState('modified');
+    }
   };
 
   function getNewChainId() {
@@ -198,6 +230,9 @@ function App() {
       const newChains = [...existing, newChain];
       return newChains;
     });
+    if (pageState === 'saved') {
+      setPageState('modified');
+    }
   };
 
   return (
@@ -207,7 +242,12 @@ function App() {
         chainName={addStatusChainName}
         chainId={addStatusChainId}
         addStatus={addStatus}/>
-      <button onClick={handleSubmit} style={{ marginLeft: "20px"}}>Submit</button>
+      <button
+        onClick={handleSubmit}
+        disabled={ pageState === 'saved' ? true : false }
+        style={{ marginLeft: "20px"}}>
+          Submit
+      </button>
       <a href='#' onClick={handleAddChain} style={{ marginLeft: "20px"}}>Add Chain</a>
       <div style={{ display: "flex", padding: "20px"}}>
         {chains.map(chain => (
@@ -218,6 +258,7 @@ function App() {
             dropStatus={dropStatus}
             deleteStatus={handleStatusDelete}
             setChainsHook={setChains}
+            setModified={() => setPageState('modified')}
             setAddStatusChainName={setAddStatusChainName}
             setAddStatusChainId={setAddStatusChainId}
           />
