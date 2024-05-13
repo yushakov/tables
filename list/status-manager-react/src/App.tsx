@@ -48,11 +48,12 @@ function App() {
 
   useEffect(()=>{
     statusesRef.current = statuses;
-  }, [statuses]);
-
-  useEffect(()=>{
     chainsRef.current = chains;
-  }, [chains]);
+  }, [statuses, chains]);
+
+  // useEffect(()=>{
+  //   chainsRef.current = chains;
+  // }, [statuses, chains]);
 
   useEffect(() => {
     const fetchData= async (url: string) => {
@@ -152,12 +153,37 @@ function App() {
 
   function updateNewIds(data: DataStructure) {
     console.log(data.new_ids)
-    data.new_ids.forEach((entry) => {
+    data.new_ids.filter(entry => 'status' in entry).forEach((entry) => {
       if ('status' in entry) {
         setStatuses(oldStats => {
           const newStats = oldStats.map(status => {
             if (status.id === entry.status.old_id) {
+              console.log("Update status from " + status.id + " to " + entry.status.new_id);
               return {...status, id: entry.status.new_id};
+            }
+            return status;
+          });
+          return newStats;
+        });
+      }
+    });
+
+    data.new_ids.filter(entry => 'chain' in entry).forEach((entry) => {
+      if ('chain' in entry) {
+        setChains(oldChains => {
+          const newChains = oldChains.map(chain => {
+            if (chain.id === entry.chain.old_id) {
+              console.log("Update chain from " + chain.id + " to " + entry.chain.new_id);
+              return {...chain, id: entry.chain.new_id};
+            }
+            return chain;
+          });
+          return newChains;
+        });
+        setStatuses(oldStats => {
+          const newStats = oldStats.map(status => {
+            if (status.chain_id === entry.chain.old_id) {
+              return {...status, chain_id: entry.chain.new_id};
             }
             return status;
           });
