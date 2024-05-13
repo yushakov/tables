@@ -117,6 +117,29 @@ function App() {
     return "new-1";
   }
 
+  type DataStructure = {
+    new_ids: [
+      {status: {old_id: string, new_id: string}} |
+      {chain: {old_id: string, new_id: string}}
+    ]
+  };
+
+  function updateNewIds(data: DataStructure) {
+    data.new_ids.forEach((entry) => {
+      if ('status' in entry) {
+        setStatuses(oldStats => {
+          const newStats = oldStats.map(status => {
+            if (status.id === entry.status.old_id) {
+              return {...status, id: entry.status.new_id};
+            }
+            return status;
+          });
+          return newStats;
+        });
+      }
+    });
+  }
+
   const handleSubmit = async () => {
     fetch(window.dataPushUrl, {
       method: 'POST',
@@ -136,11 +159,9 @@ function App() {
         return response.json();
     })
     .then(data => {
-        // Handle success. You can update the UI accordingly.
-        console.log(data); // Assuming the server responds with some JSON
+      updateNewIds(data);
     })
     .catch(error => {
-        // Handle errors
         console.error('There was a problem with the fetch operation:', error);
     });
   }
