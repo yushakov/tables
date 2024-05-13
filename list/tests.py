@@ -2848,15 +2848,42 @@ class ViewTests(TestCase):
 
     def test_status_page(self):
         from list.models import Status, StatusChain
+        ch1 = StatusChain(name='chain 1', color='white', priority=1)
+        ch2 = StatusChain(name='chain 2', color='blue', priority=2)
+        ch1.save(); ch2.save()
+        st1 = Status(name='status 1', color='white', chain=ch1)
+        st2 = Status(name='status 2', color='blue', chain=ch1)
+        st3 = Status(name='status 3', color='yellow', chain=ch2)
+        for s in [st1, st2, st3]: s.save()
         sts = Status.objects.all()
         stsCh = StatusChain.objects.all()
         c = Client()
         c.login(username="yuran", password="secret")
-        cons = make_test_construct("Test document generation")
         response = c.get(f"/list/status/")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
-        self.assertEqual(len(sts), 0)
-        self.assertEqual(len(stsCh), 0)
+        self.assertEqual(len(sts), 3)
+        self.assertEqual(len(stsCh), 2)
+
+
+    def test_status_mgr_page(self):
+        from list.models import Status, StatusChain
+        ch1 = StatusChain(name='chain 1', color='white', priority=1)
+        ch2 = StatusChain(name='chain 2', color='blue', priority=2)
+        ch1.save(); ch2.save()
+        st1 = Status(name='status 1', color='white', chain=ch1)
+        st2 = Status(name='status 2', color='blue', chain=ch1)
+        st3 = Status(name='status 3', color='yellow', chain=ch2)
+        for s in [st1, st2, st3]: s.save()
+        sts = Status.objects.all()
+        stsCh = StatusChain.objects.all()
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons = make_test_construct("Test status management page")
+        cons.status = st2
+        response = c.get(f"/list/status_mgr/")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertEqual(len(sts), 3)
+        self.assertEqual(len(stsCh), 2)
 
 
     def test_checkTimeStamp(self):

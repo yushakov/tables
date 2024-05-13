@@ -27,6 +27,9 @@ class StatusAdmin(admin.ModelAdmin):
               'description']
     # inlines = [StatusInline]
 
+class StatusChainAdmin(admin.ModelAdmin):
+    list_display = ['name', 'priority']
+
 class ConstructAdmin(admin.ModelAdmin):
     list_display = ["title_text", "goto", "listed_date", "overall_progress", "email"]
     search_fields = ["title_text"]
@@ -154,5 +157,5 @@ admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(InvoiceTransaction)
 admin.site.register(Status, StatusAdmin)
-admin.site.register(StatusChain)
+admin.site.register(StatusChain, StatusChainAdmin)
 admin.site.register(Note, NoteAdmin)

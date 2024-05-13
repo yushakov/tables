@@ -696,6 +696,9 @@ class StatusChain(models.Model):
     priority = models.IntegerField(default=0)
     color = models.CharField(max_length=200, default='white')
 
+    class Meta:
+        ordering = ['priority']
+
     def __str__(self):
         return f"{self.name}"
 
@@ -703,10 +706,13 @@ class StatusChain(models.Model):
         for sts in self.statuses.all():
             if sts.next_status is None:
                 return sts
+        return None
 
     def get_ordered_statuses(self):
         bottom = self.get_bottom_status()
         out = [bottom]
+        if bottom is None:
+            out = []
         while hasattr(bottom, 'previous_status'):
             out = [bottom.previous_status] + out
             bottom = bottom.previous_status

@@ -247,6 +247,144 @@ def status(request):
     return render(request, 'list/status.html', context)
 
 
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def status_mgr(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: status_mgr() by {request.user.username}, {ip}')
+    context = {'chains': [{'chain': chain,
+                           'statuses': chain.get_ordered_statuses()}
+                           for chain in StatusChain.objects.all()]}
+    no_cat_chain = StatusChain(name='No Cat')
+    empty_status = Status(name="empty",
+                          color="#b47dee",
+                          chain=no_cat_chain)
+    context['chains'].append({'chain': no_cat_chain,
+                              'statuses': [empty_status]})
+    return render(request, 'list/status_mgr.html', context)
+
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def get_status_chains(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: get_status_chains() by {request.user.username}, {ip}')
+    chains, statuses = [], []
+    chain_objects = StatusChain.objects.all()
+    for chain in chain_objects:
+        chain_dict = {'id': str(chain.id),
+                      'name': str(chain.name),
+                      'color': str(chain.color),
+                      'priority': chain.priority}
+        chains.append(chain_dict)
+        for status in chain.get_ordered_statuses():
+            next_status_id = ""
+            if status.next_status:
+                next_status_id = status.next_status.id
+            statuses.append({'id': str(status.id),
+                             'name': str(status.name),
+                             'color': str(status.color),
+                             'chain_id': str(status.chain.id),
+                             'next_status_id': str(next_status_id)})
+    context = {'chains': chains, 'statuses': statuses}
+    return JsonResponse(context)
+
+
+def update_status_chain(chain, statuses):
+    db_chain = None
+    new_ids = []
+    if not chain['id'].startswith('new-'):
+        try:
+            db_chain = StatusChain.objects.get(pk=chain["id"])
+            db_chain.name = chain['name']
+            db_chain.color = chain['color']
+            db_chain.priority = chain['priority']
+            db_chain.save()
+        except Exception as e:
+            logger.warning(f"No chain {chain['name']} ({chain['id']}) in DB", e)
+            # print(f"No chain {chain['name']} ({chain['id']}) in DB", e)
+    if db_chain is None:
+        # Create new chain
+        try:
+            db_chain = StatusChain(name=chain['name'],
+                                   color=chain['color'],
+                                   priority=chain['priority'])
+            db_chain.save()
+        except Exception as e:
+            logger.error(f"Could not create a new chain {chain['name']}", e)
+            # print(e)
+            return []
+        new_ids.append({
+            'chain': {
+                'old_id': chain['id'],
+                'new_id': str(db_chain.id)
+            }
+        })
+        chain['id'] = str(db_chain.id)
+        # print("New chain: ", db_chain.name, db_chain.color, db_chain.priority)
+    # Create all new first
+    for status in filter(lambda s: s['id'].startswith('new-'), statuses):
+        try:
+            new_status = Status(name=status['name'],
+                                color=status['color'],
+                                chain=db_chain)
+            new_status.save()
+            new_ids.append({
+                'status': {
+                    'old_id': status['id'],
+                    'new_id': str(new_status.id)
+                }})
+            status['id'] = str(new_status.id)
+        except Exception as e:
+            logger.error(f"Exception {e} at status {status['name']} ({status['id']})")
+    allChainStatusesFromDB = Status.objects.filter(chain=db_chain)
+    # clean all next_status fields
+    for status in allChainStatusesFromDB:
+        status.next_status = None
+        status.save()
+    # delete those deleted in frontend
+    db_ids = set([int(status.id) for status in allChainStatusesFromDB])
+    frontend_ids = set([int(status['id']) for status in statuses])
+    ids_to_delete = db_ids.difference(frontend_ids)
+    allChainStatusesFromDB = Status.objects.filter(chain=db_chain)
+    for i in ids_to_delete:
+        try:
+            status = allChainStatusesFromDB.get(pk=i)
+            status.delete()
+            logger.warning(f"Delete status {i}.")
+        except Exception as e:
+            logger.error(f"Cannot find status {i} to delete.", e)
+    # update next_status fields
+    for i, status in enumerate(statuses):
+        try:
+            db_status = allChainStatusesFromDB.get(pk=int(status['id']))
+            db_status.name = status['name']
+            db_status.color = status['color']
+            if i < len(statuses) - 1:
+                db_status.next_status = allChainStatusesFromDB.get(pk=statuses[i+1]['id'])
+            db_status.save()
+        except Exception as e:
+            logger.error(f"Exception {e} at status {status['name']} ({status['id']})")
+    return new_ids
+    
+
+@login_required
+@user_passes_test(lambda user: user.is_staff)
+def set_status_chains(request):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: set_status_chains() by {request.user.username}, {ip}')
+    if request.method == 'POST':
+        chains = json.loads(request.POST['chains'])
+        statuses = json.loads(request.POST['statuses'])
+        all_new_ids = []
+        for chain in chains:
+            chain_statuses = [s for s in filter(lambda st: st['chain_id'] == chain['id'], statuses)]
+            new_ids = update_status_chain(chain, chain_statuses)
+            all_new_ids += new_ids
+        return JsonResponse({'new_ids': all_new_ids})
+    return JsonResponse({'response': 'Use to submit Status Chain data.'})
+
+
 def add_status_change_note(user, data):
     construct_id, status_id = None, None
     try:

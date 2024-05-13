@@ -61,3 +61,11 @@ div#id_chosen_construct {
 .highlight {
     animation: fadeHighlight 2s forwards;
 }
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
