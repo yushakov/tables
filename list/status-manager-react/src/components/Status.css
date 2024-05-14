@@ -4,6 +4,8 @@
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
+    width: inherit;
+    justify-content: space-between;
 }
 
 .status-name-container {
@@ -32,6 +34,7 @@
     background-color: white;
     border-radius: 5px;
     margin-left: 20px;
+    cursor: pointer;
 }
 
 .delete-symbol:hover {
