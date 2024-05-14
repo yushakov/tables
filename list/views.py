@@ -285,7 +285,8 @@ def get_status_chains(request):
                              'name': str(status.name),
                              'color': str(status.color),
                              'chain_id': str(status.chain.id),
-                             'next_status_id': str(next_status_id)})
+                             'next_status_id': str(next_status_id),
+                             'project_count': len(status.constructs)})
     context = {'chains': chains, 'statuses': statuses}
     return JsonResponse(context)
 

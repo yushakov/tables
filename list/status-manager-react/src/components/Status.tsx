@@ -8,6 +8,7 @@ export interface StatusType {
     color: string;
     chain_id: string;
     next_status_id: string;
+    project_count?: number;
 }
 
 interface StatusProps {
@@ -90,7 +91,7 @@ export function Status(props: StatusProps) {
                 <div
                     className="status-name"
                     onDoubleClick={handleNameDblClick}>
-                    {props.status.name}
+                    {props.status.name} ({props.status.project_count})
                 </div>
                 <div className="status-editor"></div>
             </div>
