@@ -22,6 +22,7 @@ from list.views import check_integrity,   \
                        process_post,      \
                        checkTimeStamp,    \
                        fix_structure,     \
+                       fix_category, \
                        get_printed_invoice_lines, \
                        get_number,        \
                        process_invoice_lines, \
@@ -278,6 +279,85 @@ class StructureFixTests(TestCase):
         self.assertEqual(len(choices), len(stru.keys()))
 
 
+class CategoryTests(TestCase):
+    def test_fix_category(self):
+        con1 = make_test_construct()
+        con2 = make_test_construct()
+        con3 = make_test_construct()
+        cat1 = Category(name="first", color="white", priority=0)
+        cat2 = Category(name="second", color="white", priority=1)
+        for inst in [con1, con2, con3, cat1, cat2]:
+            inst.save()
+        cat1.constructs.add(con1)
+        cat2.constructs.add(con2)
+        cat1.save(); cat2.save()
+        all_constructs = Construct.objects.all()
+        all_cats = Category.objects.order_by('priority')
+        fix_category(all_constructs, all_cats)
+        self.assertEqual(len(cat1.constructs.all()), 2)
+        self.assertEqual(len(cat2.constructs.all()), 1)
+
+    def test_categories(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+
+    def test_add_category_to_construct(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat2.constructs.add(con2.id)
+        cons = Construct.objects.all()
+        for con in cons:
+            if len(con.category_set.all()) == 0:
+                con.category_set.add(cat1.id)
+        self.assertEqual(len(cat1.constructs.all()), 2)
+
+
+    def test_cats_to_chains(self):
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        categories_to_chains()
+        chains = StatusChain.objects.all()
+        statuses = Status.objects.all()
+        self.assertEqual(len(chains), 2)
+        self.assertEqual(len(statuses), 2)
+        self.assertEqual(len(chains[0].constructs), 2)
+        self.assertEqual(len(chains[1].constructs), 1)
+
+
 class HistoryTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(username='yuran', password='secret', email='yuran@domain.com')
@@ -446,66 +526,6 @@ class ModelTests(TestCase):
         con3.save()
         client_cons = client.client_constructs.all()
         self.assertEqual(len(client_cons), 2)
-
-    def test_categories(self):
-        con1 = make_test_construct(construct_name="Number one")
-        con2 = make_test_construct(construct_name="Number two")
-        con3 = make_test_construct(construct_name="Number three")
-        con1.save()
-        con2.save()
-        con3.save()
-        cat1 = Category(name='one', priority=0)
-        cat2 = Category(name='two', priority=1)
-        cat1.save()
-        cat2.save()
-        cat1.constructs.add(con1.id)
-        cat1.constructs.add(con2.id)
-        cat2.constructs.add(con3.id)
-        cat1.save()
-        cat2.save()
-
-    def test_add_category_to_construct(self):
-        con1 = make_test_construct(construct_name="Number one")
-        con2 = make_test_construct(construct_name="Number two")
-        con3 = make_test_construct(construct_name="Number three")
-        con1.save()
-        con2.save()
-        con3.save()
-        cat1 = Category(name='one', priority=0)
-        cat2 = Category(name='two', priority=1)
-        cat1.save()
-        cat2.save()
-        cat2.constructs.add(con2.id)
-        cons = Construct.objects.all()
-        for con in cons:
-            if len(con.category_set.all()) == 0:
-                con.category_set.add(cat1.id)
-        self.assertEqual(len(cat1.constructs.all()), 2)
-
-
-    def test_cats_to_chains(self):
-        con1 = make_test_construct(construct_name="Number one")
-        con2 = make_test_construct(construct_name="Number two")
-        con3 = make_test_construct(construct_name="Number three")
-        con1.save()
-        con2.save()
-        con3.save()
-        cat1 = Category(name='one', priority=0)
-        cat2 = Category(name='two', priority=1)
-        cat1.save()
-        cat2.save()
-        cat1.constructs.add(con1.id)
-        cat1.constructs.add(con2.id)
-        cat2.constructs.add(con3.id)
-        cat1.save()
-        cat2.save()
-        categories_to_chains()
-        chains = StatusChain.objects.all()
-        statuses = Status.objects.all()
-        self.assertEqual(len(chains), 2)
-        self.assertEqual(len(statuses), 2)
-        self.assertEqual(len(chains[0].constructs), 2)
-        self.assertEqual(len(chains[1].constructs), 1)
 
     def test_chain_constructs(self):
         con1 = make_test_construct(construct_name="Number one")
