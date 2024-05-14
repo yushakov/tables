@@ -46,7 +46,7 @@
                 {% for status in chain.statuses %}
                     <div class="status-col" ondrop="drop(event)" ondragover="allowDrop(event)" id="status-{{ status.id }}">
                         <div class="status-col-head" style="background-color: {{ status.color }}">
-                            {{ status.name }}
+                            {{ status.name }} (<span id="status-{{ status.id }}-cnt">{{ status.constructs|length }}</span>)
                             <script>
                                 window.names["status-{{ status.id }}"] = "{{ status.name }}";
                             </script>

@@ -115,6 +115,12 @@ function dataSent() {
     dialog.style.display = "none";
     var construct_badge = document.getElementById(window.dialog_parameters.construct_id);
     highlightElement(construct_badge);
+    if (window.dialog_parameters.status_from != window.dialog_parameters.status_to) {
+        var counter_from = document.getElementById(window.dialog_parameters.status_from + "-cnt");
+        var counter_to = document.getElementById(window.dialog_parameters.status_to + "-cnt");
+        counter_from.innerText = (Number(counter_from.innerText) - 1).toString();
+        counter_to.innerText = (Number(counter_to.innerText) + 1).toString();
+    }
     cleanDialog();
 }
 
