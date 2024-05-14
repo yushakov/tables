@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Status management{% endblock %}
+{% block title %}Status assignment{% endblock %}
 
 {% block extra-head %}
 <link rel="stylesheet" href="{% static 'list/status.css' %}">
@@ -12,8 +12,10 @@
 
 {% block content %}
 <div style="padding: 10px">
-<h1>Status management</h1>
-    <a href="{% url 'list:index' %}">all projects</a>&nbsp;&nbsp;&nbsp;<br /><br />
+<h1>Status assignment board</h1>
+    <a href="{% url 'list:index' %}">all projects</a>&nbsp;&nbsp;&nbsp;
+    <a href="{% url 'list:status_mgr' %}">status chains</a>&nbsp;&nbsp;&nbsp;
+    <br /><br />
     <div id="id_chosen_construct"></div>
     <div class="tab-head">
     {% for chain in chains %}

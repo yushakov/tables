@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Status management{% endblock %}
+{% block title %}Status chains{% endblock %}
 
 {% block extra-head %}
 <link rel="stylesheet" crossorigin href="{% static 'list/status_mgr/styles.css' %}">
@@ -9,10 +9,15 @@
 {% endblock %}
 
 {% block content %}
-    <script>
-        window.dataFetchUrl = "{% url 'list:get_status_chains' %}";
-        window.dataPushUrl = "{% url 'list:set_status_chains' %}";
-        window.csrf = "{{ csrf_token }}";
-    </script>
-    <div id="root"></div>
+    <div style="margin-left: 20px">
+        <h2 style="color: black">Status chains (categories)</h2>
+        <a href="{% url 'list:index' %}">all projects</a>&nbsp;&nbsp;&nbsp;
+        <a href="{% url 'list:status' %}">status assignment</a>&nbsp;&nbsp;&nbsp;<br /><br />
+        <script>
+            window.dataFetchUrl = "{% url 'list:get_status_chains' %}";
+            window.dataPushUrl = "{% url 'list:set_status_chains' %}";
+            window.csrf = "{{ csrf_token }}";
+        </script>
+        <div id="root"></div>
+    </div>
 {% endblock %}
