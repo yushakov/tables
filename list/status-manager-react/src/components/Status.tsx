@@ -79,13 +79,20 @@ export function Status(props: StatusProps) {
         });
     };
 
+    const handleDrop = (e: React.DragEvent) => {
+        const originChainId = e.dataTransfer.getData("originChainId");
+        if (originChainId === props.status.chain_id) {
+            props.onDrop(e);
+        }
+    };
+
     return (
         <div id={"status-" + props.status.id}
              style={{ backgroundColor: bgColor }}
              className={clsName}
              draggable="true"
              onDragOver={(e) => e.preventDefault()}
-             onDrop={props.onDrop}
+             onDrop={handleDrop}
              onDragStart={handleDragStart}>
             <div className="status-name-container">
                 <div

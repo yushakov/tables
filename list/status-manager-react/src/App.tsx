@@ -51,10 +51,6 @@ function App() {
     chainsRef.current = chains;
   }, [statuses, chains]);
 
-  // useEffect(()=>{
-  //   chainsRef.current = chains;
-  // }, [statuses, chains]);
-
   useEffect(() => {
     const fetchData= async (url: string) => {
       const response = await fetch(url);

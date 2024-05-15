@@ -32,8 +32,11 @@ export function StatusChain(props: StatusChainProps) {
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         const statusId = e.dataTransfer.getData("statusId").replace(/status-/, "");
+        const originChainId = e.dataTransfer.getData("originChainId");
         const targetId = e.currentTarget.id;
-        props.dropStatus(statusId, targetId);
+        if (originChainId === props.chain.id) {
+            props.dropStatus(statusId, targetId);
+        }
     };
 
     const handleAddStatusClick = () => {
