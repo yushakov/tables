@@ -293,9 +293,11 @@ class CategoryTests(TestCase):
         cat1.save(); cat2.save()
         all_constructs = Construct.objects.all()
         all_cats = Category.objects.order_by('priority')
-        fix_category(all_constructs, all_cats)
-        self.assertEqual(len(cat1.constructs.all()), 2)
-        self.assertEqual(len(cat2.constructs.all()), 1)
+        categories_to_chains()
+        all_chains = StatusChain.objects.order_by('priority')
+        fix_category(all_constructs, all_chains)
+        self.assertEqual(len(all_chains[0].constructs), 2)
+        self.assertEqual(len(all_chains[1].constructs), 1)
 
     def test_categories(self):
         con1 = make_test_construct(construct_name="Number one")
@@ -1873,6 +1875,7 @@ class ViewTests(TestCase):
         cat2.constructs.add(con3.id)
         cat1.save()
         cat2.save()
+        categories_to_chains()
         foreman = User(username='foreman')
         foreman.save()
         con1.foreman = foreman
@@ -1926,9 +1929,11 @@ class ViewTests(TestCase):
         cat2.save()
         cat2.constructs.add(con2.id)
         cat2.save()
+        categories_to_chains()
+        chain1 = StatusChain.objects.filter(name=cat1.name)[0]
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
-        self.assertEqual(len(cat1.constructs.all()), 2)
+        self.assertEqual(len(chain1.constructs), 2)
 
     def test_update_construct_category_with_no_categories(self):
         c = Client()
@@ -1939,6 +1944,7 @@ class ViewTests(TestCase):
         con1.save()
         con2.save()
         con3.save()
+        categories_to_chains()
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 

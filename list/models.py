@@ -698,6 +698,7 @@ class StatusChain(models.Model):
 
     class Meta:
         ordering = ['priority']
+        verbose_name_plural = 'Status chains (categories)'
 
     def __str__(self):
         return f"{self.name}"
@@ -738,6 +739,7 @@ class Status(models.Model):
     next_status = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_status')
 
     class Meta:
+        ordering =['chain__name', 'name']
         verbose_name_plural = 'statuses'
 
     def __str__(self):

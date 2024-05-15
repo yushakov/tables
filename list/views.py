@@ -39,12 +39,17 @@ class IndexView(generic.ListView):
         """Return the projects"""
         return Construct.objects.order_by('overall_progress_percent_num')
 
-def fix_category(constructs, categories):
+
+def fix_category(constructs, categories: list[StatusChain]):
     if len(categories) > 0:
         for con in constructs:
-            if len(con.category_set.all()) == 0:
-                logger.warning(f"Put '{con}' into category '{categories[0].name}'")
-                con.category_set.add(categories[0].id)
+            if not con.status:
+                logger.warning(f"Put '{con}' into category (status chain) '{categories[0].name}'")
+                statuses = categories.order_by('priority')[0].get_ordered_statuses()
+                if len(statuses) > 0:
+                    con.status = statuses[0]
+                    con.save()
+
 
 def get_total(constructs):
     total = {}
@@ -140,7 +145,7 @@ def index(request):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: index() by {request.user.username} --::-- ip: {ip}')
     all_constructs = Construct.objects.all()
-    all_cats = Category.objects.order_by('priority')
+    all_cats = StatusChain.objects.order_by('priority')
     fix_category(all_constructs, all_cats)
     cats = all_cats
     ctg_id = [0]
@@ -164,7 +169,7 @@ def index(request):
         pass
     constructs = []
     for ctg in cats:
-        cons = all_constructs.filter(category=ctg.id)
+        cons = ctg.constructs
         for con in cons:
             con.color = ctg.color
             constructs.append(con)

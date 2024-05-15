@@ -20,12 +20,12 @@ class CategoryInline(admin.TabularInline):
     extra = 1
 
 class StatusAdmin(admin.ModelAdmin):
+    list_display = ['name', 'chain']
     list_filter = ['chain']
     fields = ['name',
               'chain',
               'color',
               'description']
-    # inlines = [StatusInline]
 
 class StatusChainAdmin(admin.ModelAdmin):
     list_display = ['name', 'priority']
@@ -48,7 +48,6 @@ class ConstructAdmin(admin.ModelAdmin):
               "notes_txt",
               "header_txt",
               "footer_txt"]
-    inlines = [CategoryInline]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -63,6 +62,7 @@ class ConstructAdmin(admin.ModelAdmin):
         form.base_fields["deposit_percent_expect"].label = "Expected deposit, %"
         form.base_fields["company_profit_percent_num"].label = "Company profit, %"
         form.base_fields["ontop_profit_percent_num"].label = "On-top profits, %"
+        form.base_fields["status"].label = "Status (in a Status Chain (former 'Category'))"
         form.base_fields["notes_txt"].label = "Notes"
         form.base_fields["header_txt"].label = "Header"
         form.base_fields["footer_txt"].label = "Footer"
@@ -149,7 +149,6 @@ class NoteAdmin(admin.ModelAdmin):
                     'content_type', 'content_object']
 
 
-admin.site.register(Category, CategoryAdmin)
 admin.site.register(User, MyUserAdmin)
 admin.site.register(Construct, ConstructAdmin)
 admin.site.register(Choice, ChoiceAdmin)
