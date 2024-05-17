@@ -18,7 +18,7 @@ from list.views import get_client_ip_address
 logger = logging.getLogger('django')
 
 
-def get_formatted_choices(construct_id):
+def get_formatted_choices(construct_id, date_sort):
     out, queryset = [], []
     if construct_id >= 0:
         try:
@@ -48,7 +48,7 @@ def get_formatted_choices(construct_id):
                 task['display_order'] = int(key.replace('line_', ''))
                 tmp_set.append(task)
                 dates.append([task['plan_start_date'], task['plan_days_num']])
-            else:
+            elif not date_sort:
                 queryset += sorted(tmp_set, key=lambda x: x['plan_start_date'])
                 tmp_set = []
                 group_id = val['id']
@@ -71,7 +71,7 @@ class ChoiceViewSet(viewsets.ReadOnlyModelViewSet):
         if not self.request.user.is_authenticated:
             get_object_or_404(Construct, pk=-1)
         construct_id = int(self.request.GET.get('id', '-1'))
-        return get_formatted_choices(construct_id)
+        return get_formatted_choices(construct_id, 'date_sort' in self.request.GET)
 
 
 @user_passes_test(lambda user: user.is_staff)
@@ -82,6 +82,10 @@ def index(request, construct_id):
     protocol = settings.PROTOCOL
     host = settings.ALLOWED_HOSTS[0]
     port = settings.PORT
+    date_sort = ''
+    if request.method == 'GET':
+        if 'date_sort' in request.GET:
+            date_sort = '&date_sort'
     return render(request, 'gantt/index.html',
                   {'construct_id': construct_id,
                    'title': construct.title_text,
@@ -92,7 +96,8 @@ def index(request, construct_id):
                                                 host,
                                                 port,
                                                 "/gantt/api/choices/?id=",
-                                                str(construct_id)]),
+                                                str(construct_id),
+                                                date_sort]),
                     'interactive': 'true'
                   })
 
