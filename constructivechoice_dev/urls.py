@@ -33,7 +33,6 @@ admin.site.index_title = 'Site Administration'
 admin.site.site_title = 'Constructive Choice Projects'
 
 urlpatterns = [
-    # path('', include('list.urls')),
     path('', redirect_to_list_account),
     path('list/', include('list.urls')),
     path('gantt/', include('gantt.urls')),
@@ -44,4 +43,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-
+if settings.DEBUG:
+    urlpatterns += [
+        path("__debug__/", include("debug_toolbar.urls")),
+    ]
