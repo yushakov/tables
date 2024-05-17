@@ -42,13 +42,13 @@ class IndexView(generic.ListView):
 
 def fix_category(constructs, categories: list[StatusChain]):
     if len(categories) > 0:
-        for con in constructs:
-            if not con.status:
-                logger.warning(f"Put '{con}' into category (status chain) '{categories[0].name}'")
-                statuses = categories.order_by('priority')[0].get_ordered_statuses()
-                if len(statuses) > 0:
-                    con.status = statuses[0]
-                    con.save()
+        cons = constructs.filter(status=None)
+        for con in cons:
+            logger.warning(f"Put '{con}' into category (status chain) '{categories[0].name}'")
+            statuses = categories.order_by('priority')[0].get_ordered_statuses()
+            if len(statuses) > 0:
+                con.status = statuses[0]
+                con.save()
 
 
 def get_total(constructs):
