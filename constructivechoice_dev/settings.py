@@ -77,7 +77,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if DEBUG:
+if False:  # DEBUG:
     MIDDLEWARE += (
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
