@@ -135,6 +135,16 @@ def get_constructs_from_chains(categories):
 def get_formatted_constructs(constructs):
     out = []
     constructs = sorted(constructs, key=lambda c: c.get_start_date())
+    project = {'id': '',
+               'construct_name': '',
+               'name_txt': '',
+               'plan_start_date': timezone.now().date(),
+               'plan_days_num': 1,
+               'type': 'project',
+               'progress_percent_num': 0,
+               'hide_children': 0,
+               'display_order': 0}
+    out.append(project)
     for i, con in enumerate(constructs):
         start_date = con.get_start_date()
         entry = {'id': con.id,
