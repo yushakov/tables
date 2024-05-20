@@ -149,7 +149,7 @@ def index(request):
     fix_category(all_constructs, all_cats)
     cats = get_requested_categories(request.GET, all_cats)
     adi = get_active_done_inds(all_cats)
-    foreman_id = int(request.GET.get('foreman', '-1'))
+    foreman_id = get_foreman_id_from_get(request.GET)
     constructs = get_constructs_in_cats_and_foreman(cats, foreman_id)
     total = get_total(constructs)
     cats_spec = 'all'
@@ -165,6 +165,15 @@ def index(request):
                'cats_spec': cats_spec
               }
     return render(request, 'list/index.html', context)
+
+
+def get_foreman_id_from_get(get_dict):
+    foreman_id = 0
+    try:
+        foreman_id = int(get_dict.get('foreman', '-1'))
+    except Exception as e:
+        logger.error(f"Error getting foreman from '{get_dict}'. Exception: {e}")
+    return foreman_id
 
 
 def get_constructs_in_cats_and_foreman(cats, foreman_id):
