@@ -152,6 +152,7 @@ def index(request):
     foreman_id = get_foreman_id_from_get(request.GET)
     constructs = get_constructs_in_cats_and_foreman(cats, foreman_id)
     total = get_total(constructs)
+    get_line = make_get_line(cats, foreman_id)
     cats_spec = 'all'
     if 'category' in request.GET:
         cats_spec = request.GET['category']
@@ -162,9 +163,17 @@ def index(request):
                'active_done_inds': adi,
                'noscale': True,
                'total': total,
-               'cats_spec': cats_spec
+               'cats_spec': cats_spec,
+               'get_line': get_line,
+               'foreman_id': foreman_id
               }
     return render(request, 'list/index.html', context)
+
+def make_get_line(cats, foreman_id):
+    line = ('category=' + ','.join([str(c) for c in cats]) +
+            '&' +
+            'foreman=' + str(foreman_id))
+    return line
 
 
 def get_foreman_id_from_get(get_dict):

@@ -26,6 +26,7 @@ from list.views import check_integrity,   \
                        get_printed_invoice_lines, \
                        get_number,        \
                        process_invoice_lines, \
+                       make_get_line, \
                        foreman_bg_update, \
                        client_slug_bg_update, \
                        bg_process_post
@@ -1901,6 +1902,45 @@ class ViewTests(TestCase):
         self.assertIs(str(response.content).find("Number two") > 0, False)
         self.assertIs(str(response.content).find("Number three") > 0, True)
 
+    def test_categories_all_and_foreman(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        categories_to_chains()
+        foreman = User(username='foreman')
+        foreman.save()
+        con1.foreman = foreman
+        con3.foreman = foreman
+        con1.save()
+        con3.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        get_str = '/list/?category=all' + '&foreman=' + str(foreman.id)
+        response = c.get(get_str)
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        self.assertIs(str(response.content).find("Number one") > 0, True)
+        self.assertIs(str(response.content).find("Number two") > 0, False)
+        self.assertIs(str(response.content).find("Number three") > 0, True)
+
+    def test_make_get_line(self):
+        print(make_get_line([0, 1, 2], 0))
+        print(make_get_line([''], ''))
+        print(make_get_line([1,2,3], 4))
+
     def test_index_with_foreman(self):
         c = Client()
         c.login(username="yuran", password="secret")
@@ -1990,6 +2030,29 @@ class ViewTests(TestCase):
         response = c.get('/list/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         response = c.get('/list/?category=')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_categories_all(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        con1 = make_test_construct(construct_name="Number one")
+        con2 = make_test_construct(construct_name="Number two")
+        con3 = make_test_construct(construct_name="Number three")
+        con1.save()
+        con2.save()
+        con3.save()
+        cat1 = Category(name='one', priority=0)
+        cat2 = Category(name='two', priority=1)
+        cat1.save()
+        cat2.save()
+        cat1.constructs.add(con1.id)
+        cat1.constructs.add(con2.id)
+        cat2.constructs.add(con3.id)
+        cat1.save()
+        cat2.save()
+        response = c.get('/list/')
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+        response = c.get('/list/?category=all')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_update_construct_category(self):
