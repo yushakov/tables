@@ -2,7 +2,8 @@ from django.test import TestCase, Client
 from list.models import User, \
                         Invoice,\
                         CLIENT_GROUP_NAME, \
-                        WORKER_GROUP_NAME
+                        WORKER_GROUP_NAME, \
+                        StatusChain, Status
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from list.tests import make_test_construct
@@ -156,3 +157,58 @@ class ViewTests(TestCase):
         choices = cons.choice_set.all()
         self.assertEqual(choices[0].plan_days_num, 12)
         self.assertEqual(choices[0].progress_percent_num, 70)
+
+    def test_constructs_all(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons1 = make_test_construct('Test 1')
+        cons2 = make_test_construct('Test 2')
+        response = c.get("/gantt/constructs/all")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_constructs_no_cats_cat_1(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons1 = make_test_construct('Test 1')
+        cons2 = make_test_construct('Test 2')
+        response = c.get("/gantt/constructs/1")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_constructs_cat_1(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons1 = make_test_construct('Test 1')
+        cons2 = make_test_construct('Test 2')
+        chain = StatusChain(name='Active')
+        chain.save()
+        status = Status(name='Ok')
+        status.chain = chain
+        status.save()
+        for con in [cons1, cons2]:
+            con.status = status
+            con.save()
+        response = c.get("/gantt/constructs/" + str(status.id))
+        self.assertEqual(response.status_code, STATUS_CODE_OK)
+
+    def test_constructs_cat_1_2(self):
+        c = Client()
+        c.login(username="yuran", password="secret")
+        cons1 = make_test_construct('Test 1')
+        cons2 = make_test_construct('Test 2')
+        cons3 = make_test_construct('Test 3')
+        chain1 = StatusChain(name='Active')
+        chain1.save()
+        chain2 = StatusChain(name='Sale')
+        chain2.save()
+        status1 = Status(name='Ok')
+        status1.chain = chain1
+        status1.save()
+        status2 = Status(name='Deposit paid')
+        status2.chain = chain2
+        status2.save()
+        for con in [cons1, cons2]:
+            con.status = status1
+            con.save()
+        cons3.status = status2
+        response = c.get(f"/gantt/constructs/{status1.id},{status2.id}")
+        self.assertEqual(response.status_code, STATUS_CODE_OK)

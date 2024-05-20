@@ -100,7 +100,7 @@ def make_test_construct(construct_name = 'Some test Construct', user_id=-1, hist
          progress_percent_num  = 25.0,
          units_of_measure_text = 'nr',
          workers               = 'Paul',
-         plan_start_date       = '1984-04-15',
+         plan_start_date       = '1984-04-19',
          plan_days_num         = 7.0)
     choice.save()
     dic["line_3"] = {"type": "Choice", "id": str(choice.id)}
@@ -112,8 +112,8 @@ def make_test_construct(construct_name = 'Some test Construct', user_id=-1, hist
          progress_percent_num  = 25.0,
          units_of_measure_text = 'nr',
          workers               = 'Paul',
-         plan_start_date       = '1984-04-15',
-         plan_days_num         = 7.0)
+         plan_start_date       = '1984-04-25',
+         plan_days_num         = 3.0)
     choice.save()
     dic["line_4"] = {"type": "Choice", "id": str(choice.id)}
     construct.struct_json = json.dumps(dic)
@@ -503,6 +503,16 @@ class HistoryTests(TestCase):
 
 
 class ModelTests(TestCase):
+    def test_start_end_duration(self):
+        con = make_test_construct('Testing dates')
+        # print("Start: ", con.get_start_date())
+        # print("End: ", con.get_end_date())
+        # print("Duration: ", con.get_duration_in_days())
+        self.assertEqual(con.get_start_date(), format_date('1984-04-15'))
+        self.assertEqual(con.get_end_date(), format_date('1984-04-28'))
+        self.assertEqual(con.get_duration_in_days(), 14)
+
+
     def test_foreman(self):
         foreman = User(username='Foreman')
         foreman.save()

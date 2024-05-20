@@ -177,11 +177,15 @@ def index(request):
     if foreman > 0:
         constructs = [con for con in constructs if con.foreman is not None and con.foreman.id == foreman]
     total = get_total(constructs)
+    cats_spec = 'all'
+    if 'category' in request.GET:
+        cats_spec = request.GET['category']
     context = {'active_construct_list': constructs,
                'categories': all_cats,
                'active_done_inds': adi,
                'noscale': True,
-               'total': total
+               'total': total,
+               'cats_spec': cats_spec
               }
     return render(request, 'list/index.html', context)
 

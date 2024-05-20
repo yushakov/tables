@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from list.models import Choice, Construct
+from list.models import Choice, Construct, StatusChain
 from .serializers import TaskSerializer
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
@@ -18,7 +18,7 @@ from list.views import get_client_ip_address
 logger = logging.getLogger('django')
 
 
-def get_formatted_choices(construct_id, date_sort):
+def get_formatted_choices(construct_id, date_sort=False):
     out, queryset = [], []
     if construct_id >= 0:
         try:
@@ -115,6 +115,50 @@ class SlugChoiceViewSet(viewsets.ReadOnlyModelViewSet):
         return get_formatted_choices(construct.id)
 
 
+def get_constructs_from_chains(categories):
+    if categories == "all":
+        return Construct.objects.all()
+    chain_ids = [int(v) for v in categories.split(',')]
+    cons = []
+    for chid in chain_ids:
+        try:
+            chain = StatusChain.objects.get(pk=chid)
+            cons += chain.constructs
+        except:
+            logger.error(f"Problem getting constructs from the chain {chid}")
+    return cons
+
+
+def get_formatted_constructs(constructs):
+    out = []
+    constructs = sorted(constructs, key=lambda c: c.get_start_date())
+    for i, con in enumerate(constructs):
+        start_date = con.get_start_date()
+        entry = {'id': con.id,
+                 'construct_name': '',
+                 'name_txt': con.title_text,
+                 'plan_start_date': start_date,
+                 'plan_days_num': con.get_duration_in_days(),
+                 'type': 'task',
+                 'progress_percent_num': con.overall_progress_percent_num,
+                 'hide_children': 0,
+                 'display_order': i + 1}
+        out.append(entry)
+    return out
+
+
+class ConstructsViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        # TODO: write tests
+        categories = str(self.request.GET.get('cats', ''))
+        constructs = get_constructs_from_chains(categories)
+        if len(constructs) == 0:
+            raise Http404("Projects are not found")
+        return get_formatted_constructs(constructs)
+
+
 def slug(request, slug):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: gantt.slug("{slug}") from ip: {ip}')
@@ -138,6 +182,27 @@ def slug(request, slug):
                                                 str(slug)]),
                     'interactive': 'false',
                     'slug_name': slug
+                  })
+
+@user_passes_test(lambda user: user.is_staff)
+def constructs(request, categories):
+    ip = get_client_ip_address(request)
+    logger.info(f'*action* USER ACCESS: gantt.constructs("{categories}") from ip: {ip}')
+    protocol = settings.PROTOCOL
+    host = settings.ALLOWED_HOSTS[0]
+    port = settings.PORT
+    return render(request, 'gantt/index.html',
+                  {'construct_id': -1,
+                   'title': "Constructs",
+                   'protocol': '',
+                   'host': '',
+                   'port': '',
+                   'get_choices_link': ''.join([protocol,
+                                                host,
+                                                port,
+                                                "/gantt/api/constructs/?cats=",
+                                                str(categories)]),
+                    'interactive': 'false',
                   })
 
 
