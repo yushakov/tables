@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator, RegexVa
 from django.utils.html import format_html
 from django.utils import timezone
 from django.utils.text import slugify
-from datetime import timedelta
+from datetime import timedelta, date
 import uuid
 from django.core.files.base import ContentFile
 import logging
@@ -123,6 +123,25 @@ class Construct(models.Model):
     
     def __str__(self):
         return self.title_text
+
+    def get_start_date(self):
+        choices = self.choice_set.order_by('plan_start_date')
+        if len(choices) > 0:
+            return choices[0].plan_start_date
+        return timezone.now()
+
+    def get_end_date(self):
+        choices = self.choice_set.order_by('plan_start_date')
+        end_date = choices[0].plan_start_date
+        for cho in choices:
+            if cho.plan_start_date + timedelta(days=cho.plan_days_num) > end_date:
+                end_date = cho.plan_start_date + timedelta(days=cho.plan_days_num)
+        return end_date
+
+    def get_duration_in_days(self):
+        start_date = self.get_start_date()
+        end_date = self.get_end_date()
+        return (end_date - start_date).days + 1
 
     def advance_status(self):
         """Advance to the next status if available."""

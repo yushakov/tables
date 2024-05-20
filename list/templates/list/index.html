@@ -19,18 +19,21 @@
 <div style="margin-top: 10px; margin-bottom: 10px">
      <a href="{% url 'list:status' %}"><b>Status assignment board (to manage statuses and categories)</b></a>
 </div>
+<div style="margin-top: 10px; margin-bottom: 10px">
+     <a href="{% url 'gantt:constructs' %}?{{ get_line }}">Gantt-chart &rarr;</a>
+</div>
 <div id="hidden-cols-header"></div>
 <div id="hidden-cols"></div><br /><br />
 <b>Categories:</b>&nbsp;
 <a href="{% url 'list:index' %}">all</a>&nbsp;
 {% if active_done_inds %}
 <span style="background-color: lightblue; padding: 2px; border-radius: 3px">
-    <a href="?category={{ active_done_inds }}">Active+Done</a>
+    <a href="?category={{ active_done_inds }}&foreman={{ foreman_id }}">Active+Done</a>
 </span>&nbsp;
 {% endif %}
 {% for ctg in categories %}
     <span style="background-color: {{ ctg.color }}; padding: 2px; border-radius: 3px">
-        <a href="?category={{ ctg.id }}">{{ ctg.name }}</a>
+        <a href="?category={{ ctg.id }}&foreman={{ foreman_id }}">{{ ctg.name }}</a>
     </span>&nbsp;
 {% endfor %}
 {% if active_construct_list %}
@@ -76,7 +79,7 @@ ToDo: N tasks.">
             <a href="{% url 'gantt:index' construct.id %}">Gantt</a>
         </td>
         <td>
-            <a href="?foreman={{ construct.foreman.id }}">
+            <a href="?category={{ cats_spec }}&foreman={{ construct.foreman.id }}">
                 {{ construct.foreman.username }}
             </a>
         </td>

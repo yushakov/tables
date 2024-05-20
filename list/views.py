@@ -42,13 +42,13 @@ class IndexView(generic.ListView):
 
 def fix_category(constructs, categories: list[StatusChain]):
     if len(categories) > 0:
-        for con in constructs:
-            if not con.status:
-                logger.warning(f"Put '{con}' into category (status chain) '{categories[0].name}'")
-                statuses = categories.order_by('priority')[0].get_ordered_statuses()
-                if len(statuses) > 0:
-                    con.status = statuses[0]
-                    con.save()
+        cons = constructs.filter(status=None)
+        for con in cons:
+            logger.warning(f"Put '{con}' into category (status chain) '{categories[0].name}'")
+            statuses = categories.order_by('priority')[0].get_ordered_statuses()
+            if len(statuses) > 0:
+                con.status = statuses[0]
+                con.save()
 
 
 def get_total(constructs):
@@ -147,43 +147,82 @@ def index(request):
     all_constructs = Construct.objects.all()
     all_cats = StatusChain.objects.order_by('priority')
     fix_category(all_constructs, all_cats)
-    cats = all_cats
-    ctg_id = [0]
+    cats = get_requested_categories(request.GET, all_cats)
+    adi = get_active_done_inds(all_cats)
+    foreman_id = get_foreman_id_from_get(request.GET)
+    constructs = get_constructs_in_cats_and_foreman(cats, foreman_id)
+    total = get_total(constructs)
+    get_line = make_get_line(cats, foreman_id)
+    cats_spec = 'all'
+    if 'category' in request.GET:
+        cats_spec = request.GET['category']
+        if cats_spec.strip() == '':
+            cats_spec = 'all'
+    context = {'active_construct_list': constructs,
+               'categories': all_cats,
+               'active_done_inds': adi,
+               'noscale': True,
+               'total': total,
+               'cats_spec': cats_spec,
+               'get_line': get_line,
+               'foreman_id': foreman_id
+              }
+    return render(request, 'list/index.html', context)
+
+def make_get_line(cats: list[StatusChain], foreman_id: int) -> str:
+    line = ('category=' + ','.join([str(c.id) for c in cats]) +
+            '&' +
+            'foreman=' + str(foreman_id))
+    return line
+
+
+def get_foreman_id_from_get(get_dict):
+    foreman_id = 0
     try:
-        ctg_id = [int(c) for c in request.GET.get('category', '0').split(',')]
-    except:
-        pass
-    if ctg_id[0] > 0:
-        cats = []
-        for cid in ctg_id:
-            try:
-                cat = all_cats.get(id=cid)
-                cats.append(cat)
-            except:
-                pass
-    adi = ''
-    try:
-        adi += str(all_cats.filter(name__icontains='active')[0].id) + ','
-        adi += str(all_cats.filter(name__icontains='done')[0].id)
-    except:
-        pass
+        foreman_id = int(get_dict.get('foreman', '-1'))
+    except Exception as e:
+        logger.error(f"Error getting foreman from '{get_dict}'. Exception: {e}")
+    return foreman_id
+
+
+def get_constructs_in_cats_and_foreman(cats, foreman_id):
     constructs = []
     for ctg in cats:
         cons = ctg.constructs
         for con in cons:
             con.color = ctg.color
             constructs.append(con)
-    foreman = int(request.GET.get('foreman', '-1'))
-    if foreman > 0:
-        constructs = [con for con in constructs if con.foreman is not None and con.foreman.id == foreman]
-    total = get_total(constructs)
-    context = {'active_construct_list': constructs,
-               'categories': all_cats,
-               'active_done_inds': adi,
-               'noscale': True,
-               'total': total
-              }
-    return render(request, 'list/index.html', context)
+    if foreman_id > 0:
+        constructs = [con for con in constructs if con.foreman is not None and con.foreman.id == foreman_id]
+    return constructs
+
+
+def get_requested_categories(get_dict, all_cats: list[StatusChain]) -> list[StatusChain]:
+    cats = all_cats
+    ctg_id = [0]
+    try:
+        ctg_id = [int(c) for c in get_dict.get('category', '0').split(',')]
+    except Exception as e:
+        logger.error(f"Cannot get category IDs from GET: {e}")
+    if ctg_id[0] > 0:
+        cats = []
+        for cid in ctg_id:
+            try:
+                cat = all_cats.get(id=cid)
+                cats.append(cat)
+            except Exception as e:
+                logger.error(f"Cannot find category {cid}. Exception: {e}")
+    return cats
+
+
+def get_active_done_inds(all_categories):
+    adi = ''
+    try:
+        adi += str(all_categories.filter(name__icontains='active')[0].id) + ','
+        adi += str(all_categories.filter(name__icontains='done')[0].id)
+    except:
+        pass
+    return adi
 
 
 def get_content_object(data):

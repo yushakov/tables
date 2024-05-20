@@ -20,7 +20,9 @@
         window.port = "{{ port }}";
         window.csrf = "{{ csrf_token }}";
         window.interactive = {{ interactive }};
+        {% autoescape off %}
         window.getChoicesLink = "{{ get_choices_link }}";
+        {% endautoescape %}
     </script>
     <div>
         <h1>{{ title }}</h1>
@@ -28,9 +30,18 @@
     {% if construct_id > 0 %}
             &larr; <a href="{% url 'list:detail' construct_id %}">to the project</a>
             &nbsp;&nbsp;
-            <a href="{% url 'list:index' %}">Project List</a>
+            <a href="{% url 'list:index' %}">Project List</a><br /><br />
+            >> <a href="{% url 'gantt:index' construct_id %}?date_sort">all sort by date</a>
+            &nbsp;&nbsp;
+            >> <a href="{% url 'gantt:index' construct_id %}">sort in sub-group</a><br /><br />
     {% else %}
+        {% if slug_name %}
             &larr; <a href="{% url 'list:client_slug' slug_name %}">to the project</a>
+        {% else %}
+            &larr; <a href="{% url 'list:index' %}">projects</a><br /><br />
+            <b>Categories</b>: {{ categories }}<br />
+            <b>Foreman</b>: {{ foreman }}
+        {% endif %}
     {% endif %}
     </div>
     <br><br>
