@@ -147,39 +147,16 @@ def index(request):
     all_constructs = Construct.objects.all()
     all_cats = StatusChain.objects.order_by('priority')
     fix_category(all_constructs, all_cats)
-    cats = all_cats
-    ctg_id = [0]
-    try:
-        ctg_id = [int(c) for c in request.GET.get('category', '0').split(',')]
-    except:
-        pass
-    if ctg_id[0] > 0:
-        cats = []
-        for cid in ctg_id:
-            try:
-                cat = all_cats.get(id=cid)
-                cats.append(cat)
-            except:
-                pass
-    adi = ''
-    try:
-        adi += str(all_cats.filter(name__icontains='active')[0].id) + ','
-        adi += str(all_cats.filter(name__icontains='done')[0].id)
-    except:
-        pass
-    constructs = []
-    for ctg in cats:
-        cons = ctg.constructs
-        for con in cons:
-            con.color = ctg.color
-            constructs.append(con)
-    foreman = int(request.GET.get('foreman', '-1'))
-    if foreman > 0:
-        constructs = [con for con in constructs if con.foreman is not None and con.foreman.id == foreman]
+    cats = get_requested_categories(request.GET, all_cats)
+    adi = get_active_done_inds(all_cats)
+    foreman_id = int(request.GET.get('foreman', '-1'))
+    constructs = get_constructs_in_cats_and_foreman(cats, foreman_id)
     total = get_total(constructs)
     cats_spec = 'all'
     if 'category' in request.GET:
         cats_spec = request.GET['category']
+        if cats_spec.strip() == '':
+            cats_spec = 'all'
     context = {'active_construct_list': constructs,
                'categories': all_cats,
                'active_done_inds': adi,
@@ -188,6 +165,46 @@ def index(request):
                'cats_spec': cats_spec
               }
     return render(request, 'list/index.html', context)
+
+
+def get_constructs_in_cats_and_foreman(cats, foreman_id):
+    constructs = []
+    for ctg in cats:
+        cons = ctg.constructs
+        for con in cons:
+            con.color = ctg.color
+            constructs.append(con)
+    if foreman_id > 0:
+        constructs = [con for con in constructs if con.foreman is not None and con.foreman.id == foreman_id]
+    return constructs
+
+
+def get_requested_categories(get_dict, all_cats):
+    cats = all_cats
+    ctg_id = [0]
+    try:
+        ctg_id = [int(c) for c in get_dict.get('category', '0').split(',')]
+    except Exception as e:
+        logger.error(f"Cannot get category IDs from GET: {e}")
+    if ctg_id[0] > 0:
+        cats = []
+        for cid in ctg_id:
+            try:
+                cat = all_cats.get(id=cid)
+                cats.append(cat)
+            except Exception as e:
+                logger.error(f"Cannot find category {cid}. Exception: {e}")
+    return cats
+
+
+def get_active_done_inds(all_categories):
+    adi = ''
+    try:
+        adi += str(all_categories.filter(name__icontains='active')[0].id) + ','
+        adi += str(all_categories.filter(name__icontains='done')[0].id)
+    except:
+        pass
+    return adi
 
 
 def get_content_object(data):
