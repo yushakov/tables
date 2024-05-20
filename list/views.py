@@ -169,8 +169,8 @@ def index(request):
               }
     return render(request, 'list/index.html', context)
 
-def make_get_line(cats, foreman_id):
-    line = ('category=' + ','.join([str(c) for c in cats]) +
+def make_get_line(cats: list[StatusChain], foreman_id: int) -> str:
+    line = ('category=' + ','.join([str(c.id) for c in cats]) +
             '&' +
             'foreman=' + str(foreman_id))
     return line
@@ -197,7 +197,7 @@ def get_constructs_in_cats_and_foreman(cats, foreman_id):
     return constructs
 
 
-def get_requested_categories(get_dict, all_cats):
+def get_requested_categories(get_dict, all_cats: list[StatusChain]) -> list[StatusChain]:
     cats = all_cats
     ctg_id = [0]
     try:

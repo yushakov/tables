@@ -1937,9 +1937,13 @@ class ViewTests(TestCase):
         self.assertIs(str(response.content).find("Number three") > 0, True)
 
     def test_make_get_line(self):
-        print(make_get_line([0, 1, 2], 0))
-        print(make_get_line([''], ''))
-        print(make_get_line([1,2,3], 4))
+        chains = []
+        for name in ['one', 'two', 'three']:
+            chains.append(StatusChain(name=name))
+        [c.save() for c in chains]
+        print(make_get_line([chains[0], chains[1], chains[2]], 0))
+        print(make_get_line([], ''))
+        print(make_get_line([chains[0], chains[2]], 4))
 
     def test_index_with_foreman(self):
         c = Client()

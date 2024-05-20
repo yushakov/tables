@@ -163,7 +163,7 @@ class ViewTests(TestCase):
         c.login(username="yuran", password="secret")
         cons1 = make_test_construct('Test 1')
         cons2 = make_test_construct('Test 2')
-        response = c.get("/gantt/constructs/all")
+        response = c.get("/gantt/constructs/?category=all")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_constructs_no_cats_cat_1(self):
@@ -171,7 +171,7 @@ class ViewTests(TestCase):
         c.login(username="yuran", password="secret")
         cons1 = make_test_construct('Test 1')
         cons2 = make_test_construct('Test 2')
-        response = c.get("/gantt/constructs/1")
+        response = c.get("/gantt/constructs/?category=1")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_constructs_cat_1(self):
@@ -187,7 +187,7 @@ class ViewTests(TestCase):
         for con in [cons1, cons2]:
             con.status = status
             con.save()
-        response = c.get("/gantt/constructs/" + str(status.id))
+        response = c.get("/gantt/constructs/?category=" + str(chain.id))
         self.assertEqual(response.status_code, STATUS_CODE_OK)
 
     def test_constructs_cat_1_2(self):
@@ -210,5 +210,5 @@ class ViewTests(TestCase):
             con.status = status1
             con.save()
         cons3.status = status2
-        response = c.get(f"/gantt/constructs/{status1.id},{status2.id}")
+        response = c.get(f"/gantt/constructs/?category={status1.id},{status2.id}")
         self.assertEqual(response.status_code, STATUS_CODE_OK)
