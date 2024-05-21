@@ -269,6 +269,16 @@ def add_note(request):
     return JsonResponse({'message': 'Wrong access.'})
 
 
+def get_tab_focus(request):
+    chain, construct = None, None
+    if request.method == 'GET':
+        if 'chain' in request.GET:
+            chain = request.GET['chain']
+        if 'construct' in request.GET:
+            construct = request.GET['construct']
+    return chain, construct
+
+
 @login_required
 @user_passes_test(lambda user: user.is_staff)
 def status(request):
@@ -288,6 +298,9 @@ def status(request):
                           chain=no_cat_chain)
     context['chains'].append({'chain': no_cat_chain,
                               'statuses': [empty_status]})
+    focus_chain, focus_construct = get_tab_focus(request)
+    context['focus_chain'] = focus_chain
+    context['focus_construct'] = focus_construct
     return render(request, 'list/status.html', context)
 
 

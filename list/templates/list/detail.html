@@ -114,14 +114,38 @@
     <td>£ {{ total_total|floatformat:2 }}</td>
 </tr>
 {% endif %}
+<div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div>
 <tr>
-    <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
-    <td></td>
+    <td><b>Status:</b></td>
+    <td>
+        <div style="background-color: {{ construct.status.color }}; width: fit-content; padding: 7px; border-radius: 10px">
+            <a href="{% url 'list:status' %}?status={{ construct.status.id }}&chain={{ construct.status.chain.id }}&construct={{ construct.id }}">{{ construct.status.name }}</a>
+        </div>
+
+    </td>
     <td></td>
     <td><b>Total + Profit + VAT:</b></td>
     <td id='project_total_profit_vat'>&#163; {{ total_profit_vat|floatformat:2 }}</td>
     <td><b>Other works<br>progress:</b></td>
     <td>£ {{ construct.full_side_progress_cost|floatformat:2 }}</td>
+</tr>
+<tr>
+    <td><b>Category:</b></td>
+    <td>
+        <div style="color: black; font-weight: bold;
+                    width: fit-content;
+                    padding: 5px;
+                    text-decoration: underline;
+                    text-decoration-color: {{ construct.status.chain.color }};
+                    text-decoration-thickness: 4px">
+            {{ construct.status.chain }}
+        </div>
+    </td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
 </tr>
 <tr>
     <td><b>Unpaid<br>(out):</b></td>
