@@ -235,6 +235,11 @@
     <th></th>
 </tr></thead>
 <tbody>
+<script>
+    function goToChoice(url) {
+        window.open(url, "_blank");
+    }
+</script>
 {% for items in ch_list %}
     {% if items.type == 'Choice' %}
         <tr id='tr_{{ items.choice.id|unlocalize }}' class='{{ items.type }}'>
@@ -246,12 +251,14 @@
             <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
         </td>
     {% if items.type == 'Choice' %}
-        <td class='name_cell {{ items.main_contract }}'
-            title='{{ items.choice.id }}'>
         {% autoescape off %}
-            {{ items.choice.name_txt|strip|escape|markup }}
-        {% endautoescape %}
+        <td class='name_cell {{ items.main_contract }}'
+            title='{{ items.choice.id|stringformat:"d" }}'>
+            <div onclick="goToChoice('{% url 'list:choice' items.choice.id %}')" style="cursor: pointer;">
+                {{ items.choice.name_txt|strip|escape|markup }}
+            </div>
         </td>
+        {% endautoescape %}
         <td align='right'>&#163;{{ items.choice.price_num|floatformat:2 }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
@@ -361,7 +368,7 @@
     </form>
     <div id="id-note-list">
     {% for note in notes %}
-        <div class='note' id='note-{{ note.id }}'>
+        <div class='note' id='note-{{ note.id|stringformat:"d" }}'>
             <div class='note-head'>
                 <b>{{ note.last_modified_date}}</b>
     by <a href='#'>{{ note.author }}</a>

@@ -227,7 +227,7 @@ def get_active_done_inds(all_categories):
 
 def get_content_object(data):
     object_type = data.get('object_type', '')
-    object_id = data.get('object_id', '-1')
+    object_id = data.get('object_id', '-1').replace(',', '')
     if object_type == 'construct':
         try:
             obj = Construct.objects.get(pk=object_id)
@@ -517,7 +517,8 @@ def choice(request, choice_id):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: choice() by {request.user.username}, {ip}')
     choice = Choice.objects.get(pk=choice_id)
-    context = {"choice": choice}
+    context = {"choice": choice,
+               "notes": get_choice_notes(choice_id)}
     return render(request, 'list/choice.html', context)
 
 
@@ -933,6 +934,13 @@ def get_construct_notes(construct_id):
     content_type_construct = ContentType.objects.get(model='construct', app_label='list')
     notes = Note.objects.filter(content_type=content_type_construct)
     notes = notes.filter(object_id=construct_id).order_by('-last_modified_date')
+    return notes
+
+
+def get_choice_notes(choice_id):
+    content_type_choice = ContentType.objects.get(model='choice', app_label='list')
+    notes = Note.objects.filter(content_type=content_type_choice)
+    notes = notes.filter(object_id=choice_id).order_by('-last_modified_date')
     return notes
 
 

@@ -1,7 +1,66 @@
 {% extends 'base.html' %}
-{% block title %}Choice page{% endblock %}
-{% block content %}
 {% load static %}
+{% load app_filters %}
+
+{% block title %}Choice page{% endblock %}
+
+{% block extra-head %}
+<link rel="stylesheet" href="{% static 'list/notes.css' %}">
+<script src="{% static 'list/notes.js' %}"></script>
+<style>
+    a {
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
 <h1>{{ choice.construct.title_text }}</h1>
+<p>
+    &larr; <a href="{% url 'list:detail' choice.construct.id %}#tr_{{ choice.id|stringformat:'d' }}">to the project</a>
+</p>
 <h2>{{ choice.name_txt }}</h2>
+
+<div>
+    <h3>Constructive notes</h3>
+    {{ choice.constructive_notes }}
+</div>
+<div>
+    <h3>Client notes</h3>
+    {{ choice.client_notes }}
+</div>
+
+<div class='notes-container'>
+    <h2 style='color: #5e5e5e; margin-bottom: 5px'
+    title="**bold text**
+*italic text*
+[link title](https://www.example.com)">New note<sup>?</sup></h2>
+    <form id='id-add-note-form' action="{% url 'list:add_note' %}" method='POST'>
+        {% csrf_token %}
+        <p>
+            <textarea id='id-note-text' name='note-text' cols='50' rows='5' value=''></textarea>
+        </p>
+        <input type='hidden' name='object_type' value='choice'>
+        <input type='hidden' name='object_id' value='{{ choice.id }}'>
+        <p id='id-submit-p'>
+            <input type='submit' value='Submit' class='note-submit'>
+        </p>
+    </form>
+    <div id="id-note-list">
+    {% for note in notes %}
+        <div class='note' id='note-{{ note.id|stringformat:"d" }}'>
+            <div class='note-head'>
+                <b>{{ note.last_modified_date}}</b>
+    by <a href='#'>{{ note.author }}</a>
+            </div>
+            <div class='note-text'>
+                {% autoescape off %}
+                {{ note.text|escape|markup }}
+                {% endautoescape %}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+</div>
+
 {% endblock %}
