@@ -1537,8 +1537,8 @@ def history(request):
     context = {}
     if request.method == "GET":
         if 'id1' in request.GET and 'id2' in request.GET:
-            id1 = int(request.GET['id1'])
-            id2 = int(request.GET['id2'])
+            id1 = int(request.GET['id1'].replace(',', ''))
+            id2 = int(request.GET['id2'].replace(',', ''))
             context['text'] = HistoryRecord.get_diff(id1, id2)
     return render(request, 'list/history.html', context)
 
