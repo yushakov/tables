@@ -23,12 +23,18 @@ function sendNoteForm() {
         // Handle success. You can update the UI accordingly.
         let note_list = document.getElementById("id-note-list");
         let notes = note_list.getElementsByClassName("note");
-        let new_note = document.createElement('p');
+        let new_note = document.createElement('div');
         new_note.classList.add('note');
         new_note.id = 'note-' + data['note_id'];
-        new_note.innerHTML = "<b>" + data['last_modified'] + "</b> by "
-                           + "<a href='#'>" + data['author'] + "</a><br />"
-                           + note_markup(data['text']);
+        let note_head = document.createElement('div');
+        note_head.classList.add('note-head');
+        note_head.innerHTML = "<b>" + data['last_modified'] + "</b> by "
+                            + "<a href='#'>" + data['author'] + "</a>";
+        new_note.appendChild(note_head);
+        let note_text = document.createElement('div');
+        note_text.classList.add('note-text');
+        note_text.innerHTML = note_markup(data['text']);
+        new_note.appendChild(note_text);
         if (notes.length > 0) {
             notes[0].parentNode.insertBefore(new_note, notes[0]);
         }
