@@ -114,14 +114,38 @@
     <td>£ {{ total_total|floatformat:2 }}</td>
 </tr>
 {% endif %}
+<div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div>
 <tr>
-    <td><div id='profit_percent' style='display:none'>{{ construct.company_profit_percent_num }}</div></td>
-    <td></td>
+    <td><b>Status:</b></td>
+    <td>
+        <div style="background-color: {{ construct.status.color }}; width: fit-content; padding: 7px; border-radius: 10px">
+            <a href="{% url 'list:status' %}?status={{ construct.status.id }}&chain={{ construct.status.chain.id }}&construct={{ construct.id }}">{{ construct.status.name }}</a>
+        </div>
+
+    </td>
     <td></td>
     <td><b>Total + Profit + VAT:</b></td>
     <td id='project_total_profit_vat'>&#163; {{ total_profit_vat|floatformat:2 }}</td>
     <td><b>Other works<br>progress:</b></td>
     <td>£ {{ construct.full_side_progress_cost|floatformat:2 }}</td>
+</tr>
+<tr>
+    <td><b>Category:</b></td>
+    <td>
+        <div style="color: black; font-weight: bold;
+                    width: fit-content;
+                    padding: 5px;
+                    text-decoration: underline;
+                    text-decoration-color: {{ construct.status.chain.color }};
+                    text-decoration-thickness: 4px">
+            {{ construct.status.chain }}
+        </div>
+    </td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
 </tr>
 <tr>
     <td><b>Unpaid<br>(out):</b></td>
@@ -181,6 +205,12 @@
             style="text-decoration: none">
                 Notes
     </button>
+    <button onclick="open_tab('id-choice-notes', this)"
+            class="tab"
+            id="id-tab-choice-notes"
+            style="text-decoration: none">
+                Choice Notes
+    </button>
 </div>
 {% comment %} Tab header end. {% endcomment %}
 
@@ -235,6 +265,11 @@
     <th></th>
 </tr></thead>
 <tbody>
+<script>
+    function goToChoice(url) {
+        window.open(url, "_blank");
+    }
+</script>
 {% for items in ch_list %}
     {% if items.type == 'Choice' %}
         <tr id='tr_{{ items.choice.id|unlocalize }}' class='{{ items.type }}'>
@@ -246,12 +281,14 @@
             <a href="#" onclick="return addRow({{ items.idx }}, 'Header2');">head</a>
         </td>
     {% if items.type == 'Choice' %}
-        <td class='name_cell {{ items.main_contract }}'
-            title='{{ items.choice.id }}'>
         {% autoescape off %}
-            {{ items.choice.name_txt|strip|escape|markup }}
-        {% endautoescape %}
+        <td class='name_cell {{ items.main_contract }}'
+            title='{{ items.choice.id|stringformat:"d" }}'>
+            <div onclick="goToChoice('{% url 'list:choice' items.choice.id %}')" style="cursor: pointer;">
+                {{ items.choice.name_txt|strip|escape|markup }}
+            </div>
         </td>
+        {% endautoescape %}
         <td align='right'>&#163;{{ items.choice.price_num|floatformat:2 }}</td>
         <td align='right'>{{ items.choice.quantity_num }}</td>
         <td align='left'>{{ items.choice.units_of_measure_text }}</td>
@@ -361,10 +398,30 @@
     </form>
     <div id="id-note-list">
     {% for note in notes %}
-        <div class='note' id='note-{{ note.id }}'>
+        <div class='note' id='note-{{ note.id|stringformat:"d" }}'>
             <div class='note-head'>
                 <b>{{ note.last_modified_date}}</b>
     by <a href='#'>{{ note.author }}</a>
+            </div>
+            <div class='note-text'>
+                {% autoescape off %}
+                {{ note.text|escape|markup }}
+                {% endautoescape %}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+</div> <!-- end of id-notes -->
+
+{% comment %} Tab 'id-choice-notes'. {% endcomment %}
+<div id='id-choice-notes' class='tab-content notes-container' style='display:none'>
+    <h2>Choice notes</h2>
+    <div id="id-choice-note-list">
+    {% for note in choice_notes %}
+        <div class='note' id='note-{{ note.id|stringformat:"d" }}'>
+            <div class='note-head'>
+                <b>{{ note.last_modified_date}}</b>
+    by <a href='#'>{{ note.author }}</a> to the choice <a href="{% url 'list:choice' note.object_id %}#note-{{ note.id|stringformat:'d' }}"><b>{{ note.content_object.name_txt }}</b></a>
             </div>
             <div class='note-text'>
                 {% autoescape off %}

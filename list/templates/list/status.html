@@ -11,6 +11,24 @@
 {% endblock %}
 
 {% block content %}
+
+{% if focus_chain %}
+    <script>
+        window.addEventListener("load", (event) => {
+            const tab = document.getElementById("tab-{{ focus_chain }}")
+            if (tab) open_tab("chain-{{ focus_chain }}", tab);
+            else console.log("no chain");
+            const badge = document.getElementById("construct-{{ focus_construct }}");
+            if (badge) {
+                badge.scrollIntoView({ behavior: 'instant', block: 'center' });
+                highlightElement(badge);
+            }
+            else console.log("No badge");
+
+        });
+    </script>
+{% endif %}
+
 <div style="padding: 10px">
 <h1>Status assignment board</h1>
     <a href="{% url 'list:index' %}">all projects</a>&nbsp;&nbsp;&nbsp;

@@ -35,49 +35,56 @@ export function initHelperChains(): [StatusChainType[], StatusType[]] {
             name: "Lead obtained",
             color: "yellow",
             chain_id: "1",
-            next_status_id: "2"
+            next_status_id: "2",
+            project_count: 4
         },
         {
             id: "2",
             name: "Responsibility assigned",
             color: "green",
             chain_id: "1",
-            next_status_id: "3"
+            next_status_id: "3",
+            project_count: 3
         },
         {
             id: "3",
             name: "Meeting done",
             color: "blue",
             chain_id: "1",
-            next_status_id: ""
+            next_status_id: "",
+            project_count: 0
         },
         {
             id: "4",
             name: "In Schedule",
             color: "green",
             chain_id: "2",
-            next_status_id: "5"
+            next_status_id: "5",
+            project_count: 10
         },
         {
             id: "5",
             name: "Issue",
             color: "red",
             chain_id: "2",
-            next_status_id: ""
+            next_status_id: "",
+            project_count: 1
         },
         {
             id: "6",
             name: "Success",
             color: "green",
             chain_id: "3",
-            next_status_id: ""
+            next_status_id: "",
+            project_count: 414
         },
         {
             id: "7",
             name: "Fail",
             color: "red",
             chain_id: "3",
-            next_status_id: ""
+            next_status_id: "",
+            project_count: 11
         },
     ];
     return [chains, statuses];

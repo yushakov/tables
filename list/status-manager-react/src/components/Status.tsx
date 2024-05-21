@@ -98,11 +98,14 @@ export function Status(props: StatusProps) {
                 <div
                     className="status-name"
                     onDoubleClick={handleNameDblClick}>
-                    {props.status.name} ({props.status.project_count})
+                    {props.status.name}
                 </div>
                 <div className="status-editor"></div>
+                <div>&nbsp;({props.status.project_count})</div>
             </div>
-            <div className='delete-symbol' onClick={handleClickDelete}>X</div>
+            {(props.status.project_count || 0) == 0 && <div className='delete-symbol' onClick={handleClickDelete} title="Delete status">
+                X
+            </div>}
             <div className='delete-dialog-container' style={{ display: showDlg }}>
                 <div className='delete-dialog'>
                     <h3>Are you sure you want to delete status?</h3>

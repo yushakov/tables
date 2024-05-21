@@ -227,7 +227,7 @@ def get_active_done_inds(all_categories):
 
 def get_content_object(data):
     object_type = data.get('object_type', '')
-    object_id = data.get('object_id', '-1')
+    object_id = data.get('object_id', '-1').replace(',', '')
     if object_type == 'construct':
         try:
             obj = Construct.objects.get(pk=object_id)
@@ -269,6 +269,16 @@ def add_note(request):
     return JsonResponse({'message': 'Wrong access.'})
 
 
+def get_tab_focus(request):
+    chain, construct = None, None
+    if request.method == 'GET':
+        if 'chain' in request.GET:
+            chain = request.GET['chain']
+        if 'construct' in request.GET:
+            construct = request.GET['construct']
+    return chain, construct
+
+
 @login_required
 @user_passes_test(lambda user: user.is_staff)
 def status(request):
@@ -288,6 +298,9 @@ def status(request):
                           chain=no_cat_chain)
     context['chains'].append({'chain': no_cat_chain,
                               'statuses': [empty_status]})
+    focus_chain, focus_construct = get_tab_focus(request)
+    context['focus_chain'] = focus_chain
+    context['focus_construct'] = focus_construct
     return render(request, 'list/status.html', context)
 
 
@@ -517,7 +530,8 @@ def choice(request, choice_id):
     ip = get_client_ip_address(request)
     logger.info(f'*action* USER ACCESS: choice() by {request.user.username}, {ip}')
     choice = Choice.objects.get(pk=choice_id)
-    context = {"choice": choice}
+    context = {"choice": choice,
+               "notes": get_choice_notes(choice_id)}
     return render(request, 'list/choice.html', context)
 
 
@@ -936,6 +950,25 @@ def get_construct_notes(construct_id):
     return notes
 
 
+def get_choice_notes(choice_id):
+    content_type_choice = ContentType.objects.get(model='choice', app_label='list')
+    notes = Note.objects.filter(content_type=content_type_choice)
+    notes = notes.filter(object_id=choice_id).order_by('-last_modified_date')
+    return notes
+
+
+def get_construct_choice_notes(construct_id):
+    choice_notes = []
+    try:
+        construct = Construct.objects.get(pk=construct_id)
+    except:
+        return []
+    for choice in construct.choice_set.all():
+        choice_notes += list(get_choice_notes(choice.id))
+    choice_notes = sorted(choice_notes, key=lambda n: n.created_date.timestamp(), reverse=True)
+    return choice_notes
+
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
@@ -974,6 +1007,7 @@ def detail(request, construct_id):
                'noscale': True,
                'history': history,
                'notes': get_construct_notes(construct.id),
+               'choice_notes': get_construct_choice_notes(construct.id),
                'detailJsVersion': detailJsVersion}
     return render(request, 'list/detail.html', context)
 

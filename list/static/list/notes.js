@@ -21,6 +21,7 @@ function sendNoteForm() {
     })
     .then(data => {
         // Handle success. You can update the UI accordingly.
+        console.log(data);
         let note_list = document.getElementById("id-note-list");
         let notes = note_list.getElementsByClassName("note");
         let new_note = document.createElement('div');
