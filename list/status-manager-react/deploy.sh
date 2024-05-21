@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# nvm use 20.5.0 - run it separately
+
 ROOT=$(pwd)
 echo "Build $(pwd)..."
 npm run build

@@ -28,6 +28,7 @@
     font-weight: bold;
     text-align: center;
     cursor: pointer;
+    border: 1px solid white;
 }
 
 .add-status:hover {

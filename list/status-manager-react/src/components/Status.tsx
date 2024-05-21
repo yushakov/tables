@@ -102,7 +102,7 @@ export function Status(props: StatusProps) {
                 </div>
                 <div className="status-editor"></div>
             </div>
-            <div className='delete-symbol' onClick={handleClickDelete}>X</div>
+            {(props.status.project_count || 0) == 0 && <div className='delete-symbol' onClick={handleClickDelete}>X</div>}
             <div className='delete-dialog-container' style={{ display: showDlg }}>
                 <div className='delete-dialog'>
                     <h3>Are you sure you want to delete status?</h3>
