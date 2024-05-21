@@ -361,13 +361,17 @@
     </form>
     <div id="id-note-list">
     {% for note in notes %}
-        <p class='note' id='note-{{ note.id }}'>
-            <b>{{ note.last_modified_date}}</b>
-by <a href='#'>{{ note.author }}</a><br />
-            {% autoescape off %}
-            {{ note.text|escape|markup }}
-            {% endautoescape %}
-        </p>
+        <div class='note' id='note-{{ note.id }}'>
+            <div class='note-head'>
+                <b>{{ note.last_modified_date}}</b>
+    by <a href='#'>{{ note.author }}</a>
+            </div>
+            <div class='note-text'>
+                {% autoescape off %}
+                {{ note.text|escape|markup }}
+                {% endautoescape %}
+            </div>
+        </div>
     {% endfor %}
     </div>
 </div>
