@@ -101,7 +101,10 @@ export function StatusChain(props: StatusChainProps) {
                     {props.chain.name}
                 </div>
                 <div className="add-status"
-                     onClick={handleAddStatusClick}>+</div>
+                     title="Add a status"
+                     onClick={handleAddStatusClick}>
+                        +
+                </div>
             </div>
             {
                 statuses.map(status => (
