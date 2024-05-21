@@ -944,6 +944,18 @@ def get_choice_notes(choice_id):
     return notes
 
 
+def get_construct_choice_notes(construct_id):
+    choice_notes = []
+    try:
+        construct = Construct.objects.get(pk=construct_id)
+    except:
+        return []
+    for choice in construct.choice_set.all():
+        choice_notes += list(get_choice_notes(choice.id))
+    choice_notes = sorted(choice_notes, key=lambda n: n.created_date.timestamp(), reverse=True)
+    return choice_notes
+
+
 @login_required
 @permission_required("list.view_construct")
 @permission_required("list.change_construct")
@@ -982,6 +994,7 @@ def detail(request, construct_id):
                'noscale': True,
                'history': history,
                'notes': get_construct_notes(construct.id),
+               'choice_notes': get_construct_choice_notes(construct.id),
                'detailJsVersion': detailJsVersion}
     return render(request, 'list/detail.html', context)
 

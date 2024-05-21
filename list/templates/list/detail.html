@@ -181,6 +181,12 @@
             style="text-decoration: none">
                 Notes
     </button>
+    <button onclick="open_tab('id-choice-notes', this)"
+            class="tab"
+            id="id-tab-choice-notes"
+            style="text-decoration: none">
+                Choice Notes
+    </button>
 </div>
 {% comment %} Tab header end. {% endcomment %}
 
@@ -372,6 +378,26 @@
             <div class='note-head'>
                 <b>{{ note.last_modified_date}}</b>
     by <a href='#'>{{ note.author }}</a>
+            </div>
+            <div class='note-text'>
+                {% autoescape off %}
+                {{ note.text|escape|markup }}
+                {% endautoescape %}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+</div> <!-- end of id-notes -->
+
+{% comment %} Tab 'id-choice-notes'. {% endcomment %}
+<div id='id-choice-notes' class='tab-content notes-container' style='display:none'>
+    <h2>Choice notes</h2>
+    <div id="id-choice-note-list">
+    {% for note in choice_notes %}
+        <div class='note' id='note-{{ note.id|stringformat:"d" }}'>
+            <div class='note-head'>
+                <b>{{ note.last_modified_date}}</b>
+    by <a href='#'>{{ note.author }}</a> to the choice <a href="{% url 'list:choice' note.object_id %}#note-{{ note.id|stringformat:'d' }}"><b>{{ note.content_object.name_txt }}</b></a>
             </div>
             <div class='note-text'>
                 {% autoescape off %}
