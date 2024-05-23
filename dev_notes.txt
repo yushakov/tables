@@ -393,17 +393,20 @@ Chat GPT подсказывает (как я и догадывался), что 
 2. Открываем её в sqlite3:
    sqlite3 db_for_test.sqlite3
 3. Чистим таблицы (прямо в sqlite3>):
-   delete from list_construct;
-   delete from list_choice;
-   delete from list_transaction;
+   (вообще-то, удаляем всё, кроме user_groups и user_permissions)
+   delete from list_historyrecord;
    delete from list_invoice;
    delete from list_invoicetransaction;
-   delete from list_historyrecord;
-   delete from list_user;
-   delete from list_user_user_permissions;
-   delete from list_user_accessible_constructs;
-   delete from list_category_constructs;
    delete from list_note;
+   delete from list_status;
+   delete from list_statuschain;
+   delete from list_transaction;
+   delete from list_category;
+   delete from list_user;
+   delete from list_category_constructs;
+   delete from list_user_accessible_constructs;
+   delete from list_choice;
+   delete from list_construct;
    delete from django_content_type;
    delete from auth_permission;
    delete from django_admin_log;
@@ -416,7 +419,6 @@ Chat GPT подсказывает (как я и догадывался), что 
    SecRetPa55
 6. Сохряняем в json:
    python manage.py dumpdata --format json -o cypress/fixtures/test.json
-   (cypress_test - эта база прописана в settings.py)
 7. Запускаем тестовый сервер:
    python manage.py testserver cypress/fixtures/test.json
 8. Тестируем:

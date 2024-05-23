@@ -120,23 +120,75 @@ describe('Tests after login', () => {
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
   })
 
-  it("Create Categories", () => {
-    cy.visit("admin/list/category/add/");
+  it("Create Status Chains (Categories)", () => {
+    cy.visit("admin/list/statuschain/add/");
     cy.get('#id_name').type('Active');
     cy.get('#id_priority').clear().type('0');
     cy.get('#id_color').clear().type('pink');
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
 
-    cy.visit("admin/list/category/add/");
-    cy.get('#id_name').type('Done');
+    cy.visit("admin/list/statuschain/add/");
+    cy.get('#id_name').type('Draft');
     cy.get('#id_priority').clear().type('1');
-    cy.get('#id_color').clear().type('grey');
+    cy.get('#id_color').clear().type('yellow');
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
 
-    cy.visit("admin/list/category/add/");
-    cy.get('#id_name').type('No-Cat');
+    cy.visit("admin/list/statuschain/add/");
+    cy.get('#id_name').type('Done');
     cy.get('#id_priority').clear().type('2');
+    cy.get('#id_color').clear().type('green');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+
+    cy.visit("admin/list/statuschain/add/");
+    cy.get('#id_name').type('No-Cat');
+    cy.get('#id_priority').clear().type('3');
+    cy.get('#id_color').clear().type('white');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+  })
+
+  it("Create Basic Statuses", () => {
+    cy.visit("admin/list/status/add/");
+    cy.get('#id_name').type('In Schedule');
+    cy.get('#id_chain').select('Active');
+    cy.get('#id_color').clear().type('green');
+    cy.get('#id_description').clear().type('Everything is fine +1');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+
+    cy.visit("admin/list/status/add/");
+    cy.get('#id_name').type('Issue');
+    cy.get('#id_color').clear().type('red');
+    cy.get('#id_chain').select('Active');
+    cy.get('#id_description').clear().type('Something needs to be fixed!');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+    
+    cy.visit("admin/list/status/add/");
+    cy.get('#id_name').type('Idle');
     cy.get('#id_color').clear().type('yellow');
+    cy.get('#id_chain').select('Active');
+    cy.get('#id_description').clear().type('Something is blocking');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+
+    //------------------------------------------------------------//
+
+    cy.visit("admin/list/status/add/");
+    cy.get('#id_name').type('Lead obtained');
+    cy.get('#id_color').clear().type('yellow');
+    cy.get('#id_chain').select('Draft');
+    cy.get('#id_description').clear().type('Got email or phone number, or social network page, etc.');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+
+    cy.visit("admin/list/status/add/");
+    cy.get('#id_name').type('Success');
+    cy.get('#id_color').clear().type('green');
+    cy.get('#id_chain').select('Done');
+    cy.get('#id_description').clear().type('Done, paid, profitable, all are happy.');
+    cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
+
+    cy.visit("admin/list/status/add/");
+    cy.get('#id_name').type('default');
+    cy.get('#id_color').clear().type('lightgrey');
+    cy.get('#id_chain').select('No-Cat');
+    cy.get('#id_description').clear().type('Nothing.');
     cy.get('input[type="submit"].default[value="Save"]').should('exist').click();
   })
 
@@ -145,6 +197,7 @@ describe('Tests after login', () => {
     cy.contains('Admin page.').should('exist').click();
     cy.get('a[href="/admin/list/construct/add/"]').click();
     cy.get('#id_title_text').type('Cypress Test Project');
+    cy.get('#id_status').select('In Schedule (Active)');
     cy.get('#id_address_text').type('10 Cypress Way');
     cy.get('#id_owner_name_text').type('Cypress');
     cy.get('#id_client_user').select('cypress');
@@ -156,6 +209,7 @@ describe('Tests after login', () => {
     cy.contains('Admin page.').should('exist').click();
     cy.get('a[href="/admin/list/construct/add/"]').click();
     cy.get('#id_title_text').type('Cypress On-Top Test Project');
+    cy.get('#id_status').select('Lead obtained (Draft)');
     cy.get('#id_address_text').type('10 Cypress Way');
     cy.get('#id_owner_name_text').type('Cypress');
     cy.get('#id_ontop_profit_percent_num').type('20');
