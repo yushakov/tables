@@ -323,6 +323,33 @@ describe('Tests after login', () => {
     cy.contains('Note from Cypress').should('be.visible');
   });
 
+  it("Switch to a choice page and add a Note.", () => {
+    cy.visit("/list/1");
+    cy.get('#id-tab-tasks').click();
+    cy.contains('Left side').should('be.visible');
+    cy.contains('Left side').trigger('mouseover');
+    cy.wait(1000);
+    cy.contains('open the choice').should('be.visible').click();
+    cy.get('#id-note-text').should('be.visible').clear().type('Choice note from Cypress');
+    cy.get('#id-add-note-form').find('input[type="submit"]').click();
+    cy.wait(1000);
+    cy.get('#id-note-text').invoke('text').then((text)=>{
+      expect(text.trim()).to.equal('');
+    });
+    cy.contains('Choice note from Cypress').should('be.visible');
+  });
+
+  it("Switching to the choice link disappears.", () => {
+    cy.visit("/list/1");
+    cy.get('#id-tab-tasks').click();
+    cy.contains('Left side').should('be.visible');
+    cy.contains('Left side').trigger('mouseover');
+    cy.wait(1000);
+    cy.contains('open the choice').should('be.visible');
+    cy.wait(4000);
+    cy.get('#id-go-to-choice-popup').should('be.hidden');
+  });
+
   it("Open the project list", () => {
     // cy.contains('back to the project list').should('exist').click()
     cy.visit("/list");
