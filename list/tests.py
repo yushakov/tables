@@ -12,7 +12,7 @@ import re
 import datetime as dt
 import json
 from django.conf import settings
-from list.views import check_integrity,   \
+from list.views import add_progress_update_note, check_integrity,   \
                        is_yyyy_mm_dd,     \
                        is_dd_mm_yyyy,     \
                        is_month_day_year, \
@@ -31,7 +31,7 @@ from list.views import check_integrity,   \
                        client_slug_bg_update, \
                        bg_process_post
 from list.models import Construct, \
-                        Category, \
+                        Category, Note, \
                         User, \
                         Choice, \
                         Invoice, \
@@ -1788,6 +1788,30 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertIs(str(response.content).find("price") > 0, True)
 
+    def test_progress_update_note_no_user(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        add_progress_update_note(choice, 30.5)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 1)
+
+    def test_progress_update_note_user(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        add_progress_update_note(choice, 30.5, user=self.worker_user_2)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 1)
+
+    def test_progress_update_note_same_progress(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        add_progress_update_note(choice, choice.progress_percent_num, user=self.worker_user_2)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 0)
+
     def test_worker_page(self):
         c = Client()
         c.login(username="worker2", password="secret")
@@ -3475,6 +3499,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3516,6 +3541,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3565,6 +3591,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3609,6 +3636,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3666,6 +3694,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3708,6 +3737,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3750,6 +3780,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3793,6 +3824,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3829,6 +3861,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3887,6 +3920,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3918,6 +3952,7 @@ class ViewTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
@@ -3976,6 +4011,7 @@ class ViewTests(TestCase):
         time_earlier = int(dt.datetime.now().timestamp()) + 3
         class Request:
             method = "POST"
+            user=None
             POST = {"json_value": "{" + f'"timestamp": "{time_earlier}",' + \
 '''
   "row_1": {
@@ -4064,6 +4100,7 @@ class ViewTests(TestCase):
         time_earlier = int(dt.datetime.now().timestamp()) - 10
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_earlier}",' + \
 '''
   "row_1": {
@@ -4105,6 +4142,7 @@ class ViewTests(TestCase):
         construct.save()
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value":
 '''
 {
@@ -4154,6 +4192,7 @@ class ViewTests(TestCase):
         time_earlier = int(dt.datetime.now().timestamp()) + 3
         class Request:
             method = "POST"
+            user = None
             POST = {"json_value": "{" + f'"timestamp": "{time_earlier}",' + \
 '''
   "row_1": {
@@ -4230,6 +4269,7 @@ class ClientSlugTests(TestCase):
         time_later = int(dt.datetime.now().timestamp()) + 10
         class Request:
             method = "POST"
+            user=None
             POST = {"json_value": "{" + f'"timestamp": "{time_later}",' + \
 '''
   "row_1": {
