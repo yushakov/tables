@@ -12,7 +12,7 @@ import re
 import datetime as dt
 import json
 from django.conf import settings
-from list.views import add_progress_update_note, check_integrity,   \
+from list.views import add_notes_about_old_notes_update, add_progress_update_note, check_integrity,   \
                        is_yyyy_mm_dd,     \
                        is_dd_mm_yyyy,     \
                        is_month_day_year, \
@@ -1809,6 +1809,56 @@ class ViewTests(TestCase):
         choices = cons.choice_set.all()
         choice = choices[0]
         add_progress_update_note(choice, choice.progress_percent_num, user=self.worker_user_2)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 0)
+
+    def test_old_note_update_note_no_user(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        add_notes_about_old_notes_update(choice, "New anonymous client note!", 'client')
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 1)
+
+    def test_old_note_update_note_client(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        add_notes_about_old_notes_update(choice, "New client note!", 'client', user=self.worker_user_2)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 1)
+
+    def test_old_note_update_note_construcho(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        add_notes_about_old_notes_update(choice, "New ConstruCho note!", 'construcho', user=self.user)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 1)
+
+    def test_old_note_update_note_strange_type(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        add_notes_about_old_notes_update(choice, "New stranger note!", 'someone', user=self.user)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 0)
+
+    def test_old_note_update_note_same_note_client(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        choice.client_notes = "Some note."
+        add_notes_about_old_notes_update(choice, choice.client_notes + ' ', 'client', user=self.user)
+        notes = Note.objects.all()
+        self.assertEqual(len(notes), 0)
+
+    def test_old_note_update_note_same_note_construcho(self):
+        cons = make_test_construct("test")
+        choices = cons.choice_set.all()
+        choice = choices[0]
+        choice.constructive_notes = "Some note."
+        add_notes_about_old_notes_update(choice, choice.constructive_notes + ' ', 'construcho', user=self.user)
         notes = Note.objects.all()
         self.assertEqual(len(notes), 0)
 
