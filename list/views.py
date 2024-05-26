@@ -1,3 +1,4 @@
+import difflib
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import generic
@@ -640,7 +641,53 @@ def prepare_data(cells):
         data['main_contract_choice'] = data['constructive_notes'].find('#main') >= 0
     return data
 
-def update_choice(choice_id, cell_data, client=False, foreman=False):
+
+def add_progress_update_note(choice: Choice, progress_percent: float, user=None):
+    note_text = ("Progress update. " +
+                 f"From {choice.progress_percent_num} % " +
+                 f"to {progress_percent} %.")
+    if round(choice.progress_percent_num, 2) == round(progress_percent, 2): return
+    new_note = Note(text=note_text,
+                    author=user,
+                    content_object=choice)
+    new_note.save()
+
+
+class OldNoteType:
+    client = 'client'
+    construcho = 'construcho'
+
+
+def add_notes_about_old_notes_update(choice: Choice,
+                                     new_note: str,
+                                     note_type: OldNoteType,
+                                     user=None):
+    note_text = "Old notes update."
+    # import pdb; pdb.set_trace()
+    lst2  = new_note.split('\n')
+    if user is not None and type(user) != 'User':
+        user = None
+    if note_type == OldNoteType.client:
+        if choice.client_notes.strip() == new_note.strip(): return
+        note_text += " Client notes."
+        lst1  = choice.client_notes.split('\n')
+        diff_lines = [l for l in difflib.unified_diff(lst1, lst2)]
+    elif note_type == OldNoteType.construcho:
+        if choice.constructive_notes.strip() == new_note.strip(): return
+        note_text += " Constructive notes."
+        lst1  = choice.constructive_notes.split('\n')
+        diff_lines = [l for l in difflib.unified_diff(lst1, lst2)]
+    else:
+        logger.error(f"Wrong note type in add_notes_about_old_notes_update(): {note_type}")
+        return
+    note_text += '\n' + '\n'.join(diff_lines)
+    new_note = Note(text=note_text,
+                    author=user,
+                    content_object=choice)
+    new_note.save()
+
+
+def update_choice(choice_id, cell_data, client=False, foreman=False, user=None):
     # can be a header
     if type(choice_id) != int:
         try:
@@ -664,10 +711,12 @@ def update_choice(choice_id, cell_data, client=False, foreman=False):
             logger.info(f'UPDATE "{choice.name_txt[:50]}" (id: {choice.id}) from "{choice.construct}"')
             data = prepare_data(cells)
             if client:
+                add_notes_about_old_notes_update(choice, data['client_notes'], OldNoteType.client, user)
                 choice.client_notes = data['client_notes']
                 choice.save()
                 return int(choice_id)
             if foreman:
+                add_progress_update_note(choice, data['progress_percent_num'], user)
                 choice.progress_percent_num = data['progress_percent_num']
                 choice.save()
                 return int(choice_id)
@@ -677,10 +726,13 @@ def update_choice(choice_id, cell_data, client=False, foreman=False):
             choice.units_of_measure_text =    data['units_of_measure_text']
             choice.price_num =                data['price_num']
             choice.workers =                  data['workers']
+            add_progress_update_note(choice, data['progress_percent_num'], user)
             choice.progress_percent_num =     data['progress_percent_num']
             choice.plan_start_date =          data['plan_start_date']
             choice.plan_days_num =            data['plan_days_num']          
+            add_notes_about_old_notes_update(choice, data['constructive_notes'], OldNoteType.construcho, user)
             choice.constructive_notes =       data['constructive_notes']
+            add_notes_about_old_notes_update(choice, data['client_notes'], OldNoteType.client, user)
             choice.client_notes =             data['client_notes']
             choice.main_contract_choice =     data['main_contract_choice']
             choice.save()
@@ -731,22 +783,22 @@ def add_to_structure(structure, row_data, choice_id):
     structure.update({f'line_{ln_cntr}':{'type':row_type, 'id':row_id}})
 
 
-def create_or_update_choice(row_id, row, construct, client=False, foreman=False):
+def create_or_update_choice(row_id, row, construct, client=False, foreman=False, user=None):
     if row_id.startswith('tr_'):
-        return update_choice(row_id.replace('tr_',''), row, client, foreman)
+        return update_choice(row_id.replace('tr_',''), row, client, foreman, user)
     elif not client and not foreman:
         return create_choice(row, construct)
     return -1
 
 
-def save_update(data, construct, client=False, foreman=False):
+def save_update(data, construct, client=False, foreman=False, user=None):
     structure = dict()
     client_try_to_change_structure = client
     out_pairs = dict()
     for key in data.keys():
         if not key.startswith("row_"): continue
         row_id = data[key]['id']
-        choice_id = create_or_update_choice(row_id, data[key], construct, client, foreman)
+        choice_id = create_or_update_choice(row_id, data[key], construct, client, foreman, user)
         add_to_structure(structure, data[key], choice_id)
         if row_id.startswith('tmp_'):
             out_pairs[row_id] = choice_id
@@ -904,7 +956,7 @@ def process_post(request, construct, client=False, foreman=False):
         data = json.loads(request.POST["json_value"])
         logger.debug('POST data in detail():\n %s', request.POST["json_value"])
         if checkTimeStamp(data, construct):
-            return save_update(data, construct, client, foreman)
+            return save_update(data, construct, client, foreman, request.user)
         return dict()
     return dict()
 
