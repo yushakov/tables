@@ -72,7 +72,7 @@ class ConstructAdmin(admin.ModelAdmin):
 class ChoiceAdmin(admin.ModelAdmin):
     list_display = ["get_name", "construct", "get_progress"]
     list_filter  = ["construct"]
-    search_fields = ["name_txt__contains"]
+    search_fields = ["name_txt__icontains"]
     fields = ["construct", "workers", "name_txt",
               "main_contract_choice",
               "quantity_num", "units_of_measure_text", "price_num",
@@ -147,6 +147,7 @@ class MyUserAdmin(UserAdmin):
 class NoteAdmin(admin.ModelAdmin):
     list_display = ['text_shorten', 'last_modified_date', 'author',
                     'content_type', 'content_object']
+    search_fields = ["text__icontains"]
 
 
 admin.site.register(User, MyUserAdmin)
