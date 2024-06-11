@@ -110,7 +110,11 @@ Please, report to administrators, if you think this is an issue.
         {% if 'is_staff' in perms %}
             <label for='id_link_to_pay'><b>Link to pay:</b></label>
             <span id='id_link_to_pay'>
-                <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&to={{ invoice.seller }}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
+                {% if invoice.invoice_type == 'IN' %}
+                    <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&from={{invoice.construct.owner_name_text}}&to={{ invoice.seller }}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
+                {% else %}
+                    <a href="{% url 'list:submit_transaction' %}?construct={{invoice.construct.id}}&to={{ invoice.seller }}&amount={{invoice.amount}}&invoice={{invoice.id}}&type={{invoice.invoice_type}}">pay</a>
+                {% endif %}
             </span>
         {% endif %}
     {% endif %}
