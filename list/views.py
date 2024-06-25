@@ -482,16 +482,16 @@ def add_status_change_note(user, data):
 
 
 def get_active_done_constructs():
-    cats = Category.objects.all()
+    cats = StatusChain.objects.all()
     active, done = [], []
     active_cats = cats.filter(name__icontains='active')
     done_cats = cats.filter(name__icontains='done')
     if len(active_cats) > 0:
         for ac in active_cats:
-            active += [con for con in ac.constructs.all()]
+            active += [con for con in ac.constructs]
     if len(done_cats) > 0:
         for dc in done_cats:
-            done += [con for con in dc.constructs.all()]
+            done += [con for con in dc.constructs]
     return active + done
 
 def get_user_invoices(user):

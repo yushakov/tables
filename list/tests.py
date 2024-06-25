@@ -1745,9 +1745,12 @@ class ViewTests(TestCase):
         cons = make_test_construct('Test construct for the foreman session')
         cons.foreman = self.worker_user_2
         cons.save()
-        cat = Category(name='active', priority=1)
-        cat.save(0)
-        cat.constructs.add(cons.id)
+        ch = StatusChain(name='active', priority=1)
+        ch.save()
+        status = Status(name="status", chain=ch)
+        status.save()
+        cons.status = status
+        cons.save()
         response = c.get('/list/account/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
@@ -1758,9 +1761,12 @@ class ViewTests(TestCase):
         cons = make_test_construct('Test construct for the foreman session')
         cons.foreman = self.worker_user_2
         cons.save()
-        cat = Category(name='Windows (Active)', priority=1)
-        cat.save(0)
-        cat.constructs.add(cons.id)
+        ch = StatusChain(name='Windows (Active)', priority=1)
+        ch.save()
+        status = Status(name="status", chain=ch)
+        status.save()
+        cons.status = status
+        cons.save()
         response = c.get('/list/account/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
@@ -1771,9 +1777,12 @@ class ViewTests(TestCase):
         cons = make_test_construct('Test construct for the foreman session')
         cons.foreman = self.worker_user_2
         cons.save()
-        cat = Category(name='Windows (Done)', priority=1)
-        cat.save(0)
-        cat.constructs.add(cons.id)
+        ch = StatusChain(name='Windows (Done)', priority=1)
+        ch.save()
+        status = Status(name="status", chain=ch)
+        status.save()
+        cons.status = status
+        cons.save()
         response = c.get('/list/account/')
         self.assertEqual(response.status_code, STATUS_CODE_OK)
         self.assertTrue(str(response.content).find("Test construct for the foreman session") >= 0)
