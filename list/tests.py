@@ -506,12 +506,17 @@ class HistoryTests(TestCase):
 class ModelTests(TestCase):
     def test_start_end_duration(self):
         con = make_test_construct('Testing dates')
-        # print("Start: ", con.get_start_date())
-        # print("End: ", con.get_end_date())
-        # print("Duration: ", con.get_duration_in_days())
         self.assertEqual(con.get_start_date(), format_date('1984-04-15'))
         self.assertEqual(con.get_end_date(), format_date('1984-04-28'))
         self.assertEqual(con.get_duration_in_days(), 14)
+
+
+    def test_start_end_duration_of_empty(self):
+        con = Construct(title_text='Testing dates')
+        con.save()
+        self.assertEqual(con.get_start_date(), timezone.now().date())
+        self.assertEqual(con.get_end_date(), timezone.now().date())
+        self.assertEqual(con.get_duration_in_days(), 1)
 
 
     def test_foreman(self):
