@@ -40,25 +40,25 @@
 <table id='construct_list'>
     <tr>
         <th class="construct-title">Project name</th>
-        <th>Progress</th>
+        <th style='width: 100px;'>Progress</th>
         <th>Chart</th>
         <th>Foreman</th>
-        <th class="cols full-cost" title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
-        <th class="cols vat" title="VAT from actual Income, not the full cost.">VAT<sup>?</sup></th>
+        <th style='width: 100px;' class="cols full-cost" title="Full cost of the project with Company Profit and VAT.">Cost<sup>?</sup></th>
+        <th style='width: 80px;' class="cols vat" title="VAT from actual Income, not the full cost.">VAT<sup>?</sup></th>
         <th class="cols main-cost" style="display: none">Main<br>cost</th>
-        <th class="cols paid-deposit">Paid<br>deposit</th>
-        <th class="cols full-progress" title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
-        <th class="cols deposit-aware-progress" style="display: none" title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
-        <th class="cols income" title="Current income according to incoming transactions including the deposit.">Income<sup>?</sup></th>
-        <th class="cols outcome" title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
-        <th class="cols expenses">Expenses +</th>
-        <th class="cols salaries-paid">Salaries<br>paid</th>
-        <th class="cols company-profit" title="Income &minus; Outcome &minus; VAT">Real<br>Profit<sup>?</sup></th>
-        <th class="cols owner-profit" title="We have Income = PartCost&middot;(1+Profit)&middot;(1+VAT), therefore PartCost = Income / [(1 + Profit)&middot;(1 + VAT)]. Hence, OngoingProfit = PartCost &middot; Profit.">Ongoing<sup>?</sup><br>Profit</th>
-        <th class="cols salaries-part" title="Real Profit &minus; Ongoing Profit.">Salaries<sup>?</sup><br>Part</th>
-        <th class="cols left-to-pay" title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
-        <th class="cols invoices-to-pay" title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
-        <th class="cols requested-payments" title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
+        <th style='width: 80px;' class="cols paid-deposit">Paid<br>deposit</th>
+        <th style='width: 80px;' class="cols full-progress" title="Will be equal to Cost, when the project is 100% done.">Full<sup>?</sup><br>progress</th>
+        <th style='width: 80px;' class="cols deposit-aware-progress" style="display: none" title="Main contract progress + additional works progress">Deposit<sup>?</sup><br>aware<br>progress</th>
+        <th style='width: 80px;' class="cols income" title="Current income according to incoming transactions including the deposit.">Income<sup>?</sup></th>
+        <th style='width: 80px;' class="cols outcome" title="Current outcome according to outgoing transactions.">Outcome<sup>?</sup> =</th>
+        <th style='width: 80px;' class="cols expenses">Expenses +</th>
+        <th style='width: 80px;' class="cols salaries-paid">Salaries<br>paid</th>
+        <th style='width: 80px;' class="cols company-profit" title="Income &minus; Outcome &minus; VAT">Real<br>Profit<sup>?</sup></th>
+        <th style='width: 80px;' class="cols owner-profit" title="We have Income = PartCost&middot;(1+Profit)&middot;(1+VAT), therefore PartCost = Income / [(1 + Profit)&middot;(1 + VAT)]. Hence, OngoingProfit = PartCost &middot; Profit.">Ongoing<sup>?</sup><br>Profit</th>
+        <th style='width: 80px;' class="cols salaries-part" title="Real Profit &minus; Ongoing Profit.">Salaries<sup>?</sup><br>Part</th>
+        <th style='width: 80px;' class="cols left-to-pay" title="Main contract progress (deposit aware) + side works progress - (income - deposit). Invoice the client, if this is positive.">Left<sup>?</sup><br>to pay</th>
+        <th style='width: 80px;' class="cols invoices-to-pay" title="Received invoices, which need to be payed. (Outcome.)">Invoices<sup>?</sup><br>to Pay (debt)</th>
+        <th style='width: 80px;' class="cols requested-payments" title="Sent invoices, which are not payed yet. (Income.)">Requested<sup>?</sup><br>Payments</th>
     </tr>
     <tbody>
     {% for construct in active_construct_list %}
