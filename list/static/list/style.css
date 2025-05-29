@@ -43,7 +43,8 @@
 }
 
 .construct-title {
-    max-width: 250px;
+    width: 300px;
+    max-width: 700px;
 }
 
 .construct-status-marker {
@@ -53,7 +54,7 @@
 }
 
 table {
-  border-spacing: 1em 0.5em;
+  border-spacing: 0.1em;
   padding: 0 2em 1em 0;
   border: 1px solid lightgrey;
   border-collapse: collapse;
@@ -111,7 +112,7 @@ th.assign_cell  {
 }
 
 table#construct_list {
-    border-collapse: collapse;
+    border-collapse: separate;
     border: none;
 }
 

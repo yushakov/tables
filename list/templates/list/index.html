@@ -39,7 +39,7 @@
 {% if active_construct_list %}
 <table id='construct_list'>
     <tr>
-        <th>Project name</th>
+        <th class="construct-title">Project name</th>
         <th>Progress</th>
         <th>Chart</th>
         <th>Foreman</th>
@@ -63,7 +63,7 @@
     <tbody>
     {% for construct in active_construct_list %}
         <tr>
-        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px"
+        <td class='construct-title' style="background-color: {{ construct.color }}; border-radius: 7px;"
             title="Created: {{ construct.listed_date }}
 Status: {{ construct.status.name }} ({{ construct.status.chain.name }}).
 ToDo: N tasks.">

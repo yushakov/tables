@@ -84,16 +84,19 @@
 {% csrf_token %}
 <table id='construct_list'><tbody>
     {% for subset in subsets %}
-        <tr>
-            <td>
+        <tr style="height: 20px;">
+            <td style="width: 200px;">
                 <b>{{ subset.user.first_name }} {{ subset.user.last_name }}</b>
             </td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td><b>Pay</b></td>
-            <td></td>
-            <td></td>
+            <td style="width: 200px;"></td>
+            <td style="width: 100px;"></td>
+            <td style="width: 100px;"></td>
+            <td style="width: 20px;"><b>Pay</b></td>
+            <td style="width: 100px;"></td>
+            <td style="width: 50px;"></td>
+            <td style="width: 50px;"></td>
+            <td style="width: 150px;"></td>
+            <td style="width: 200px;"></td>
         </tr>
         {% for inv in subset.invoices %}
             <tr id='tr_{{ inv.id }}'>
